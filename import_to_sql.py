@@ -2,7 +2,6 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, event
-from sqlalchemy.sql import insert
 from sqlalchemy.engine import URL
 from pathlib import Path
 
