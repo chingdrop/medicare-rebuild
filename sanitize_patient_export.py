@@ -32,8 +32,8 @@ export_df['Nickname'] = export_df['Nickname'].str.strip().str.title()
 export_df['Phone Number'] = export_df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
 export_df['Phone Number'] = export_df['Phone Number'].apply(lambda x: x if len(str(x)) == 10 else None)
 export_df['Gender'] = export_df['Gender'].replace({'Male': 'M', 'Female': 'F'})
-email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-export_df['Email'] = export_df['Email'].apply(lambda x: x if re.match(email_pattern, str(x)) else None)
+email_pattern = r'(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)'
+export_df['Email'] = export_df['Email'].str.extract(email_pattern)
 export_df['Suffix'] = export_df['Suffix'].str.strip().str.title()
 export_df['Social Security'] = export_df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
 export_df['Social Security'] = export_df['Social Security'].apply(lambda x: x if len(str(x)) == 9 else None)
