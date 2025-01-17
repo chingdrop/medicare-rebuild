@@ -61,16 +61,17 @@ report_df['Zip code'] = report_df['Zip code'].astype(str).str.split('-', n=1).st
 mbi_pattern = r'([A-Z0-9]{11})'
 report_df['MedicareNumber'] = report_df['MedicareNumber'].str.strip().str.upper()
 report_df['MedicareNumber'] = report_df['MedicareNumber'].str.extract(mbi_pattern)
+
 report_df['DX_Code'] = report_df['DX_Code'].apply(standardize_dx_code)
 
 # Regex pattern must have a capture group. i.e., ()
-insurance_id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d*)'
+insurance_id_pattern = r'([A-Z]*\d+[A-Z]*\d*)'
+report_df['Primary Payer ID'] = report_df['Primary Payer ID'].str.strip().str.upper()
 report_df['Primary Payer ID'] = report_df['Primary Payer ID'].str.extract(insurance_id_pattern)
 report_df['Primary Payer ID'] = report_df['Primary Payer ID'].fillna(report_df['Primary Payer'].str.extract(insurance_id_pattern)[0])
-report_df['Primary Payer ID'] = report_df['Primary Payer ID'].str.strip().str.upper()
+report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].str.strip().str.upper()
 report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].str.extract(insurance_id_pattern)
 report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].fillna(report_df['Secondary Payer'].str.extract(insurance_id_pattern)[0])
-report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].str.strip().str.upper()
 report_df['Primary Payer'] = report_df['Primary Payer'].apply(standardize_insurance_name)
 report_df['Secondary Payer'] = report_df['Secondary Payer'].apply(standardize_insurance_name)
 report_df['Primary Payer'] = report_df.apply(fill_primary_payer, axis=1)
