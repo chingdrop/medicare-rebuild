@@ -50,3 +50,164 @@ state_abbreviations = {
     "Wisconsin": "WI",
     "Wyoming": "WY"
 }
+
+insurance_keywords = {
+    "AARP-PPO": [
+        ["aarp"]
+    ],
+    "Aetna Insurance": [
+        ["aetna"]
+    ],
+    "Ambetter of Arkansas": [
+        ["ambetter", "arkansas"]
+    ],
+    "American Continental Insurance": [
+        ["american", "continental"]
+    ],
+    "Amerigroup": [
+        ["amerigroup"]
+    ],
+    "Bankers Life And Casualty": [
+        ["bankers", "life"]
+    ],
+    "BCBS Federal": [
+        ["blue", "cross", "federal"],
+        ["blue", "cross", "fed"],
+        ["bcbs", "federal"],
+        ["bcbs", "fed"]
+    ],
+    "Blue Cross and Blue Shield of Florida": [
+        ["blue", "cross"],
+        ["bluecross"],
+        ["bcbs"],
+        ["anthem"]
+    ],
+    "Care Improvement Plus": [
+        ["care", "improvement"]
+    ],
+    "Care Plus": [
+        ["care", "plus"],
+        ["careplus"]
+    ],
+    "Caresource": [
+        ["care", "source"],
+        ["caresource"]
+    ],
+    "Central California Alliance for Health": [
+        ["central", "california"],
+        ["central", "ca"]
+    ],
+    "Champ Va": [
+        ["champ", "va"]
+    ],
+    "Cigna": [
+        ["cigna"]
+    ],
+    "Colonial Penn Life Insurance CO": [
+        ["colonial", "penn"]
+    ],
+    "Commonwealth Care Alliance": [
+        ["commonwealth", "care"],
+        ["commonwealth", "health"]
+    ],
+    "Community Health Plan": [
+        ["community", "health"]
+    ],
+    "CSI Medicare Supplement": [
+        ["csi", "medicare"]
+    ],
+    "Devoted Health": [
+        ["devoted"]
+    ],
+    "Emblem Health": [
+        ["emblem"]
+    ],
+    "Fidelis Care New York": [
+        ["fidelis"]
+    ],
+    "Freedom Health": [
+        ["freedom"]
+    ],
+    "GEHA": [
+        ["geha"]
+    ],
+    "Great southern life insurance": [
+        ["great", "southern"]
+    ],
+    "Harvard Pilgrim Health Plan": [
+        ["harvard", "pilgrim"]
+    ],
+    "Healthfirst Health Plan": [
+        ["healthfirst"]
+    ],
+    "Humana": [
+        ["humana"]
+    ],
+    "Inland Empire Health Plan": [
+        ["inland", "empire"]
+    ],
+    "Kaiser": [
+        ["kaiser"]
+    ],
+    "Kern Health Systems": [
+        ["kern", "health"],
+        ["kern", "family"]
+    ],
+    "Medicaid of California": [
+        ["medicaid", "california"],
+        ["medicaid", "ca"]
+    ],
+    "Medicaid of Florida": [
+        ["medicaid", "florida"],
+        ["medicaid", "fl"]
+    ],
+    "Medical Mutual of Ohio": [
+        ["medical", "mutual", "ohio"],
+        ["medical", "mutual", "oh"]
+    ],
+    "Meridian Health Plan": [
+        ["meridian", "health"]
+    ],
+    "Molina Healthcare": [
+        ["molina"]
+    ],
+    "Mutual of Omaha": [
+        ["mutual", "omaha"]
+    ],
+    "Preferred Care Partners": [
+        ["preferred", "care", "partner"]
+    ],
+    "Sunshine state Health Plan": [
+        ["sunshine", "health"],
+        ["sunshine", "insurance"]
+    ],
+    "Transamerica Life Insurance Co": [
+        ["trans", "america"]
+    ],
+    "Tricare for Life": [
+        ["tricare"]
+    ],
+    "United American":[
+        ["united", "american"]
+    ],
+    "United HealthCare": [
+        ["united", "healthcare"],
+        ["united", "health", "care"],
+        ["uhc"]
+    ],
+    "UPMC Health Plan": [
+        ["upmc"]
+    ],
+    "Wellcare": [
+        ["wellcare"]
+    ],
+    "Wellpoint": [
+        ["wellpoint"]
+    ],
+    "Western Health Advantage": [
+        ["western", "health", "advantage"]
+    ],
+    "Western United Life Assurance": [
+        ["western", "united"]
+    ]
+}

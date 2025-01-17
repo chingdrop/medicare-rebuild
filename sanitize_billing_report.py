@@ -2,7 +2,7 @@ import re
 import pandas as pd
 from pathlib import Path
 
-from enums import state_abbreviations
+from enums import state_abbreviations, insurance_keywords
 
 
 data_dir = Path.cwd() / 'data'
@@ -28,6 +28,13 @@ def fill_primary_payer_id(row):
     if row['Primary Payer'] == 'Medicare Part B' and pd.isnull(row['Primary Payer ID']) :
         return row['MedicareNumber']
     return row['Primary Payer ID']
+
+def standardize_insurance_name(name):
+    for standard_name, keyword_sets in insurance_keywords.items():
+        for keyword_set in keyword_sets:
+            if all(re.search(r'\b' + re.escape(keyword) + r'\b', str(name).lower()) for keyword in keyword_set):
+                return standard_name
+    return name
 
 report_df['First Name'] = report_df['First Name'].str.replace(r'\s+', ' ', regex=True)
 report_df['First Name'] = report_df['First Name'].str.replace(r'[^a-zA-Z\s.-]', '', regex=True)
@@ -59,11 +66,13 @@ report_df['DX_Code'] = report_df['DX_Code'].apply(standardize_dx_code)
 # Regex pattern must have a capture group. i.e., ()
 insurance_id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d*)'
 report_df['Primary Payer ID'] = report_df['Primary Payer ID'].str.extract(insurance_id_pattern)
-report_df['Primary Payer ID'] = report_df['Primary Payer ID'].fillna(report_df['Primary Payer'].str.extract(insurance_id_pattern))
+report_df['Primary Payer ID'] = report_df['Primary Payer ID'].fillna(report_df['Primary Payer'].str.extract(insurance_id_pattern)[0])
 report_df['Primary Payer ID'] = report_df['Primary Payer ID'].str.strip().str.upper()
 report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].str.extract(insurance_id_pattern)
-report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].fillna(report_df['Secondary Payer'].str.extract(insurance_id_pattern))
+report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].fillna(report_df['Secondary Payer'].str.extract(insurance_id_pattern)[0])
 report_df['Secondary Payer ID'] = report_df['Secondary Payer ID'].str.strip().str.upper()
+report_df['Primary Payer'] = report_df['Primary Payer'].apply(standardize_insurance_name)
+report_df['Secondary Payer'] = report_df['Secondary Payer'].apply(standardize_insurance_name)
 report_df['Primary Payer'] = report_df.apply(fill_primary_payer, axis=1)
 report_df['Primary Payer ID'] = report_df.apply(fill_primary_payer_id, axis=1)
 
