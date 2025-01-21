@@ -17,9 +17,9 @@ connection_url = URL.create(
         "TrustServerCertificate": "yes",
     },
 )
-engine = create_engine(connection_url)
+my_engine = create_engine(connection_url)
 
-@event.listens_for(engine, "before_cursor_execute")
+@event.listens_for(my_engine, "before_cursor_execute")
 def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
     if executemany:
         cursor.fast_executemany = True

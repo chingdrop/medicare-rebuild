@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from sql_connect import engine
+from sql_connect import my_engine
 
 
 data_dir = Path.cwd() / 'data'
@@ -65,7 +65,7 @@ med_nec_df = med_nec_df.rename(
 )
 
 # Using engine.begin for simpler connection and commit handling. 
-with engine.begin() as conn:
+with my_engine.begin() as conn:
     patient_df.to_sql('patient', conn, if_exists='append', index=False)
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
 
