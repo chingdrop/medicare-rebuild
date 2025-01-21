@@ -13,16 +13,13 @@ engine = create_alchemy_engine(
     database=os.getenv('LCH_SQL_GPS_DB')
 )
 
-data_dir = Path.cwd() / 'data'
-
-dtypes = {
-    'Phone Number': 'str',
-    'Social Security': 'str',
-    'Zip code': 'str'
-}
 export_df = pd.read_csv(
-    data_dir / 'final_patient_export.csv',
-    dtype=dtypes,
+    Path.cwd() / 'data' / 'final_patient_export.csv',
+    dtype={
+        'Phone Number': 'str',
+        'Social Security': 'str',
+        'Zip code': 'str'
+    },
     parse_dates=['DOB', 'On-board Date']
 )
 
