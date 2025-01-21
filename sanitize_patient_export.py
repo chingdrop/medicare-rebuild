@@ -65,21 +65,24 @@ export_df['State'] = export_df['State'].replace('NAN', None)
 export_df['Zip code'] = export_df['Zip code'].astype(str).str.split('-', n=1).str[0]
 
 # Regex pattern must have a capture group. i.e., ()
+# Only matching capital letters since I use upper() on value.
+mbi_pattern = r'([A-Z0-9]{11})'
+export_df['Medicare ID number'] = export_df['Medicare ID number'].str.strip().str.upper()
+export_df['Medicare ID number'] = export_df['Medicare ID number'].str.extract(mbi_pattern)[0]
+
+# Regex pattern must have a capture group. i.e., ()
+# Only matching capital letters since I use upper() on value.
 insurance_id_pattern = r'([A-Z]*\d+[A-Z]*\d*)'
 export_df['Insurance ID:'] = export_df['Insurance ID:'].str.strip().str.upper()
-export_df['Insurance ID:'] = export_df['Insurance ID:'].str.extract(insurance_id_pattern)
+export_df['Insurance ID:'] = export_df['Insurance ID:'].str.extract(insurance_id_pattern)[0]
 export_df['Insurance ID:'] = export_df['Insurance ID:'].fillna(export_df['Insurance Name:'].str.extract(insurance_id_pattern)[0])
 export_df['InsuranceID2'] = export_df['InsuranceID2'].str.strip().str.upper()
-export_df['InsuranceID2'] = export_df['InsuranceID2'].str.extract(insurance_id_pattern)
+export_df['InsuranceID2'] = export_df['InsuranceID2'].str.extract(insurance_id_pattern)[0]
 export_df['InsuranceID2'] = export_df['InsuranceID2'].fillna(export_df['InsuranceName2'].str.extract(insurance_id_pattern)[0])
 export_df['Insurance Name:'] = export_df['Insurance Name:'].apply(standardize_insurance_name)
 export_df['InsuranceName2'] = export_df['InsuranceName2'].apply(standardize_insurance_name)
 export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)
 export_df['Insurance ID:'] = export_df.apply(fill_primary_payer_id, axis=1)
-# Regex pattern must have a capture group. i.e., ()
-mbi_pattern = r'([A-Z0-9]{11})'
-export_df['Medicare ID number'] = export_df['Medicare ID number'].str.strip().str.upper()
-export_df['Medicare ID number'] = export_df['Medicare ID number'].str.extract(mbi_pattern)
 
 export_df['DX_Code'] = export_df['DX_Code'].apply(standardize_dx_code)
 
