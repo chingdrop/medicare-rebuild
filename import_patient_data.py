@@ -62,7 +62,5 @@ med_nec_df = med_nec_df.rename(
 )
 
 with engine.connect() as conn:
-    
-
     patient_df.to_sql('patient', conn, if_exists="append", index=False)
 
