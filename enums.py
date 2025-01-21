@@ -65,7 +65,8 @@ insurance_keywords = {
         ["american", "continental"]
     ],
     "Amerigroup": [
-        ["amerigroup"]
+        ["amerigroup"],
+        ["amerigrp"]
     ],
     "Bankers Life And Casualty": [
         ["bankers", "life"]
@@ -78,6 +79,7 @@ insurance_keywords = {
     ],
     "Blue Cross and Blue Shield of Florida": [
         ["blue", "cross"],
+        ["blue", "shield"],
         ["bluecross"],
         ["bcbs"],
         ["anthem"]
@@ -141,13 +143,16 @@ insurance_keywords = {
         ["healthfirst"]
     ],
     "Humana": [
-        ["humana"]
+        ["humana"],
+        ["humann"],
+        ["humanna"]
     ],
     "Inland Empire Health Plan": [
         ["inland", "empire"]
     ],
     "Kaiser": [
-        ["kaiser"]
+        ["kaiser"],
+        ["keiser"]
     ],
     "Kern Health Systems": [
         ["kern", "health"],
@@ -191,6 +196,7 @@ insurance_keywords = {
         ["united", "american"]
     ],
     "United HealthCare": [
+        ["united", "health"],
         ["united", "healthcare"],
         ["united", "health", "care"],
         ["uhc"]
