@@ -1,25 +1,24 @@
-import os
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, event
-from sqlalchemy.engine import URL
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL, default
 
 
-load_dotenv()
-connection_url = URL.create(
-    "mssql+pyodbc",
-    username=os.getenv('SQL_USERNAME'),
-    password=os.getenv('SQL_PASSWORD'),
-    host=os.getenv('SQL_HOST'),
-    port=1433,
-    database=os.getenv('SQL_DB'),
-    query={
-        "driver": "ODBC Driver 18 for SQL Server",
-        "TrustServerCertificate": "yes",
-    },
-)
-my_engine = create_engine(connection_url)
+def my_creator(*args, **kwargs):
+    connection = default.DefaultConnection(*args, **kwargs)
+    if hasattr(connection.connection, 'fast_executemany'):
+        connection.connection.fast_executemany = True
+    return connection
 
-@event.listens_for(my_engine, "before_cursor_execute")
-def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
-    if executemany:
-        cursor.fast_executemany = True
+def create_alchemy_engine(username, password, host, database):
+    connection_url = URL.create(
+        "mssql+pyodbc",
+        username=username,
+        password=password,
+        host=host,
+        port=1433,
+        database=database,
+        query={
+            "driver": "ODBC Driver 18 for SQL Server",
+            "TrustServerCertificate": "yes",
+        },
+    )
+    return create_engine(connection_url, creator=my_creator)
