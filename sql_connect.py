@@ -1,12 +1,6 @@
-from sqlalchemy import create_engine
-from sqlalchemy.engine import URL, default
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import URL
 
-
-def my_creator(*args, **kwargs):
-    connection = default.DefaultConnection(*args, **kwargs)
-    if hasattr(connection.connection, 'fast_executemany'):
-        connection.connection.fast_executemany = True
-    return connection
 
 def create_alchemy_engine(username, password, host, database):
     connection_url = URL.create(
@@ -21,4 +15,11 @@ def create_alchemy_engine(username, password, host, database):
             "TrustServerCertificate": "yes",
         },
     )
-    return create_engine(connection_url, creator=my_creator)
+    engine = create_engine(connection_url)
+
+    @event.listens_for(engine, 'before_cursor_execute')
+    def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
+        if executemany:
+            cursor.fast_executemany = True
+
+    return engine
