@@ -1,8 +1,17 @@
+import os
 import pandas as pd
+from dotenv import load_dotenv
 from pathlib import Path
 
-from sql_connect import my_engine
+from sql_connect import create_alchemy_engine
 
+load_dotenv()
+engine = create_alchemy_engine(
+    username=os.getenv('LCH_SQL_GPS_USERNAME'),
+    password=os.getenv('LCH_SQL_GPS_PASSWORD'),
+    host=os.getenv('LCH_SQL_GPS_HOST'),
+    database=os.getenv('LCH_SQL_GPS_DB')
+)
 
 data_dir = Path.cwd() / 'data'
 
@@ -65,7 +74,7 @@ med_nec_df = med_nec_df.rename(
 )
 
 # Using engine.begin for simpler connection and commit handling. 
-with my_engine.begin() as conn:
+with engine.begin() as conn:
     patient_df.to_sql('patient', conn, if_exists='append', index=False)
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
 
