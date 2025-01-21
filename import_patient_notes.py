@@ -26,9 +26,26 @@ time_engine = create_alchemy_engine(
     database=os.getenv('LCH_SQL_SP_TIME')
 )
 
+notes_stmt = '''
+    SELECT SharePoint_ID, Notes, TimeStamp, LCH_UPN, Time_Note, Note_ID
+    FROM Medical_Notes
+    WHERE TimeStamp >= DATEADD(day, -60, GETDATE())
+'''
+time_stmt = '''
+    SELECT Recording_Time, Auto_Time, SharPoint_ID, LCH_UPN, Note_ID
+    FROM Time_Log
+    WHERE Start_Time >= DATEADD(day, -60, GETDATE())
+'''
+
 with notes_engine.begin() as conn:
-    notes_df = pd.read_sql('SELECT * FROM Medical_Notes WHERE TimeStamp >= DATEADD(day, -60, GETDATE())', conn)
+    notes_df = pd.read_sql(notes_stmt, conn)
 
 with time_engine.begin() as conn:
-    time_df = pd.read_sql('SELECT * FROM Time_Log WHERE Start_Time >= DATEADD(day, -60, GETDATE())')
+    time_df = pd.read_sql(time_stmt, conn)
 
+print('Notes DF - ' + str(notes_df.shape))
+print('Time DF - ' + str(time_df.shape))
+merge_df = pd.merge(notes_df, time_df, on='Note_ID')
+print('Merged DF - ' + str(merge_df.shape))
+
+merge_df.to_csv(Path.cwd() / 'data' / 'test_merge.csv', index=False)
