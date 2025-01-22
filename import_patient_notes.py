@@ -2,7 +2,6 @@ import os
 import html
 import pandas as pd
 from dotenv import load_dotenv
-from pathlib import Path
 
 from sql_connect import create_alchemy_engine
 
