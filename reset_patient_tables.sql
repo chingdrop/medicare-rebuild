@@ -7,6 +7,5 @@ DBCC CHECKIDENT ('patient_insurance', RESEED, 0);
 DELETE FROM medical_necessity;
 DBCC CHECKIDENT ('medical_necessity', RESEED, 0);
 
-DELETE FROM patient
-	WHERE patient_id > (SELECT MIN(patient_id) FROM patient);
-DBCC CHECKIDENT ('patient', RESEED, 1);
+DELETE FROM patient;
+DBCC CHECKIDENT ('patient', RESEED, 0);
