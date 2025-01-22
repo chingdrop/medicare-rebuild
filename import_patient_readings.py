@@ -45,14 +45,14 @@ with readings_engine.begin() as conn:
 bp_readings_df['SharePoint_ID'] = bp_readings_df['SharePoint_ID'].astype('Int64')
 bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].replace({True: 1, False: 0})
 bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].astype('Int64')
-bp_readings_df['BP_Reading_Systolic'] = bp_readings_df['BP_Reading_Systolic'].astype('Int64')
-bp_readings_df['BP_Reading_Diastolic'] = bp_readings_df['BP_Reading_Diastolic'].astype('Int64')
+bp_readings_df['BP_Reading_Systolic'] = bp_readings_df['BP_Reading_Systolic'].astype(float).round(2)
+bp_readings_df['BP_Reading_Diastolic'] = bp_readings_df['BP_Reading_Diastolic'].astype(float).round(2)
 bp_readings_df = bp_readings_df.rename(
     columns={
         'SharePoint_ID': 'sharepoint_id',
         'Device_Model': 'temp_device',
         'Time_Recorded': 'recorded_datetime',
-        'Time_Received': 'received_datetime',
+        'Time_Recieved': 'received_datetime',
         'BP_Reading_Systolic': 'systolic_reading',
         'BP_Reading_Diastolic': 'diastolic_reading',
         'Manual_Reading': 'is_manual'
@@ -62,14 +62,25 @@ bp_readings_df = bp_readings_df.rename(
 bg_readings_df['SharePoint_ID'] = bg_readings_df['SharePoint_ID'].astype('Int64')
 bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].replace({True: 1, False: 0})
 bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].astype('Int64')
-bp_readings_df['BG_Reading'] = bp_readings_df['BG_Reading'].astype('Int64')
+bg_readings_df['BG_Reading'] = bg_readings_df['BG_Reading'].astype(float).round(2)
 bg_readings_df = bg_readings_df.rename(
     columns={
         'SharePoint_ID': 'sharepoint_id',
         'Device_Model': 'temp_device',
         'Time_Recorded': 'recorded_datetime',
-        'Time_Received': 'received_datetime',
+        'Time_Recieved': 'received_datetime',
         'BG_Reading': 'glucose_reading',
         'Manual_Reading': 'is_manual'
     }
 )
+
+with gps_engine.begin() as conn:
+    patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
+
+    bp_readings_df = pd.merge(bp_readings_df, patient_id_df, on='sharepoint_id')
+    bp_readings_df.drop(columns=['sharepoint_id'], inplace=True)
+    bg_readings_df = pd.merge(bg_readings_df, patient_id_df, on='sharepoint_id')
+    bg_readings_df.drop(columns=['sharepoint_id'], inplace=True)
+
+    bp_readings_df.to_sql('blood_pressure_reading', conn, if_exists='append', index=False)
+    bg_readings_df.to_sql('glucose_reading', conn, if_exists='append', index=False)
