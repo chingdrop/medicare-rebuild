@@ -7,5 +7,6 @@ DBCC CHECKIDENT ('patient_insurance', RESEED, 0);
 DELETE FROM medical_necessity;
 DBCC CHECKIDENT ('medical_necessity', RESEED, 0);
 
+-- Patient records are deleted last due to foreign key constraints.
 DELETE FROM patient;
 DBCC CHECKIDENT ('patient', RESEED, 0);
