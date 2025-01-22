@@ -51,6 +51,8 @@ state_abbreviations = {
     "Wyoming": "WY"
 }
 
+# Key word lists must have all elements match in the target string.
+# Spelling errors and abbreviations are added to increase matching.
 insurance_keywords = {
     "AARP-PPO": [
         ["aarp"]
