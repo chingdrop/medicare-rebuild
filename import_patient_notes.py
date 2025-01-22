@@ -79,6 +79,8 @@ patient_note_df = patient_note_df.rename(
 
 with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
+
     patient_note_df = pd.merge(patient_note_df, patient_id_df, on='sharepoint_id')
     patient_note_df.drop(columns=['sharepoint_id'], inplace=True)
+    
     patient_note_df.to_sql('patient_note', conn, if_exists='append', index=False)

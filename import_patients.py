@@ -62,6 +62,8 @@ insurance_df = insurance_df.rename(
     }
 )
 med_nec_df = export_df[['On-board Date', 'DX_Code', 'ID']]
+med_nec_df['DX_Code'] = med_nec_df['DX_Code'].str.split(',')
+med_nec_df = med_nec_df.explode('DX_Code', ignore_index=True)
 med_nec_df = med_nec_df.rename(
     columns={
         'On-board Date': 'evaluation_datetime',
@@ -70,8 +72,8 @@ med_nec_df = med_nec_df.rename(
     }
 )
 
-# Using engine.begin for simpler connection and commit handling. 
 with engine.begin() as conn:
+    # Patient data is imported first to get the patient_id.
     patient_df.to_sql('patient', conn, if_exists='append', index=False)
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
 
@@ -81,9 +83,6 @@ with engine.begin() as conn:
     insurance_df.drop(columns=['sharepoint_id'], inplace=True)
     med_nec_df = pd.merge(med_nec_df, patient_id_df, on='sharepoint_id')
     med_nec_df.drop(columns=['sharepoint_id'], inplace=True)
-
-    med_nec_df['temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
-    med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
 
     address_df.to_sql('patient_address', conn, if_exists='append', index=False)
     insurance_df.to_sql('patient_insurance', conn, if_exists='append', index=False)
