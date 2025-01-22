@@ -52,18 +52,19 @@ with time_engine.begin() as conn:
         parse_dates=['Start_Time', 'End_Time']
     )
 
-merge_df = pd.merge(notes_df, time_df, on='Note_ID')
+patient_note_df = pd.merge(notes_df, time_df, on='Note_ID')
 
-merge_df.dropna(subset=['Note_ID'], inplace=True)
-merge_df.drop(columns=['Note_ID'], inplace=True)
+patient_note_df.dropna(subset=['Note_ID'], inplace=True)
+patient_note_df.drop(columns=['Note_ID'], inplace=True)
 
-merge_df['Auto_Time'] = merge_df['Auto_Time'].replace({True: 1, False: 0})
-merge_df['Auto_Time'] = merge_df['Auto_Time'].astype('Int64')
-merge_df['Recording_Time'] = merge_df['Recording_Time'].astype(str)
-merge_df['Recording_Time'] = pd.to_timedelta(merge_df['Recording_Time']).dt.total_seconds()
-merge_df['Notes'] = merge_df['Notes'].apply(html.unescape)
-merge_df['Notes'] = merge_df['Notes'].str.replace(r'<.*?>', '', regex=True)
-merge_df = merge_df.rename(
+patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].replace({True: 1, False: 0})
+patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].astype('Int64')
+patient_note_df['SharePoint_ID'] = patient_note_df['SharePoint_ID'].astype('Int64')
+patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].astype(str)
+patient_note_df['Recording_Time'] = pd.to_timedelta(patient_note_df['Recording_Time']).dt.total_seconds()
+patient_note_df['Notes'] = patient_note_df['Notes'].apply(html.unescape)
+patient_note_df['Notes'] = patient_note_df['Notes'].str.replace(r'<.*?>', '', regex=True)
+patient_note_df = patient_note_df.rename(
     columns={
         'SharePoint_ID': 'sharepoint_id',
         'Notes': 'note_content',
@@ -77,4 +78,8 @@ merge_df = merge_df.rename(
     }
 )
 
-merge_df.to_csv(Path.cwd() / 'data' / 'test_merge.csv', index=False)
+with gps_engine.begin() as conn:
+    patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
+    patient_note_df = pd.merge(patient_note_df, patient_id_df, on='sharepoint_id')
+    patient_note_df.drop(columns=['sharepoint_id'], inplace=True)
+    patient_note_df.to_sql('patient_note', conn, if_exists='append', index=False)
