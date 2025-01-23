@@ -24,7 +24,7 @@ def standardize_insurance_name(name):
         for keyword_set in keyword_sets:
             if all(re.search(r'\b' + re.escape(keyword) + r'\b', str(name).lower()) for keyword in keyword_set):
                 return standard_name
-    return name
+    return None
 
 def fill_primary_payer(row):
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
