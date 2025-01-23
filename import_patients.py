@@ -62,7 +62,7 @@ insurance_df = insurance_df.rename(
     }
 )
 med_nec_df = export_df[['On-board Date', 'DX_Code', 'ID']]
-med_nec_df['DX_Code'] = med_nec_df['DX_Code'].str.split(',')
+med_nec_df.loc[:, 'DX_Code'] = med_nec_df['DX_Code'].str.split(',')
 med_nec_df = med_nec_df.explode('DX_Code', ignore_index=True)
 med_nec_df = med_nec_df.rename(
     columns={
