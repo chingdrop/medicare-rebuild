@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-from pathlib import Path
 from dotenv import load_dotenv
 
 from sql_connect import create_alchemy_engine
