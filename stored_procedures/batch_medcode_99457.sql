@@ -9,23 +9,23 @@ AS
 BEGIN
 
 	SET NOCOUNT ON;
-	DROP TABLE IF EXISTS #99457
+	DROP TABLE IF EXISTS #99457;
 
-    SELECT pn.patient_id,
-		MAX(pn.note_datetime) AS latest_note
+    SELECT pn.patient_id
 	INTO #99457
 	FROM patient_note pn
 	WHERE pn.note_datetime >= DATEADD(MONTH, -1, GETDATE())
-	AND pn.patient_id NOT IN (
-		SELECT mc.patient_id
+	AND NOT EXISTS (
+		SELECT 1
 		FROM medical_code mc
 		JOIN medical_code_type mct 
 			ON mc.med_code_type_id = mct.med_code_type_id
 			AND mct.name = '99457'
+		WHERE mc.patient_id = pn.patient_id
 			AND mc.timestamp_applied >= DATEADD(MONTH, -1, GETDATE())
 	)
 	GROUP BY pn.patient_id
-		HAVING SUM(pn.call_time_seconds) / 60 >= 20
+	HAVING SUM(pn.call_time_seconds) / 60 >= 20;
 
 	INSERT INTO medical_code (patient_id, med_code_type_id, timestamp_applied)
 	SELECT t.patient_id,
@@ -34,6 +34,6 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99457'
 		),
-		t.latest_note
-	FROM #99457 t
+		GETDATE()
+	FROM #99457 t;
 END
