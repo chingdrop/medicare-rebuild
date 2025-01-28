@@ -9,14 +9,11 @@ BEGIN
 
 	SET NOCOUNT ON;
 
-	DROP TABLE IF EXISTS #99458
-	DROP TABLE IF EXISTS #numbers
+	DROP TABLE IF EXISTS #99458;
 
-	CREATE TABLE #numbers (
-		n INT PRIMARY KEY
-	);
+	DECLARE @numbers TABLE (n INT);
 
-	INSERT INTO #numbers (n)
+	INSERT INTO @numbers (n)
 	VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10); 
 
 	WITH patient_rpm AS (
@@ -36,8 +33,7 @@ BEGIN
 		GROUP BY mc.patient_id
 	)
 
-	SELECT pn.patient_id,
-		MAX(pn.note_datetime) AS latest_note
+	SELECT pn.patient_id
 	INTO #99458
 	FROM patient_note pn
 	JOIN patient_rpm pr
@@ -46,17 +42,18 @@ BEGIN
 		ON pn.patient_id = pc.patient_id
 		AND pr.rpm_20_mins_blocks - pc.code_count > 0
 		AND pc.code_count < 3
-	JOIN #numbers n
+	JOIN @numbers n
 		ON n.n <= (pr.rpm_20_mins_blocks - pc.code_count - 1)
-	WHERE pn.patient_id IN (
-		SELECT mc.patient_id
+	WHERE EXISTS (
+		SELECT 1
 		FROM medical_code mc
 		JOIN medical_code_type mct 
 			ON mc.med_code_type_id = mct.med_code_type_id
 			AND mct.name = '99457'
+		WHERE mc.patient_id = pn.patient_id
 			AND mc.timestamp_applied >= DATEADD(MONTH, -1, GETDATE())
 	)
-	GROUP BY pn.patient_id
+	GROUP BY pn.patient_id;
 
 	INSERT INTO medical_code (patient_id, med_code_type_id, timestamp_applied)
 	SELECT t.patient_id,
@@ -65,7 +62,7 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99458'
 		),
-		t.latest_note
-	FROM #99458 t
+		GETDATE()
+	FROM #99458 t;
 
 END
