@@ -31,8 +31,8 @@ BEGIN
 			AND mc.timestamp_applied >= DATEADD(day, -30, GETDATE())
 	)
 	GROUP BY d.patient_id
-		HAVING COUNT(DISTINCT CAST(gr.received_datetime AS DATE)) >= 16
-			OR COUNT(DISTINCT CAST(bpr.received_datetime AS DATE)) >= 16;
+	HAVING COUNT(DISTINCT CAST(gr.received_datetime AS DATE)) >= 16
+		OR COUNT(DISTINCT CAST(bpr.received_datetime AS DATE)) >= 16;
 
 	INSERT INTO medical_code (patient_id, med_code_type_id, timestamp_applied)
 	SELECT t.patient_id,
@@ -42,6 +42,6 @@ BEGIN
 		WHERE mct.name = '99454'
 		),
 		GETDATE()
-	FROM #99454 t
+	FROM #99454 t;
 
 END
