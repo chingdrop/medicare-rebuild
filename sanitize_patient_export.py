@@ -91,6 +91,12 @@ export_df['InsuranceName2'] = export_df['InsuranceName2'].apply(standardize_insu
 export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)
 export_df['Insurance ID:'] = export_df.apply(fill_primary_payer_id, axis=1)
 
+previous_patient_statuses = {
+    'Do Not Call': 'DO NOT CALL',
+    'Inactive': 'In-Active'
+}
+export_df['Member_Status'] = export_df['Member_Status'].replace(previous_patient_statuses)
+
 # Check for database constraints and replace with Null if failed condition.
 export_df['Phone Number'] = export_df['Phone Number'].apply(lambda x: x if len(str(x)) == 10 else None)
 export_df['Social Security'] = export_df['Social Security'].apply(lambda x: x if len(str(x)) == 9 else None)
