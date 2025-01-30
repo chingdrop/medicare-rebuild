@@ -110,8 +110,9 @@ export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)
 export_df['Insurance ID:'] = export_df.apply(fill_primary_payer_id, axis=1)
 
 previous_patient_statuses = {
-    'Do Not Call': 'DO NOT CALL',
-    'Inactive': 'In-Active'
+    'DO NOT CALL': 'Do Not Call' ,
+    'In-Active': 'Inactive',
+    'On-Board': 'Onboard'
 }
 export_df['Member_Status'] = export_df['Member_Status'].replace(previous_patient_statuses)
 
