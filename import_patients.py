@@ -149,10 +149,10 @@ export_df = export_df.rename(
         'InsuranceID2': 'secondary_payer_id',
         'InsuranceName2': 'secondary_payer_name',
         'On-board Date': 'evaluation_datetime',
-        'DX_Code': 'temp_dx_code'
+        'DX_Code': 'temp_dx_code',
+        'Member_Status': 'temp_status_type'
     }
 )
-
 patient_df = export_df[[
     'first_name',
     'last_name',
@@ -167,9 +167,7 @@ patient_df = export_df[[
     'social_security',
     'sharepoint_id'
 ]]
-
 address_df = export_df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
-
 insurance_df = export_df[[
     'medicare_beneficiary_id',
     'primary_payer_id',
@@ -178,10 +176,12 @@ insurance_df = export_df[[
     'secondary_payer_name',
     'sharepoint_id'
 ]]
-
 med_nec_df = export_df[['evaluation_datetime', 'temp_dx_code', 'sharepoint_id']]
 med_nec_df.loc[:, 'temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
 med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
+patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
+patient_status_df['modified_date'] = pd.Timestamp.now()
+patient_status_df['temp_user'] = 'ITHelp'
 
 with engine.begin() as conn:
     # Patient data is imported first to get the patient_id.
@@ -194,7 +194,10 @@ with engine.begin() as conn:
     insurance_df.drop(columns=['sharepoint_id'], inplace=True)
     med_nec_df = pd.merge(med_nec_df, patient_id_df, on='sharepoint_id')
     med_nec_df.drop(columns=['sharepoint_id'], inplace=True)
+    patient_status_df = pd.merge(patient_status_df, patient_id_df, on='sharepoint_id')
+    patient_status_df.drop(columns=['sharepoint_id'], inplace=True)
 
     address_df.to_sql('patient_address', conn, if_exists='append', index=False)
     insurance_df.to_sql('patient_insurance', conn, if_exists='append', index=False)
     med_nec_df.to_sql('medical_necessity', conn, if_exists='append', index=False)
+    patient_status_df.to_sql('patient_status', conn, if_exists='append', index=False)
