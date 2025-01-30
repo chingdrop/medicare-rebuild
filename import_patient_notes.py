@@ -57,12 +57,14 @@ time_df = time_df.rename(
         'Notes': 'Note_Type'
     }
 )
+# Left join is needed for patient notes without any call time associated.
 patient_note_df = pd.merge(notes_df, time_df, on=['Note_ID', 'SharePoint_ID', 'LCH_UPN'], how='left')
 patient_note_df['Time_Note'] = patient_note_df['Time_Note'].fillna(patient_note_df['Note_Type'])
 patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
 
 patient_note_df['SharePoint_ID'] = pd.to_numeric(patient_note_df['SharePoint_ID'], errors='coerce', downcast='integer')
 patient_note_df.dropna(subset=['SharePoint_ID'], inplace=True)
+# Boolean column is flipped because it's stored differently in the database.
 patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].replace({True: 0, False: 1})
 patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].astype('Int64')
 patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].astype(str)
