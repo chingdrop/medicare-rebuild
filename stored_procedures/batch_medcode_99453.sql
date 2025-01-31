@@ -16,7 +16,12 @@ BEGIN
 		med_code_id INT, patient_id INT
 	);
 
-	SELECT d.patient_id
+	SELECT d.patient_id,
+		CASE
+			WHEN MAX(gr.received_datetime) > MAX(bpr.received_datetime)
+			THEN MAX(gr.received_datetime)
+			ELSE MAX(bpr.received_datetime)
+		END AS last_reading
 	INTO #99453
 	FROM device d
 	LEFT JOIN glucose_reading gr
@@ -47,7 +52,7 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99453'
 		),
-		GETDATE()
+		t.last_reading
 	FROM #99453 t;
 	
 	INSERT INTO medical_code_device (med_code_id, device_id)

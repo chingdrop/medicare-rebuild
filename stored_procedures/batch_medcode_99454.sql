@@ -12,7 +12,12 @@ BEGIN
 	SET NOCOUNT ON;
 	DROP TABLE IF EXISTS #99454;
 
-	SELECT d.patient_id
+	SELECT d.patient_id,
+		CASE
+			WHEN MAX(gr.received_datetime) > MAX(bpr.received_datetime)
+			THEN MAX(gr.received_datetime)
+			ELSE MAX(bpr.received_datetime)
+		END AS last_reading
 	INTO #99454
 	FROM device d
 	LEFT JOIN glucose_reading gr
@@ -41,7 +46,7 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99454'
 		),
-		GETDATE()
+		t.last_reading
 	FROM #99454 t;
 
 END

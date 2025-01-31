@@ -11,7 +11,8 @@ BEGIN
 	SET NOCOUNT ON;
 	DROP TABLE IF EXISTS #99202;
 
-	SELECT pn.patient_id
+	SELECT pn.patient_id,
+		MAX(pn.note_datetime) AS last_note
 	INTO #99202
 	FROM patient_note pn
 	JOIN note_type nt
@@ -36,7 +37,7 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99202'
 		),
-		GETDATE()
+		t.last_note
 	FROM #99202 t;
 
 END
