@@ -21,6 +21,7 @@ def standardize_name(name: str, pattern: str) -> str:
     name = re.sub(pattern, '', name)
     return name
 
+
 def standardize_email(email: str) -> str:
     """Standardizes email address strings.
     Trims whitespace and lowers the text. Regex matching attempts to find email addresses and extracts them.
@@ -38,6 +39,7 @@ def standardize_email(email: str) -> str:
         return email_match.group(0)
     return email
 
+
 def standardize_state(state: str) -> str:
     """Standardizes US state strings.
     Trims whitespace and titles the text. 
@@ -54,6 +56,7 @@ def standardize_state(state: str) -> str:
     if state == 'NAN':
         return None
     return state
+
 
 def standardize_mbi(mbi: str) -> str:
     """Standardizes medicare beneficiary ID strings.
@@ -73,6 +76,7 @@ def standardize_mbi(mbi: str) -> str:
         return mbi_match.group(0)
     return mbi
 
+
 def standardize_dx_code(dx_code: str) -> str:
     """Standardizes diagnosis codes.
     Trims whitespace and uppers the text. Searches text for regex pattern of diagnosis code. 
@@ -88,6 +92,7 @@ def standardize_dx_code(dx_code: str) -> str:
     matches = re.finditer(r'[E|I|R]\d+(\.\d+)?', dx_code)
     matches = [match.group(0).replace('.', '') for match in matches]
     return ','.join(matches)
+
 
 def standardize_insurance_name(name: str) -> str:
     """Standardizes insurance name strings.
@@ -108,6 +113,7 @@ def standardize_insurance_name(name: str) -> str:
                 return standard_name
     return name
 
+
 def standardize_insurance_id(ins_id: str) -> str:
     """Standardizes insurance ID strings.
     Trims whitespace and uppers the text. Any non-alphanumeric character is replaced with empty string.
@@ -127,6 +133,7 @@ def standardize_insurance_id(ins_id: str) -> str:
         return id_match.group(0)
     return insurance_id
 
+
 def fill_primary_payer(row: pd.Series) -> pd.Series:
     """Fills primary payer name with 'Medicare Part B'.
     If insurance name and insurance ID is null; and medicare beneficiary ID is not null.
@@ -141,6 +148,7 @@ def fill_primary_payer(row: pd.Series) -> pd.Series:
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
         return 'Medicare Part B'
     return row['Insurance Name:']
+
 
 def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     """Fills primary payer ID with medicare beneficiary ID.
