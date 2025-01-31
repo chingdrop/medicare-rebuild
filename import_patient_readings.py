@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from helpers import read_sql_file
 from dataframe_utils import standardize_bp_readings, standardize_bg_readings, add_id_col
-from sql_connect import create_alchemy_engine
+from db_utils import create_alchemy_engine
 
 
 load_dotenv()
