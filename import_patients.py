@@ -54,9 +54,8 @@ export_df['Medicare ID number'] = export_df['Medicare ID number'].str.extract(mb
 
 export_df['DX_Code'] = export_df['DX_Code'].apply(standardize_dx_code)
 
-export_df['Insurance ID:'] = export_df.apply(extract_insurance_id, axis=1)
-export_df['Insurance ID:'] = export_df['Insurance ID:'].str.strip().str.upper()
-export_df['InsuranceID2'] = export_df['InsuranceID2'].str.strip().str.upper()
+export_df['Insurance ID:'] = export_df['Insurance ID:'].apply(extract_insurance_id)
+export_df['InsuranceID2'] = export_df['InsuranceID2'].apply(extract_insurance_id)
 export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)
 export_df['Insurance ID:'] = export_df.apply(fill_primary_payer_id, axis=1)
 export_df['Insurance Name:'] = export_df['Insurance Name:'].apply(standardize_insurance_name)
