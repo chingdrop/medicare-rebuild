@@ -156,3 +156,67 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     if row['Insurance Name:'] == 'Medicare Part B' and pd.isnull(row['Insurance ID:']) :
         return row['Medicare ID number']
     return row['Insurance ID:']
+
+
+def standardize_patient_data(patient_df: pd.DataFrame) -> pd.DataFrame:
+    patient_df['First Name'] = patient_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
+    patient_df['Last Name'] = patient_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
+    patient_df['Full Name'] = patient_df['First Name'] + ' ' + patient_df['Last Name']
+    patient_df['Middle Name'] = patient_df['Middle Name'].apply(standardize_name, args=(r'[^a-zA-Z-\s]',))
+    patient_df['Nickname'] = patient_df['Nickname'].str.strip().str.title()
+    patient_df['Phone Number'] = patient_df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
+    patient_df['Gender'] = patient_df['Gender'].replace({'Male': 'M', 'Female': 'F'})
+    patient_df['Email'] = patient_df['Email'].apply(standardize_email)
+    patient_df['Suffix'] = patient_df['Suffix'].str.strip().str.title()
+    patient_df['Social Security'] = patient_df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
+
+    # The logic in standardize name can be used for address text as well.
+    patient_df['Mailing Address'] = patient_df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
+    patient_df['City'] = patient_df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
+    patient_df['State'] = patient_df['State'].apply(standardize_state)
+    patient_df['Zip code'] = patient_df['Zip code'].astype(str).str.split('-', n=1).str[0]
+
+    patient_df['Medicare ID number'] = patient_df['Medicare ID number'].apply(standardize_mbi)
+    patient_df['DX_Code'] = patient_df['DX_Code'].apply(standardize_dx_code)
+    patient_df['Insurance ID:'] = patient_df['Insurance ID:'].apply(standardize_insurance_id)
+    patient_df['InsuranceID2'] = patient_df['InsuranceID2'].apply(standardize_insurance_id)
+    patient_df['Insurance Name:'] = patient_df.apply(fill_primary_payer, axis=1)
+    patient_df['Insurance ID:'] = patient_df.apply(fill_primary_payer_id, axis=1)
+    patient_df['Insurance Name:'] = patient_df['Insurance Name:'].apply(standardize_insurance_name)
+    patient_df['InsuranceName2'] = patient_df['InsuranceName2'].apply(standardize_insurance_name)
+
+    previous_patient_statuses = {
+        'DO NOT CALL': 'Do Not Call' ,
+        'In-Active': 'Inactive',
+        'On-Board': 'Onboard'
+    }
+    patient_df['Member_Status'] = patient_df['Member_Status'].replace(previous_patient_statuses)
+    patient_df = patient_df.rename(
+        columns={
+            'First Name': 'first_name',
+            'Last Name': 'last_name',
+            'Middle Name': 'middle_name',
+            'Suffix': 'name_suffix',
+            'Full Name': 'full_name',
+            'Nickname': 'nick_name',
+            'DOB': 'date_of_birth',
+            'Gender': 'sex',
+            'Email': 'email',
+            'Phone Number': 'phone_number',
+            'Social Security': 'social_security',
+            'ID': 'sharepoint_id',
+            'Mailing Address': 'street_address',
+            'City': 'city',
+            'State': 'temp_state',
+            'Zip code': 'zipcode',
+            'Medicare ID number': 'medicare_beneficiary_id',
+            'Insurance ID:': 'primary_payer_id',
+            'Insurance Name:': 'primary_payer_name',
+            'InsuranceID2': 'secondary_payer_id',
+            'InsuranceName2': 'secondary_payer_name',
+            'On-board Date': 'evaluation_datetime',
+            'DX_Code': 'temp_dx_code',
+            'Member_Status': 'temp_status_type'
+        }
+    )
+    return patient_df
