@@ -168,12 +168,30 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
 
 
 def standardize_call_time(call_time) -> int:
+    """Standardizes call time in seconds.
+    Converts value to a timedelta object and then calculates total seconds.
+
+    Args:
+        call_time: The value to be standardized.
+
+    Returns:
+        int: The standardized call time in seconds.    
+    """
     if not call_time:
         return 0
     return int(pd.to_timedelta(str(call_time)).total_seconds())
 
 
-def standardize_note_types(note_type: str):
+def standardize_note_types(note_type: str) -> str:
+    """Standardizes note type value.
+    Replaces common phrase for proper note type. Split note type by commas, then use the first element.
+
+    Args:
+        note_type (string): The value to be standardized.
+
+    Returns:
+        string: The standardized note type phrase.    
+    """
     if not note_type:
         return None
     if note_type == 'Initial Evaluation with APRN':
@@ -181,7 +199,17 @@ def standardize_note_types(note_type: str):
     return note_type.split(',')[0]
 
 
-def standardize_vendor(row):
+def standardize_vendor(row: pd.Series) -> pd.Series:
+    """Original values had Vendor name in the Device name.
+    If Vendor name is a substring of Device name then return the Vendor name.
+    Else, if 'Tenvoi' or 'Omron' is in Device name then return 'Tenvoi' or 'Omron' respectively.
+
+    Args:
+        row (pandas.Series): Row of Dataframe to be standardized.
+
+    Returns:
+        pandas.Series: The standardized row of Dataframe.    
+    """
     if not row['Vendor'] in row['Device_Name']:
         if 'Tenovi' in row['Device_Name']:
             return 'Tenovi'
