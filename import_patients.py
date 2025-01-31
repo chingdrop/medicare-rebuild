@@ -3,7 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
-from dataframe_utils import standardize_patients, check_database_constraints
+from dataframe_utils import standardize_patients, add_id_col, check_database_constraints
 from sql_connect import create_alchemy_engine
 
 load_dotenv()
@@ -66,14 +66,10 @@ with engine.begin() as conn:
     patient_df.to_sql('patient', conn, if_exists='append', index=False)
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
 
-    address_df = pd.merge(address_df, patient_id_df, on='sharepoint_id')
-    address_df.drop(columns=['sharepoint_id'], inplace=True)
-    insurance_df = pd.merge(insurance_df, patient_id_df, on='sharepoint_id')
-    insurance_df.drop(columns=['sharepoint_id'], inplace=True)
-    med_nec_df = pd.merge(med_nec_df, patient_id_df, on='sharepoint_id')
-    med_nec_df.drop(columns=['sharepoint_id'], inplace=True)
-    patient_status_df = pd.merge(patient_status_df, patient_id_df, on='sharepoint_id')
-    patient_status_df.drop(columns=['sharepoint_id'], inplace=True)
+    address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
+    insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
+    med_nec_df = add_id_col(df=med_nec_df, id_df=patient_id_df, col='sharepoint_id')
+    patient_status_df = add_id_col(df=patient_status_df, id_df=patient_id_df, col='sharepoint_id')
 
     address_df.to_sql('patient_address', conn, if_exists='append', index=False)
     insurance_df.to_sql('patient_insurance', conn, if_exists='append', index=False)

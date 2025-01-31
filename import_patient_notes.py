@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from dataframe_utils import standardize_patient_notes
+from dataframe_utils import standardize_patient_notes, add_id_col
 from sql_connect import create_alchemy_engine
 
 
@@ -67,7 +67,6 @@ patient_note_df = standardize_patient_notes(patient_note_df)
 with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
 
-    patient_note_df = pd.merge(patient_note_df, patient_id_df, on='sharepoint_id')
-    patient_note_df.drop(columns=['sharepoint_id'], inplace=True)
+    patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
     
     patient_note_df.to_sql('patient_note', conn, if_exists='append', index=False)

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from dataframe_utils import standardize_bp_readings, standardize_bg_readings
+from dataframe_utils import standardize_bp_readings, standardize_bg_readings, add_id_col
 from sql_connect import create_alchemy_engine
 
 
@@ -50,14 +50,10 @@ with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
     device_id_df = pd.read_sql('SELECT device_id, patient_id FROM device', conn)
 
-    bp_readings_df = pd.merge(bp_readings_df, patient_id_df, on='sharepoint_id')
-    bp_readings_df.drop(columns=['sharepoint_id'], inplace=True)
-    bp_readings_df = pd.merge(bp_readings_df, device_id_df, on='patient_id')
-    bp_readings_df.drop(columns=['patient_id'], inplace=True)
-    bg_readings_df = pd.merge(bg_readings_df, patient_id_df, on='sharepoint_id')
-    bg_readings_df.drop(columns=['sharepoint_id'], inplace=True)
-    bg_readings_df = pd.merge(bg_readings_df, device_id_df, on='patient_id')
-    bg_readings_df.drop(columns=['patient_id'], inplace=True)
+    bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
+    bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
+    bg_readings_df = add_id_col(df=bg_readings_df, id_df=patient_id_df, col='sharepoint_id')
+    bg_readings_df = add_id_col(df=bg_readings_df, id_df=device_id_df, col='patient_id')
 
     bp_readings_df.to_sql('blood_pressure_reading', conn, if_exists='append', index=False)
     bg_readings_df.to_sql('glucose_reading', conn, if_exists='append', index=False)

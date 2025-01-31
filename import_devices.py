@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from dataframe_utils import standardize_devices
+from dataframe_utils import standardize_devices, add_id_col
 from sql_connect import create_alchemy_engine
 
 
@@ -35,10 +35,8 @@ with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
     vendor_id_df = pd.read_sql('SELECT vendor_id, name FROM vendor', conn)
 
-    device_df = pd.merge(device_df, patient_id_df, on='sharepoint_id')
-    device_df.drop(columns=['sharepoint_id'], inplace=True)
+    device_df = add_id_col(df=device_df, id_df=patient_id_df, col='sharepoint_id')
     vendor_id_df = vendor_id_df.rename(columns={'name': 'Vendor'})
-    device_df = pd.merge(device_df, vendor_id_df, on='Vendor')
-    device_df.drop(columns=['Vendor'], inplace=True)
+    device_df = add_id_col(df=device_df, id_df=vendor_id_df, col='Vendor')
 
     device_df.to_sql('device', conn, if_exists='append', index=False)
