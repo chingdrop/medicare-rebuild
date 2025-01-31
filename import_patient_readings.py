@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from standardize_funcs import standardize_bp_readings, standardize_bg_readings
+from dataframe_utils import standardize_bp_readings, standardize_bg_readings
 from sql_connect import create_alchemy_engine
 
 

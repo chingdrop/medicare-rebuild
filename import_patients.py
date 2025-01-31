@@ -3,7 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
-from standardize_funcs import standardize_patients, check_database_constraints
+from dataframe_utils import standardize_patients, check_database_constraints
 from sql_connect import create_alchemy_engine
 
 load_dotenv()
@@ -27,9 +27,9 @@ export_df = pd.read_csv(
 )
 
 export_df = standardize_patients(export_df)
-export_df, failed_df = check_database_constraints(export_df)
 
-failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
+# export_df, failed_df = check_database_constraints(export_df)
+# failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
 
 patient_df = export_df[[
     'first_name',
