@@ -3,6 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
+from helpers import read_sql_file
 from dataframe_utils import standardize_patients, add_id_col, check_database_constraints
 from sql_connect import create_alchemy_engine
 
@@ -14,7 +15,8 @@ engine = create_alchemy_engine(
     database=os.getenv('LCH_SQL_GPS_DB')
 )
 
-data_dir = Path.cwd() / 'data'
+cwd_dir = Path.cwd()
+data_dir = cwd_dir / 'data'
 # Patient data MUST be exported from SharePoint first.
 export_df = pd.read_csv(
     data_dir / 'Patient_Export.csv',
@@ -25,6 +27,7 @@ export_df = pd.read_csv(
     },
     parse_dates=['DOB', 'On-board Date']
 )
+patient_id_stmt = read_sql_file(cwd_dir / 'queries' / 'gets' / 'get_patient_id.sql')
 
 export_df = standardize_patients(export_df)
 
@@ -64,7 +67,7 @@ patient_status_df['temp_user'] = 'ITHelp'
 with engine.begin() as conn:
     # Patient data is imported first to get the patient_id.
     patient_df.to_sql('patient', conn, if_exists='append', index=False)
-    patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
+    patient_id_df = pd.read_sql(patient_id_stmt, conn)
 
     address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
     insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')

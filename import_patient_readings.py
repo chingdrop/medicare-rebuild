@@ -1,7 +1,9 @@
 import os
 import pandas as pd
+from pathlib import Path
 from dotenv import load_dotenv
 
+from helpers import read_sql_file
 from dataframe_utils import standardize_bp_readings, standardize_bg_readings, add_id_col
 from sql_connect import create_alchemy_engine
 
@@ -20,16 +22,11 @@ readings_engine = create_alchemy_engine(
     database=os.getenv('LCH_SQL_SP_READINGS')
 )
 
-bp_readings_stmt = '''
-    SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BP_Reading_Systolic, BP_Reading_Diastolic, Manual_Reading
-    FROM Blood_Pressure_Readings
-    WHERE Time_Recorded >= DATEADD(day, -60, GETDATE())
-'''
-bg_readings_stmt = '''
-    SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BG_Reading, Manual_Reading
-    FROM Glucose_Readings
-    WHERE Time_Recorded >= DATEADD(day, -60, GETDATE())
-'''
+get_queries_dir = Path.cwd() / 'queries' / 'gets'
+bp_readings_stmt = read_sql_file(get_queries_dir / 'get_bp_readings.sql')
+bg_readings_stmt = read_sql_file(get_queries_dir / 'get_bg_readings.sql')
+patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
+device_id_stmt = read_sql_file(get_queries_dir / 'get_device_id.sql')
 
 with readings_engine.begin() as conn:
     bp_readings_df = pd.read_sql(
@@ -47,8 +44,8 @@ bp_readings_df = standardize_bp_readings(bp_readings_df)
 bg_readings_df = standardize_bg_readings(bg_readings_df)
 
 with gps_engine.begin() as conn:
-    patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
-    device_id_df = pd.read_sql('SELECT device_id, patient_id FROM device', conn)
+    patient_id_df = pd.read_sql(patient_id_stmt, conn)
+    device_id_df = pd.read_sql(device_id_stmt, conn)
 
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')

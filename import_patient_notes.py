@@ -1,7 +1,9 @@
 import os
 import pandas as pd
+from pathlib import Path
 from dotenv import load_dotenv
 
+from helpers import read_sql_file
 from dataframe_utils import standardize_patient_notes, add_id_col
 from sql_connect import create_alchemy_engine
 
@@ -26,16 +28,10 @@ time_engine = create_alchemy_engine(
     database=os.getenv('LCH_SQL_SP_TIME')
 )
 
-notes_stmt = '''
-    SELECT SharePoint_ID, Notes, TimeStamp, LCH_UPN, Time_Note, Note_ID
-    FROM Medical_Notes
-    WHERE TimeStamp >= DATEADD(day, -60, GETDATE())
-'''
-time_stmt = '''
-    SELECT SharPoint_ID, Recording_Time, LCH_UPN, Notes, Auto_Time, Start_Time, End_Time, Note_ID
-    FROM Time_Log
-    WHERE Start_Time >= DATEADD(day, -60, GETDATE())
-'''
+get_queries_dir = Path.cwd() / 'queries' / 'gets'
+notes_stmt = read_sql_file(get_queries_dir / 'get_notes_log.sql')
+time_stmt = read_sql_file(get_queries_dir / 'get_time_log.sql')
+patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
 
 with notes_engine.begin() as conn:
     notes_df = pd.read_sql(
@@ -65,7 +61,7 @@ patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
 patient_note_df = standardize_patient_notes(patient_note_df)
 
 with gps_engine.begin() as conn:
-    patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
+    patient_id_df = pd.read_sql(patient_id_stmt, conn)
 
     patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
     
