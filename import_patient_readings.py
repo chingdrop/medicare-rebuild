@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
+from standardize_funcs import standardize_bp_readings, standardize_bg_readings
 from sql_connect import create_alchemy_engine
 
 
@@ -42,37 +43,8 @@ with readings_engine.begin() as conn:
         parse_dates=['Time_Recorded', 'Time_Recieved']
     )
 
-bp_readings_df['SharePoint_ID'] = bp_readings_df['SharePoint_ID'].astype('Int64')
-bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].replace({True: 1, False: 0})
-bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].astype('Int64')
-bp_readings_df['BP_Reading_Systolic'] = bp_readings_df['BP_Reading_Systolic'].astype(float).round(2)
-bp_readings_df['BP_Reading_Diastolic'] = bp_readings_df['BP_Reading_Diastolic'].astype(float).round(2)
-bp_readings_df = bp_readings_df.rename(
-    columns={
-        'SharePoint_ID': 'sharepoint_id',
-        'Device_Model': 'temp_device',
-        'Time_Recorded': 'recorded_datetime',
-        'Time_Recieved': 'received_datetime',
-        'BP_Reading_Systolic': 'systolic_reading',
-        'BP_Reading_Diastolic': 'diastolic_reading',
-        'Manual_Reading': 'is_manual'
-    }
-)
-
-bg_readings_df['SharePoint_ID'] = bg_readings_df['SharePoint_ID'].astype('Int64')
-bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].replace({True: 1, False: 0})
-bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].astype('Int64')
-bg_readings_df['BG_Reading'] = bg_readings_df['BG_Reading'].astype(float).round(2)
-bg_readings_df = bg_readings_df.rename(
-    columns={
-        'SharePoint_ID': 'sharepoint_id',
-        'Device_Model': 'temp_device',
-        'Time_Recorded': 'recorded_datetime',
-        'Time_Recieved': 'received_datetime',
-        'BG_Reading': 'glucose_reading',
-        'Manual_Reading': 'is_manual'
-    }
-)
+bp_readings_df = standardize_bp_readings(bp_readings_df)
+bg_readings_df = standardize_bg_readings(bg_readings_df)
 
 with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)

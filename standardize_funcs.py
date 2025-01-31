@@ -299,6 +299,44 @@ def standardize_devices(device_df: pd.DataFrame) -> pd.DataFrame:
     return device_df
 
 
+def standardize_bp_readings(bp_readings_df: pd.DataFrame) -> pd.DataFrame:
+    bp_readings_df['SharePoint_ID'] = bp_readings_df['SharePoint_ID'].astype('Int64')
+    bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].replace({True: 1, False: 0})
+    bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].astype('Int64')
+    bp_readings_df['BP_Reading_Systolic'] = bp_readings_df['BP_Reading_Systolic'].astype(float).round(2)
+    bp_readings_df['BP_Reading_Diastolic'] = bp_readings_df['BP_Reading_Diastolic'].astype(float).round(2)
+    bp_readings_df = bp_readings_df.rename(
+        columns={
+            'SharePoint_ID': 'sharepoint_id',
+            'Device_Model': 'temp_device',
+            'Time_Recorded': 'recorded_datetime',
+            'Time_Recieved': 'received_datetime',
+            'BP_Reading_Systolic': 'systolic_reading',
+            'BP_Reading_Diastolic': 'diastolic_reading',
+            'Manual_Reading': 'is_manual'
+        }
+    )
+    return bp_readings_df
+
+
+def standardize_bg_readings(bg_readings_df: pd.DataFrame) -> pd.DataFrame:
+    bg_readings_df['SharePoint_ID'] = bg_readings_df['SharePoint_ID'].astype('Int64')
+    bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].replace({True: 1, False: 0})
+    bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].astype('Int64')
+    bg_readings_df['BG_Reading'] = bg_readings_df['BG_Reading'].astype(float).round(2)
+    bg_readings_df = bg_readings_df.rename(
+        columns={
+            'SharePoint_ID': 'sharepoint_id',
+            'Device_Model': 'temp_device',
+            'Time_Recorded': 'recorded_datetime',
+            'Time_Recieved': 'received_datetime',
+            'BG_Reading': 'glucose_reading',
+            'Manual_Reading': 'is_manual'
+        }
+    )
+    return bg_readings_df
+
+
 def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:
     failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 10)]
     success_df = df[df['phone_number'].apply(lambda x: len(str(x)) == 10)]
