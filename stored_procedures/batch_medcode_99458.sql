@@ -33,7 +33,8 @@ BEGIN
 		GROUP BY mc.patient_id
 	)
 
-	SELECT pn.patient_id
+	SELECT pn.patient_id,
+		MAX(pn.note_datetime) AS last_note
 	INTO #99458
 	FROM patient_note pn
 	JOIN patient_rpm pr
@@ -62,7 +63,7 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99458'
 		),
-		GETDATE()
+		t.last_note
 	FROM #99458 t;
 
 END

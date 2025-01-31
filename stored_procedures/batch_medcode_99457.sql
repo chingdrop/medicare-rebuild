@@ -11,7 +11,8 @@ BEGIN
 	SET NOCOUNT ON;
 	DROP TABLE IF EXISTS #99457;
 
-    SELECT pn.patient_id
+    SELECT pn.patient_id,
+		MAX(pn.note_datetime) AS last_note
 	INTO #99457
 	FROM patient_note pn
 	WHERE pn.note_datetime >= DATEADD(MONTH, -1, GETDATE())
@@ -34,6 +35,6 @@ BEGIN
 		FROM medical_code_type mct
 		WHERE mct.name = '99457'
 		),
-		GETDATE()
+		t.last_note
 	FROM #99457 t;
 END
