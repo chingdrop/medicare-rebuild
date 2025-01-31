@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from standardize_funcs import standardize_patient_notes
+from dataframe_utils import standardize_patient_notes
 from sql_connect import create_alchemy_engine
 
 
