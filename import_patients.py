@@ -5,7 +5,7 @@ from pathlib import Path
 
 from helpers import read_sql_file
 from dataframe_utils import standardize_patients, add_id_col, check_database_constraints
-from sql_connect import create_alchemy_engine
+from db_utils import create_alchemy_engine
 
 load_dotenv()
 engine = create_alchemy_engine(
