@@ -5,7 +5,7 @@ from pathlib import Path
 
 from apply_funcs import standardize_insurance_id, fill_primary_payer, fill_primary_payer_id, \
     standardize_dx_code, standardize_insurance_name, standardize_name, standardize_state, \
-    standardize_email
+    standardize_email, standardize_mbi
 from sql_connect import create_alchemy_engine
 
 load_dotenv()
@@ -45,15 +45,8 @@ export_df['City'] = export_df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]
 export_df['State'] = export_df['State'].apply(standardize_state)
 export_df['Zip code'] = export_df['Zip code'].astype(str).str.split('-', n=1).str[0]
 
-# Regex pattern must have a capture group for extraction. i.e., ()
-# Only matching capital letters since I use upper() on value.
-mbi_pattern = r'([A-Z0-9]{11})'
-# Medicare formatting/extraction MUST be done first since the MBI is used in Null fills.
-export_df['Medicare ID number'] = export_df['Medicare ID number'].str.strip().str.upper()
-export_df['Medicare ID number'] = export_df['Medicare ID number'].str.extract(mbi_pattern)[0]
-
+export_df['Medicare ID number'] = export_df['Medicare ID number'].apply(standardize_mbi)
 export_df['DX_Code'] = export_df['DX_Code'].apply(standardize_dx_code)
-
 export_df['Insurance ID:'] = export_df['Insurance ID:'].apply(standardize_insurance_id)
 export_df['InsuranceID2'] = export_df['InsuranceID2'].apply(standardize_insurance_id)
 export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)

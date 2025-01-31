@@ -55,6 +55,24 @@ def standardize_state(state: str) -> str:
         return None
     return state
 
+def standardize_mbi(mbi: str) -> str:
+    """Standardizes medicare beneficiary ID strings.
+    Trims whitespace and lowers the text. 
+    Regex matching attempts to find medicare beneficiary IDs and extracts them.
+
+    Args:
+        mbi (string): The value to be standardized.
+
+    Returns:
+        string: The standardized medicare beneficiary ID.    
+    """
+    mbi = str(mbi).strip().upper()
+    mbi_pattern = r'([A-Z0-9]{11})'
+    mbi_match = re.search(mbi_pattern, mbi)
+    if mbi_match:
+        return mbi_match.group(0)
+    return mbi
+
 def standardize_dx_code(dx_code: str) -> str:
     """Standardizes diagnosis codes.
     Trims whitespace and uppers the text. Searches text for regex pattern of diagnosis code. 
