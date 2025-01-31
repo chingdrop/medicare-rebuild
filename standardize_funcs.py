@@ -1,7 +1,8 @@
 import re
+import html
 import pandas as pd
 
-from enums import insurance_keywords, state_abbreviations
+from enums import alert_team_list, insurance_keywords, nurse_list, state_abbreviations
 
 
 def standardize_name(name: str, pattern: str) -> str:
@@ -228,6 +229,42 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     return patient_df
+
+
+def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
+    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].astype(str)
+    patient_note_df['Recording_Time'] = pd.to_timedelta(patient_note_df['Recording_Time']).dt.total_seconds()
+    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Recording_Time'] = 900
+    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].fillna(0)
+
+    patient_note_df['Notes'] = patient_note_df['Notes'].apply(html.unescape)
+    patient_note_df['Notes'] = patient_note_df['Notes'].str.replace(r'<.*?>', '', regex=True)
+
+    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Time_Note'] = 'Initial Evaluation'
+    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].str.replace('Initial Evaluation with APRN', 'Initial Evaluation')
+    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(alert_team_list), 'Time_Note'] = 'Alert'
+    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].str.split(',').str[0]
+    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].replace('', None)
+
+    patient_note_df['SharePoint_ID'] = pd.to_numeric(patient_note_df['SharePoint_ID'], errors='coerce', downcast='integer')
+    patient_note_df.dropna(subset=['SharePoint_ID'], inplace=True)
+    # Boolean column is flipped because it's stored differently in the database.
+    patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].replace({True: 0, False: 1})
+    patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].astype('Int64')
+    patient_note_df = patient_note_df.rename(
+        columns={
+            'SharePoint_ID': 'sharepoint_id',
+            'Notes': 'note_content',
+            'TimeStamp': 'note_datetime',
+            'LCH_UPN': 'temp_user',
+            'Time_Note': 'temp_note_type',
+            'Recording_Time': 'call_time_seconds',
+            'Auto_Time': 'is_manual',
+            'Start_Time': 'start_call_datetime',
+            'End_Time': 'end_call_datetime'
+        }
+    )
+    return patient_note_df
 
 
 def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:
