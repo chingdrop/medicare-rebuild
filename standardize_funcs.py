@@ -167,6 +167,20 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     return row['Insurance ID:']
 
 
+def standardize_call_time(call_time) -> int:
+    if not call_time:
+        return 0
+    return int(pd.to_timedelta(str(call_time)).total_seconds())
+
+
+def standardize_note_types(note_type: str):
+    if not note_type:
+        return None
+    if note_type == 'Initial Evaluation with APRN':
+        note_type = 'Initial Evaluation'
+    return note_type.split(',')[0]
+
+
 def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
     patient_df['First Name'] = patient_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     patient_df['Last Name'] = patient_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
@@ -232,22 +246,17 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
-    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].astype(str)
-    patient_note_df['Recording_Time'] = pd.to_timedelta(patient_note_df['Recording_Time']).dt.total_seconds()
+    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].apply(standardize_call_time)
     patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Recording_Time'] = 900
-    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].fillna(0)
 
     patient_note_df['Notes'] = patient_note_df['Notes'].apply(html.unescape)
     patient_note_df['Notes'] = patient_note_df['Notes'].str.replace(r'<.*?>', '', regex=True)
 
+    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].apply(standardize_note_types)
     patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Time_Note'] = 'Initial Evaluation'
-    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].str.replace('Initial Evaluation with APRN', 'Initial Evaluation')
     patient_note_df.loc[patient_note_df['LCH_UPN'].isin(alert_team_list), 'Time_Note'] = 'Alert'
-    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].str.split(',').str[0]
-    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].replace('', None)
 
     patient_note_df['SharePoint_ID'] = pd.to_numeric(patient_note_df['SharePoint_ID'], errors='coerce', downcast='integer')
-    patient_note_df.dropna(subset=['SharePoint_ID'], inplace=True)
     # Boolean column is flipped because it's stored differently in the database.
     patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].replace({True: 0, False: 1})
     patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].astype('Int64')
