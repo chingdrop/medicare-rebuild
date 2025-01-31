@@ -42,7 +42,7 @@ def standardize_insurance_name(name):
         for keyword_set in keyword_sets:
             if all(re.search(r'\b' + re.escape(keyword) + r'\b', str(name).lower()) for keyword in keyword_set):
                 return standard_name
-    return None
+    return name
 
 def fill_primary_payer(row):
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
@@ -117,12 +117,16 @@ previous_patient_statuses = {
 export_df['Member_Status'] = export_df['Member_Status'].replace(previous_patient_statuses)
 
 # Check for database constraints and replace with Null if failed condition.
-export_df['Phone Number'] = export_df['Phone Number'].apply(lambda x: x if len(str(x)) == 10 else None)
-export_df['Social Security'] = export_df['Social Security'].apply(lambda x: x if len(str(x)) == 9 else None)
-export_df['Zip code'] = export_df['Zip code'].apply(lambda x: x if len(str(x)) == 5 else None)
-export_df['Medicare ID number'] = export_df['Medicare ID number'].apply(lambda x: x if len(str(x)) == 11 else None)
-failed_df = export_df[export_df[['First Name', 'Last Name', 'ID', 'DOB', 'Phone Number', 'Gender', 'Mailing Address', 'City', 'State', 'Zip code', 'DX_Code']].isnull().any(axis=1)]
-failed_df = export_df[export_df[['Insurance ID:', 'Insurance Name:', 'Medicare ID number']].isnull().all(axis=1)]
+failed_df = export_df[export_df['Phone Number'].apply(lambda x: len(str(x)) != 10)]
+export_df = export_df[export_df['Phone Number'].apply(lambda x: len(str(x)) == 10)]
+failed_df = export_df[export_df['Social Security'].apply(lambda x: len(str(x)) != 9)]
+export_df = export_df[export_df['Social Security'].apply(lambda x: len(str(x)) == 9)]
+failed_df = export_df[export_df['Zip code'].apply(lambda x: len(str(x)) != 5)]
+export_df = export_df[export_df['Zip code'].apply(lambda x: len(str(x)) == 5)]
+failed_df = export_df[export_df['Medicare ID number'].apply(lambda x: len(str(x)) != 11)]
+export_df = export_df[export_df['Medicare ID number'].apply(lambda x: len(str(x)) == 11)]
+# failed_df = export_df[export_df[['First Name', 'Last Name', 'ID', 'DOB', 'Phone Number', 'Gender', 'Mailing Address', 'City', 'State', 'Zip code', 'DX_Code']].isnull().any(axis=1)]
+# failed_df = export_df[export_df[['Insurance ID:', 'Insurance Name:', 'Medicare ID number']].isnull().all(axis=1)]
 
 failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
 
