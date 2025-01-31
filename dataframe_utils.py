@@ -365,6 +365,12 @@ def standardize_bg_readings(bg_readings_df: pd.DataFrame) -> pd.DataFrame:
     return bg_readings_df
 
 
+def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
+    df = pd.merge(df, id_df, on=col)
+    df.drop(columns=[col], inplace=True)
+    return df
+
+
 def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:
     failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 10)]
     success_df = df[df['phone_number'].apply(lambda x: len(str(x)) == 10)]
