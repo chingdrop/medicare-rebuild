@@ -4,6 +4,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
+from apply_funcs import standardize_name
 from enums import state_abbreviations, insurance_keywords
 from sql_connect import create_alchemy_engine
 
@@ -68,15 +69,10 @@ def fill_primary_payer_id(row):
         return row['Medicare ID number']
     return row['Insurance ID:']
 
-export_df['First Name'] = export_df['First Name'].str.replace(r'\s+', ' ', regex=True)
-export_df['First Name'] = export_df['First Name'].str.replace(r'[^a-zA-Z\s.-]', '', regex=True)
-export_df['First Name'] = export_df['First Name'].str.strip().str.title()
-export_df['Last Name'] = export_df['Last Name'].str.replace(r'\s+', ' ', regex=True)
-export_df['Last Name'] = export_df['Last Name'].str.replace(r'[^a-zA-Z\s.-]', '', regex=True)
-export_df['Last Name'] = export_df['Last Name'].str.strip().str.title()
+export_df['First Name'] = export_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
+export_df['Last Name'] = export_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
 export_df['Full Name'] = export_df['First Name'] + ' ' + export_df['Last Name']
-export_df['Middle Name'] = export_df['Middle Name'].str.replace(r'[^a-zA-Z-\s]', '', regex=True)
-export_df['Middle Name'] = export_df['Middle Name'].str.strip().str.title()
+export_df['Middle Name'] = export_df['Middle Name'].apply(standardize_name, args=(r'[^a-zA-Z-\s]',))
 export_df['Nickname'] = export_df['Nickname'].str.strip().str.title()
 export_df['Phone Number'] = export_df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
 export_df['Gender'] = export_df['Gender'].replace({'Male': 'M', 'Female': 'F'})
@@ -86,12 +82,9 @@ export_df['Email'] = export_df['Email'].str.extract(email_pattern)
 export_df['Suffix'] = export_df['Suffix'].str.strip().str.title()
 export_df['Social Security'] = export_df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
 
-export_df['Mailing Address'] = export_df['Mailing Address'].str.replace(r'\s+', ' ', regex=True)
-export_df['Mailing Address'] = export_df['Mailing Address'].str.replace(r'[^a-zA-Z0-9\s#.-/]', '', regex=True)
-export_df['Mailing Address'] = export_df['Mailing Address'].str.strip().str.title()
-export_df['City'] = export_df['City'].str.replace(r'\s+', ' ', regex=True)
-export_df['City'] = export_df['City'].str.replace(r'[^a-zA-Z-]', '', regex=True)
-export_df['City'] = export_df['City'].str.strip().str.title()
+# The logic in standardize name can be used for address text as well.
+export_df['Mailing Address'] = export_df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
+export_df['City'] = export_df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
 export_df['State'] = export_df['State'].apply(standardize_state)
 export_df['State'] = export_df['State'].replace('NAN', None)
 export_df['Zip code'] = export_df['Zip code'].astype(str).str.split('-', n=1).str[0]
