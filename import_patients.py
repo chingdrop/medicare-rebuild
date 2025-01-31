@@ -3,7 +3,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
-from apply_funcs import standardize_insurance_id, fill_primary_payer, fill_primary_payer_id, standardize_dx_code, standardize_insurance_name, standardize_name, standardize_state
+from apply_funcs import standardize_insurance_id, fill_primary_payer, fill_primary_payer_id, \
+    standardize_dx_code, standardize_insurance_name, standardize_name, standardize_state, \
+    standardize_email
 from sql_connect import create_alchemy_engine
 
 load_dotenv()
@@ -33,9 +35,7 @@ export_df['Middle Name'] = export_df['Middle Name'].apply(standardize_name, args
 export_df['Nickname'] = export_df['Nickname'].str.strip().str.title()
 export_df['Phone Number'] = export_df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
 export_df['Gender'] = export_df['Gender'].replace({'Male': 'M', 'Female': 'F'})
-# Regex pattern must have a capture group for extraction. i.e., ()
-email_pattern = r'(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)'
-export_df['Email'] = export_df['Email'].str.extract(email_pattern)
+export_df['Email'] = export_df['Email'].apply(standardize_email)
 export_df['Suffix'] = export_df['Suffix'].str.strip().str.title()
 export_df['Social Security'] = export_df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
 
