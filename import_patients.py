@@ -3,7 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
-from standardize_funcs import standardize_patient_data
+from standardize_funcs import standardize_patient_data, check_database_constraints
 from sql_connect import create_alchemy_engine
 
 load_dotenv()
@@ -27,18 +27,8 @@ export_df = pd.read_csv(
 )
 
 export_df = standardize_patient_data(export_df)
+export_df, failed_df = check_database_constraints(export_df)
 
-# Check for database constraints and replace with Null if failed condition.
-failed_df = export_df[export_df['Phone Number'].apply(lambda x: len(str(x)) != 10)]
-export_df = export_df[export_df['Phone Number'].apply(lambda x: len(str(x)) == 10)]
-failed_df = export_df[export_df['Social Security'].apply(lambda x: len(str(x)) != 9)]
-export_df = export_df[export_df['Social Security'].apply(lambda x: len(str(x)) == 9)]
-failed_df = export_df[export_df['Zip code'].apply(lambda x: len(str(x)) != 5)]
-export_df = export_df[export_df['Zip code'].apply(lambda x: len(str(x)) == 5)]
-failed_df = export_df[export_df['Medicare ID number'].apply(lambda x: len(str(x)) != 11)]
-export_df = export_df[export_df['Medicare ID number'].apply(lambda x: len(str(x)) == 11)]
-# failed_df = export_df[export_df[['First Name', 'Last Name', 'ID', 'DOB', 'Phone Number', 'Gender', 'Mailing Address', 'City', 'State', 'Zip code', 'DX_Code']].isnull().any(axis=1)]
-# failed_df = export_df[export_df[['Insurance ID:', 'Insurance Name:', 'Medicare ID number']].isnull().all(axis=1)]
 failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
 
 patient_df = export_df[[
