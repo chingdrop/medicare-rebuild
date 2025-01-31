@@ -166,7 +166,7 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     return row['Insurance ID:']
 
 
-def standardize_patient_data(patient_df: pd.DataFrame) -> pd.DataFrame:
+def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
     patient_df['First Name'] = patient_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     patient_df['Last Name'] = patient_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     patient_df['Full Name'] = patient_df['First Name'] + ' ' + patient_df['Last Name']
