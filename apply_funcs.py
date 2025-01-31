@@ -30,31 +30,25 @@ def standardize_state(state):
     return state
 
 def standardize_dx_code(dx_code):
-    dx_code = str(dx_code).strip()
+    dx_code = str(dx_code).strip().upper()
     matches = re.finditer(r'[E|I|R]\d+(\.\d+)?', dx_code)
     matches = [match.group(0).replace('.', '') for match in matches]
     return ','.join(matches)
 
-def standardize_insurance_name(name):
+    name = str(name).strip().title()
     for standard_name, keyword_sets in insurance_keywords.items():
         for keyword_set in keyword_sets:
-            if all(re.search(r'\b' + re.escape(keyword) + r'\b', str(name).lower()) for keyword in keyword_set):
+            if all(re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()) for keyword in keyword_set):
                 return standard_name
     return name
 
-def extract_insurance_id(row):
-    insurance_name = str(row['Insurance Name:'])
-    insurance_id = str(row['Insurance ID:'])
-    if not insurance_name == 'Medicare Part B':
-        insurance_id = re.sub(r'[^A-Za-z0-9]', '', insurance_id)
-        id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d*)'
-        id_in_name = re.search(id_pattern, insurance_name)
-        id_in_id = re.search(id_pattern, insurance_id)
-        if id_in_name:
-            return id_in_name.group(0)
-        elif id_in_id:
-            return id_in_id.group(0)
-    return row['Insurance ID:']
+    insurance_id = str(ins_id).strip().upper()
+    insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
+    id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
+    id_in_id = re.search(id_pattern, insurance_id)
+    if id_in_id:
+        return id_in_id.group(0)
+    return insurance_id
 
 def fill_primary_payer(row):
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
