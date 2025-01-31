@@ -219,3 +219,6 @@ insurance_keywords = {
         ["western", "united"]
     ]
 }
+
+nurse_list = ['Joycelynn Harris', 'Melanie Coffey', 'Krista Lewin']
+alert_team_list = ['Christylyn Diosma', 'Maria Albingco', 'Mary Cortes', 'Richel Rodriguez', 'Rigel Sagayno']
