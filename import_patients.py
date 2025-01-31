@@ -44,6 +44,20 @@ def standardize_insurance_name(name):
                 return standard_name
     return name
 
+def extract_insurance_id(row):
+    insurance_name = str(row['Insurance Name:'])
+    insurance_id = str(row['Insurance ID:'])
+    if not insurance_name == 'Medicare Part B':
+        insurance_id = re.sub(r'[^A-Za-z0-9]', '', insurance_id)
+        id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d*)'
+        id_in_name = re.search(id_pattern, insurance_name)
+        id_in_id = re.search(id_pattern, insurance_id)
+        if id_in_name:
+            return id_in_name.group(0)
+        elif id_in_id:
+            return id_in_id.group(0)
+    return row['Insurance ID:']
+
 def fill_primary_payer(row):
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
         return 'Medicare Part B'
@@ -91,23 +105,13 @@ export_df['Medicare ID number'] = export_df['Medicare ID number'].str.extract(mb
 
 export_df['DX_Code'] = export_df['DX_Code'].apply(standardize_dx_code)
 
-# Regex pattern must have a capture group for extraction. i.e., ()
-# Only matching capital letters since I use upper() on value.
-insurance_id_pattern = r'([A-Z]*\d+[A-Z]*\d*)'
+export_df['Insurance ID:'] = export_df.apply(extract_insurance_id, axis=1)
 export_df['Insurance ID:'] = export_df['Insurance ID:'].str.strip().str.upper()
-export_df['Insurance ID:'] = export_df['Insurance ID:'].str.extract(insurance_id_pattern)[0]
-# Sometimes Insurance ID is placed in Insurance Name.
-export_df['Insurance ID:'] = export_df['Insurance ID:'].fillna(export_df['Insurance Name:'].str.extract(insurance_id_pattern)[0])
 export_df['InsuranceID2'] = export_df['InsuranceID2'].str.strip().str.upper()
-export_df['InsuranceID2'] = export_df['InsuranceID2'].str.extract(insurance_id_pattern)[0]
-# Sometimes Insurance ID is placed in Insurance Name.
-export_df['InsuranceID2'] = export_df['InsuranceID2'].fillna(export_df['InsuranceName2'].str.extract(insurance_id_pattern)[0])
-# Insurane names are standardized after Insurance ID extractions to preserve original values.
-export_df['Insurance Name:'] = export_df['Insurance Name:'].apply(standardize_insurance_name)
-export_df['InsuranceName2'] = export_df['InsuranceName2'].apply(standardize_insurance_name)
-# Null fills are done after regex extraction to preserve original values.
 export_df['Insurance Name:'] = export_df.apply(fill_primary_payer, axis=1)
 export_df['Insurance ID:'] = export_df.apply(fill_primary_payer_id, axis=1)
+export_df['Insurance Name:'] = export_df['Insurance Name:'].apply(standardize_insurance_name)
+export_df['InsuranceName2'] = export_df['InsuranceName2'].apply(standardize_insurance_name)
 
 previous_patient_statuses = {
     'DO NOT CALL': 'Do Not Call' ,
