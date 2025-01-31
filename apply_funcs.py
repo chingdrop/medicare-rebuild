@@ -21,6 +21,23 @@ def standardize_name(name: str, pattern: str) -> str:
     name = re.sub(pattern, '', name)
     return name
 
+def standardize_email(email: str) -> str:
+    """Standardizes email address strings.
+    Trims whitespace and lowers the text. Regex matching attempts to find email addresses and extracts them.
+
+    Args:
+        email (string): The value to be standardized.
+
+    Returns:
+        string: The standardized email address.    
+    """
+    email = str(email).strip().lower()
+    email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
+    email_match = re.search(email_pattern, email)
+    if email_match:
+        return email_match.group(0)
+    return email
+
 def standardize_state(state: str) -> str:
     """Standardizes US state strings.
     Trims whitespace and titles the text. 
