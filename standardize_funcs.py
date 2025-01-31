@@ -181,6 +181,15 @@ def standardize_note_types(note_type: str):
     return note_type.split(',')[0]
 
 
+def standardize_vendor(row):
+    if not row['Vendor'] in row['Device_Name']:
+        if 'Tenovi' in row['Device_Name']:
+            return 'Tenovi'
+        else:
+            return 'Omron'
+    return row['Vendor']
+
+
 def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
     patient_df['First Name'] = patient_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     patient_df['Last Name'] = patient_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
@@ -274,6 +283,20 @@ def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     return patient_note_df
+
+
+def standardize_devices(device_df: pd.DataFrame) -> pd.DataFrame:
+    device_df['Patient_ID'] = device_df['Patient_ID'].astype('Int64')
+    device_df['Device_ID'] = device_df['Device_ID'].str.replace('-', '')
+    device_df['Vendor'] = device_df.apply(standardize_vendor, axis=1)
+    device_df = device_df.rename(
+        columns={
+            'Device_ID': 'model_number',
+            'Device_Name': 'name',
+            'Patient_ID': 'sharepoint_id'
+        }
+    )
+    return device_df
 
 
 def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:

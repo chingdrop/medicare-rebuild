@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
+from standardize_funcs import standardize_devices
 from sql_connect import create_alchemy_engine
 
 
@@ -28,25 +29,7 @@ device_stmt = '''
 with fulfillment_engine.begin() as conn:
     device_df = pd.read_sql(device_stmt, conn)
 
-# Filtered devices for either Tenovi or Omron.
-def standardize_vendor(row):
-    if not row['Vendor'] in row['Device_Name']:
-        if 'Tenovi' in row['Device_Name']:
-            return 'Tenovi'
-        else:
-            return 'Omron'
-    return row['Vendor']
-
-device_df['Patient_ID'] = device_df['Patient_ID'].astype('Int64')
-device_df['Device_ID'] = device_df['Device_ID'].str.replace('-', '')
-device_df['Vendor'] = device_df.apply(standardize_vendor, axis=1)
-device_df = device_df.rename(
-    columns={
-        'Device_ID': 'model_number', 
-        'Device_Name': 'name', 
-        'Patient_ID': 'sharepoint_id'
-    }
-)
+device_df = standardize_devices(device_df)
 
 with gps_engine.begin() as conn:
     patient_id_df = pd.read_sql('SELECT patient_id, sharepoint_id FROM patient', conn)
