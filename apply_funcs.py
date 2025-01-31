@@ -57,8 +57,7 @@ def standardize_state(state: str) -> str:
 
 def standardize_dx_code(dx_code: str) -> str:
     """Standardizes diagnosis codes.
-    Trims whitespace and uppers the text. 
-    Searches text for regex pattern of diagnosis code. 
+    Trims whitespace and uppers the text. Searches text for regex pattern of diagnosis code. 
     Joins all elements into a single string with commas as the separator. 
 
     Args:
@@ -105,9 +104,9 @@ def standardize_insurance_id(ins_id: str) -> str:
     insurance_id = str(ins_id).strip().upper()
     insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
     id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
-    id_in_id = re.search(id_pattern, insurance_id)
-    if id_in_id:
-        return id_in_id.group(0)
+    id_match = re.search(id_pattern, insurance_id)
+    if id_match:
+        return id_match.group(0)
     return insurance_id
 
 def fill_primary_payer(row: pd.Series) -> pd.Series:
