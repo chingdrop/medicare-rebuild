@@ -3,7 +3,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pathlib import Path
 
-from apply_funcs import standardize_insurance_id, fill_primary_payer, fill_primary_payer_id, \
+from standardize_funcs import standardize_insurance_id, fill_primary_payer, fill_primary_payer_id, \
     standardize_dx_code, standardize_insurance_name, standardize_name, standardize_state, \
     standardize_email, standardize_mbi
 from sql_connect import create_alchemy_engine
