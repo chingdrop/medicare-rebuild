@@ -43,7 +43,6 @@ export_df['Social Security'] = export_df['Social Security'].astype(str).str.repl
 export_df['Mailing Address'] = export_df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
 export_df['City'] = export_df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
 export_df['State'] = export_df['State'].apply(standardize_state)
-export_df['State'] = export_df['State'].replace('NAN', None)
 export_df['Zip code'] = export_df['Zip code'].astype(str).str.split('-', n=1).str[0]
 
 # Regex pattern must have a capture group for extraction. i.e., ()

@@ -24,7 +24,10 @@ def standardize_name(name: str, pattern: str) -> str:
 
 def standardize_state(state):
     state = str(state).strip().title()
-    return state_abbreviations.get(state, state).upper()
+    state = state_abbreviations.get(state, state).upper()
+    if state == 'NAN':
+        return None
+    return state
 
 def standardize_dx_code(dx_code):
     dx_code = str(dx_code).strip()
