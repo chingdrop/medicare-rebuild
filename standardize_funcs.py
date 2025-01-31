@@ -220,3 +220,17 @@ def standardize_patient_data(patient_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     return patient_df
+
+
+def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:
+    failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 10)]
+    success_df = df[df['phone_number'].apply(lambda x: len(str(x)) == 10)]
+    failed_df = df[df['social_security'].apply(lambda x: len(str(x)) != 9)]
+    success_df = df[df['social_security'].apply(lambda x: len(str(x)) == 9)]
+    failed_df = df[df['zipcode'].apply(lambda x: len(str(x)) != 5)]
+    success_df = df[df['zipcode'].apply(lambda x: len(str(x)) == 5)]
+    failed_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11)]
+    success_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) == 11)]
+    # failed_df = export_df[export_df[['First Name', 'Last Name', 'ID', 'DOB', 'Phone Number', 'Gender', 'Mailing Address', 'City', 'State', 'Zip code', 'DX_Code']].isnull().any(axis=1)]
+    # failed_df = export_df[export_df[['Insurance ID:', 'Insurance Name:', 'Medicare ID number']].isnull().all(axis=1)]
+    return success_df, failed_df
