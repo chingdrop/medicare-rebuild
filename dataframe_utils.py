@@ -179,7 +179,7 @@ def standardize_call_time(call_time) -> int:
     """
     if not call_time:
         return 0
-    return int(pd.to_timedelta(str(call_time)).total_seconds())
+    return pd.to_timedelta(str(call_time)).total_seconds()
 
 
 def standardize_note_types(note_type: str) -> str:
@@ -196,7 +196,7 @@ def standardize_note_types(note_type: str) -> str:
         return None
     if note_type == 'Initial Evaluation with APRN':
         note_type = 'Initial Evaluation'
-    return note_type.split(',')[0]
+    return str(note_type).split(',')[0]
 
 
 def standardize_vendor(row: pd.Series) -> pd.Series:
@@ -279,6 +279,11 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
             'Member_Status': 'temp_status_type'
         }
     )
+    # Check database constraints
+    patient_df = patient_df[patient_df['phone_number'].apply(lambda x: len(str(x)) == 10)]
+    patient_df = patient_df[patient_df['social_security'].apply(lambda x: len(str(x)) == 9)]
+    patient_df = patient_df[patient_df['zipcode'].apply(lambda x: len(str(x)) == 5)]
+    patient_df = patient_df[patient_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) == 11)]
     return patient_df
 
 
@@ -379,17 +384,3 @@ def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
     df = pd.merge(df, id_df, on=col)
     df.drop(columns=[col], inplace=True)
     return df
-
-
-def check_database_constraints(df: pd.DataFrame) -> pd.DataFrame:
-    failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 10)]
-    success_df = df[df['phone_number'].apply(lambda x: len(str(x)) == 10)]
-    failed_df = df[df['social_security'].apply(lambda x: len(str(x)) != 9)]
-    success_df = df[df['social_security'].apply(lambda x: len(str(x)) == 9)]
-    failed_df = df[df['zipcode'].apply(lambda x: len(str(x)) != 5)]
-    success_df = df[df['zipcode'].apply(lambda x: len(str(x)) == 5)]
-    failed_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11)]
-    success_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) == 11)]
-    # failed_df = export_df[export_df[['First Name', 'Last Name', 'ID', 'DOB', 'Phone Number', 'Gender', 'Mailing Address', 'City', 'State', 'Zip code', 'DX_Code']].isnull().any(axis=1)]
-    # failed_df = export_df[export_df[['Insurance ID:', 'Insurance Name:', 'Medicare ID number']].isnull().all(axis=1)]
-    return success_df, failed_df
