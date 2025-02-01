@@ -18,11 +18,23 @@ class DatabaseManager:
             },
         )
         self.engine = None
+        self.connection = None
 
-    def connect(self):
+    def create_engine(self):
+        self.engine = create_engine(self.connection_url)
+        event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+
+    def begin(self,):
         if not self.engine:
-            self.engine = create_engine(self.connection_url)
-            event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+            self.create_engine()
+        self.connection = self.engine.begin()
+        return self.connection
+
+    def connect(self,):
+        if not self.engine:
+            self.create_engine()
+        self.connection = self.engine.connect()
+        return self.connection
 
     def read_sql(self, query: str, parse_dates=None) -> pd.DataFrame:
         """Executes a SQL query and returns the result as a DataFrame.
@@ -56,9 +68,15 @@ class DatabaseManager:
         """
         df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
 
+    def close(self,):
+        self.connection.close()
+        self.connection = None
+
     def dispose(self,):
-        if self.engine:
-            self.engine.dispose()
+        if self.connection:
+            self.close()
+        self.engine.dispose()
+        self.engine = None
 
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
