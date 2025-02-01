@@ -1,5 +1,6 @@
 import logging
 import colorlog
+from pathlib import Path
 
 
 def setup_logger(name: str, level: int=3) -> logging.Logger:
@@ -18,7 +19,7 @@ def setup_logger(name: str, level: int=3) -> logging.Logger:
         return logger
     logger.setLevel(log_level[level])
 
-    file_handler = logging.FileHandler(f'{name}_logfile.log')
+    file_handler = logging.FileHandler(Path.cwd() / 'logs' / f'{name}_logfile.log')
     file_handler.setLevel(log_level[level])
 
     stream_handler = colorlog.StreamHandler()
