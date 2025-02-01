@@ -1,7 +1,4 @@
-from import_to_sql import DataImporter
+from import_to_sql import import_device_data
 
 
-di = DataImporter()
-di.connect_gps_db()
-di.fulfillment_db()
-di.import_device_data()
+import_device_data()
