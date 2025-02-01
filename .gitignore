@@ -3,6 +3,7 @@
 
 ### Custom ignores ###
 data/
+logs/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
