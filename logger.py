@@ -2,19 +2,28 @@ import logging
 import colorlog
 
 
-def setup_logger(name):
+def setup_logger(name: str, level: int=3) -> logging.Logger:
+    if not isinstance(level, int) and (level >= 1 and level <= 5):
+        raise ValueError("Level is not valid integer range.")
+    
+    log_level = {
+        1: logging.CRITICAL,
+        2: logging.ERROR,
+        3: logging.WARNING,
+        4: logging.INFO,
+        5: logging.DEBUG
+    }
     logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+    if logger.hasHandlers():
+        return logger
+    logger.setLevel(log_level[level])
 
-    # File handler for logging to a file
     file_handler = logging.FileHandler(f'{name}_logfile.log')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(log_level[level])
 
-    # Colorlog stream handler for terminal output with colors
     stream_handler = colorlog.StreamHandler()
-    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setLevel(log_level[level])
 
-    # Define a colorful formatter for terminal output
     formatter = colorlog.ColoredFormatter(
         '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
@@ -27,11 +36,9 @@ def setup_logger(name):
         }
     )
 
-    # Attach the formatter to both handlers
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     stream_handler.setFormatter(formatter)
 
-    # Add handlers to the logger
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
