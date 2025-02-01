@@ -1,8 +1,6 @@
 from pathlib import Path
 
-from import_to_sql import DataImporter
+from import_to_sql import import_patient_data
 
 
-di = DataImporter()
-di.connect_gps_db()
-di.import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
+import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
