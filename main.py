@@ -1,4 +1,5 @@
 import os
+import warnings
 from pathlib import Path
 from sqlalchemy import text
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ from helpers import read_sql_file
 from logger import setup_logger
 
 
+warnings.filterwarnings("ignore")
 logger = setup_logger('main', level='info')
 
 full_reset_stmt = read_sql_file(Path.cwd() / 'queries' / 'resets' / 'full_reset_patient_tables.sql', encoding="utf-8-sig")
