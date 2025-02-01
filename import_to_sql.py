@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
-    standardize_devices
+    standardize_devices, standardize_bp_readings, standardize_bg_readings
 from db_utils import DatabaseManager
 from helpers import read_sql_file
 
@@ -54,6 +54,15 @@ class DataImporter:
             database=os.getenv('LCH_SQL_SP_FULFILLMENT')
         )
         self.fulfillment_db.connect()
+
+    def connect_readings_db(self,):
+        readings_db = DatabaseManager(
+            username=os.getenv('LCH_SQL_USERNAME'),
+            password=os.getenv('LCH_SQL_PASSWORD'),
+            host=os.getenv('LCH_SQL_HOST'),
+            database=os.getenv('LCH_SQL_SP_READINGS')
+        )
+        readings_db.connect()   
 
     # Patient data MUST be exported from SharePoint first.
     def import_patient_data(self, filename: Path) -> None:
@@ -154,3 +163,26 @@ class DataImporter:
         device_df = add_id_col(df=device_df, id_df=vendor_id_df, col='Vendor')
     
         self.gps_db.to_sql(device_df, 'device', if_exists='append')
+
+    def import_patient_reading_data(self,):
+        bp_readings_stmt = read_sql_file(self.get_queries_dir / 'get_bp_readings.sql')
+        bg_readings_stmt = read_sql_file(self.get_queries_dir / 'get_bg_readings.sql')
+        patient_id_stmt = read_sql_file(self.get_queries_dir / 'get_patient_id.sql')
+        device_id_stmt = read_sql_file(self.get_queries_dir / 'get_device_id.sql')
+
+        bp_readings_df = self.readings_db.read_sql(bp_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
+        bg_readings_df = self.readings_db.read_sql(bg_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
+
+        bp_readings_df = standardize_bp_readings(bp_readings_df)
+        bg_readings_df = standardize_bg_readings(bg_readings_df)
+
+        patient_id_df = self.gps_db.read_sql(patient_id_stmt)
+        device_id_df = self.gps_db.read_sql(device_id_stmt)
+
+        bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
+        bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
+        bg_readings_df = add_id_col(df=bg_readings_df, id_df=patient_id_df, col='sharepoint_id')
+        bg_readings_df = add_id_col(df=bg_readings_df, id_df=device_id_df, col='patient_id')
+
+        self.gps_db.to_sql(bp_readings_df, 'blood_pressure_reading', if_exists='append')
+        self.gps_db.to_sql(bg_readings_df, 'glucose_reading', if_exists='append')
