@@ -55,6 +55,9 @@ class DatabaseManager:
         """
         df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
 
+    def dispose(self,):
+        self.engine.dispose()
+
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
         if executemany:
