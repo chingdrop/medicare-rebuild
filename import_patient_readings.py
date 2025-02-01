@@ -24,25 +24,30 @@ readings_db = DatabaseManager(
 )
 readings_db.connect()
 
-get_queries_dir = Path.cwd() / 'queries' / 'gets'
-bp_readings_stmt = read_sql_file(get_queries_dir / 'get_bp_readings.sql')
-bg_readings_stmt = read_sql_file(get_queries_dir / 'get_bg_readings.sql')
-patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
-device_id_stmt = read_sql_file(get_queries_dir / 'get_device_id.sql')
 
-bp_readings_df = readings_db.read_sql(bp_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
-bg_readings_df = readings_db.read_sql(bg_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
+def import_reading_data():
+    get_queries_dir = Path.cwd() / 'queries' / 'gets'
+    bp_readings_stmt = read_sql_file(get_queries_dir / 'get_bp_readings.sql')
+    bg_readings_stmt = read_sql_file(get_queries_dir / 'get_bg_readings.sql')
+    patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
+    device_id_stmt = read_sql_file(get_queries_dir / 'get_device_id.sql')
 
-bp_readings_df = standardize_bp_readings(bp_readings_df)
-bg_readings_df = standardize_bg_readings(bg_readings_df)
+    bp_readings_df = readings_db.read_sql(bp_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
+    bg_readings_df = readings_db.read_sql(bg_readings_stmt, parse_dates=['Time_Recorded', 'Time_Recieved'])
 
-patient_id_df = gps_db.read_sql(patient_id_stmt)
-device_id_df = gps_db.read_sql(device_id_stmt)
+    bp_readings_df = standardize_bp_readings(bp_readings_df)
+    bg_readings_df = standardize_bg_readings(bg_readings_df)
 
-bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
-bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
-bg_readings_df = add_id_col(df=bg_readings_df, id_df=patient_id_df, col='sharepoint_id')
-bg_readings_df = add_id_col(df=bg_readings_df, id_df=device_id_df, col='patient_id')
+    patient_id_df = gps_db.read_sql(patient_id_stmt)
+    device_id_df = gps_db.read_sql(device_id_stmt)
 
-gps_db.to_sql(bp_readings_df, 'blood_pressure_reading', if_exists='append')
-gps_db.to_sql(bg_readings_df, 'glucose_reading', if_exists='append')
+    bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
+    bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
+    bg_readings_df = add_id_col(df=bg_readings_df, id_df=patient_id_df, col='sharepoint_id')
+    bg_readings_df = add_id_col(df=bg_readings_df, id_df=device_id_df, col='patient_id')
+
+    gps_db.to_sql(bp_readings_df, 'blood_pressure_reading', if_exists='append')
+    gps_db.to_sql(bg_readings_df, 'glucose_reading', if_exists='append')
+
+
+import_reading_data()
