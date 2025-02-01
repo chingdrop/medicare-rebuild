@@ -5,47 +5,39 @@ from dotenv import load_dotenv
 
 from helpers import read_sql_file
 from dataframe_utils import standardize_patient_notes, add_id_col
-from db_utils import create_alchemy_engine
+from db_utils import DatabaseManager
 
 
 load_dotenv()
-gps_engine = create_alchemy_engine(
+gps_db = DatabaseManager(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
     host=os.getenv('LCH_SQL_GPS_HOST'),
     database=os.getenv('LCH_SQL_GPS_DB')
 )
-notes_engine = create_alchemy_engine(
+gps_db.connect()
+notes_db = DatabaseManager(
     username=os.getenv('LCH_SQL_USERNAME'),
     password=os.getenv('LCH_SQL_PASSWORD'),
     host=os.getenv('LCH_SQL_HOST'),
     database=os.getenv('LCH_SQL_SP_NOTES')
 )
-time_engine = create_alchemy_engine(
+notes_db.connect()
+time_db = DatabaseManager(
     username=os.getenv('LCH_SQL_USERNAME'),
     password=os.getenv('LCH_SQL_PASSWORD'),
     host=os.getenv('LCH_SQL_HOST'),
     database=os.getenv('LCH_SQL_SP_TIME')
 )
+time_db.connect()
 
 get_queries_dir = Path.cwd() / 'queries' / 'gets'
 notes_stmt = read_sql_file(get_queries_dir / 'get_notes_log.sql')
 time_stmt = read_sql_file(get_queries_dir / 'get_time_log.sql')
 patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
 
-with notes_engine.begin() as conn:
-    notes_df = pd.read_sql(
-        notes_stmt,
-        conn,
-        parse_dates=['TimeStamp']
-    )
-
-with time_engine.begin() as conn:
-    time_df = pd.read_sql(
-        time_stmt,
-        conn,
-        parse_dates=['Start_Time', 'End_Time']
-    )
+notes_df = notes_db.read_sql(notes_stmt, parse_dates=['TimeStamp'])
+time_df = time_db.read_sql(time_stmt, parse_dates=['Start_Time', 'End_Time'])
 
 time_df = time_df.rename(
     columns={
@@ -60,9 +52,8 @@ patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
 
 patient_note_df = standardize_patient_notes(patient_note_df)
 
-with gps_engine.begin() as conn:
-    patient_id_df = pd.read_sql(patient_id_stmt, conn)
+patient_id_df = gps_db.read_sql(patient_id_stmt)
 
-    patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
+patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
     
-    patient_note_df.to_sql('patient_note', conn, if_exists='append', index=False)
+gps_db.to_sql(patient_note_df, 'patient_note', if_exists='append')

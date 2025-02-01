@@ -5,15 +5,16 @@ from pathlib import Path
 
 from helpers import read_sql_file
 from dataframe_utils import standardize_patients, add_id_col, check_database_constraints
-from db_utils import create_alchemy_engine
+from db_utils import DatabaseManager
 
 load_dotenv()
-engine = create_alchemy_engine(
+db = DatabaseManager(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
     host=os.getenv('LCH_SQL_GPS_HOST'),
     database=os.getenv('LCH_SQL_GPS_DB')
 )
+db.connect()
 
 cwd_dir = Path.cwd()
 data_dir = cwd_dir / 'data'
@@ -64,17 +65,16 @@ patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
 patient_status_df['modified_date'] = pd.Timestamp.now()
 patient_status_df['temp_user'] = 'ITHelp'
 
-with engine.begin() as conn:
-    # Patient data is imported first to get the patient_id.
-    patient_df.to_sql('patient', conn, if_exists='append', index=False)
-    patient_id_df = pd.read_sql(patient_id_stmt, conn)
+# Patient data is imported first to get the patient_id.
+db.to_sql(patient_df, 'patient', if_exists='append')
+patient_id_df = db.read_sql(patient_id_stmt)
 
-    address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
-    insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
-    med_nec_df = add_id_col(df=med_nec_df, id_df=patient_id_df, col='sharepoint_id')
-    patient_status_df = add_id_col(df=patient_status_df, id_df=patient_id_df, col='sharepoint_id')
+address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
+insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
+med_nec_df = add_id_col(df=med_nec_df, id_df=patient_id_df, col='sharepoint_id')
+patient_status_df = add_id_col(df=patient_status_df, id_df=patient_id_df, col='sharepoint_id')
 
-    address_df.to_sql('patient_address', conn, if_exists='append', index=False)
-    insurance_df.to_sql('patient_insurance', conn, if_exists='append', index=False)
-    med_nec_df.to_sql('medical_necessity', conn, if_exists='append', index=False)
-    patient_status_df.to_sql('patient_status', conn, if_exists='append', index=False)
+db.to_sql(address_df, 'patient_address', if_exists='append')
+db.to_sql(insurance_df, 'patient_insurance', if_exists='append')
+db.to_sql(med_nec_df, 'medical_necessity', if_exists='append')
+db.to_sql(patient_status_df, 'patient_status', if_exists='append')
