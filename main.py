@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from sqlalchemy import text
+from dotenv import load_dotenv
 
 from import_to_sql import import_patient_data, import_device_data, import_patient_note_data, \
     import_patient_reading_data
@@ -11,7 +12,8 @@ from logger import setup_logger
 
 logger = setup_logger('main', level='info')
 
-full_reset_stmt = read_sql_file(Path.cwd() / 'queries' / 'resets' / 'full_reset_patient_tables.sql')
+full_reset_stmt = read_sql_file(Path.cwd() / 'queries' / 'resets' / 'full_reset_patient_tables.sql', encoding="utf-8-sig")
+load_dotenv()
 gps_db = DatabaseManager(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
