@@ -24,7 +24,7 @@ class DatabaseManager:
             self.engine = create_engine(self.connection_url)
             event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
 
-    def read_sql(self, query: str, parse_dates=None) -> pd.Dataframe:
+    def read_sql(self, query: str, parse_dates=None) -> pd.DataFrame:
         """Executes a SQL query and returns the result as a DataFrame.
         
         Args:
