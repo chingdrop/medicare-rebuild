@@ -27,14 +27,12 @@ class DatabaseManager:
     def begin(self,):
         if not self.engine:
             self.create_engine()
-        self.connection = self.engine.begin()
-        return self.connection
+        return self.engine.begin()
 
     def connect(self,):
         if not self.engine:
             self.create_engine()
-        self.connection = self.engine.connect()
-        return self.connection
+        return self.engine.connect()
 
     def read_sql(self, query: str, parse_dates=None) -> pd.DataFrame:
         """Executes a SQL query and returns the result as a DataFrame.
@@ -68,13 +66,7 @@ class DatabaseManager:
         """
         df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
 
-    def close(self,):
-        self.connection.close()
-        self.connection = None
-
     def dispose(self,):
-        if self.connection:
-            self.close()
         self.engine.dispose()
         self.engine = None
 
