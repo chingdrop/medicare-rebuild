@@ -3,7 +3,8 @@ import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 
-from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes
+from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
+    standardize_devices
 from db_utils import DatabaseManager
 from helpers import read_sql_file
 
@@ -44,7 +45,16 @@ class DataImporter:
             database=os.getenv('LCH_SQL_SP_TIME')
         )
         self.time_db.connect()
-        
+
+    def connect_fulfillment_db(self,):
+        self.fulfillment_db = DatabaseManager(
+            username=os.getenv('LCH_SQL_USERNAME'),
+            password=os.getenv('LCH_SQL_PASSWORD'),
+            host=os.getenv('LCH_SQL_HOST'),
+            database=os.getenv('LCH_SQL_SP_FULFILLMENT')
+        )
+        self.fulfillment_db.connect()
+
     # Patient data MUST be exported from SharePoint first.
     def import_patient_data(self, filename: Path) -> None:
         export_df = pd.read_csv(
@@ -129,4 +139,18 @@ class DataImporter:
         patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
         self.gps_db.to_sql(patient_note_df, 'patient_note', if_exists='append')
 
+    def import_device_data(self,):
+        device_stmt = read_sql_file(self.get_queries_dir / 'get_fulfillment.sql')
+        patient_id_stmt = read_sql_file(self.get_queries_dir / 'get_patient_id.sql')
+        vendor_id_stmt = read_sql_file(self.get_queries_dir / 'get_vendor_id.sql')
+
+        device_df = self.fulfillment_db.read_sql(device_stmt)
+        device_df = standardize_devices(device_df)
+        patient_id_df = self.gps_db.read_sql(patient_id_stmt)
+        vendor_id_df = self.gps_db.read_sql(vendor_id_stmt)
+
+        device_df = add_id_col(df=device_df, id_df=patient_id_df, col='sharepoint_id')
+        vendor_id_df = vendor_id_df.rename(columns={'name': 'Vendor'})
+        device_df = add_id_col(df=device_df, id_df=vendor_id_df, col='Vendor')
     
+        self.gps_db.to_sql(device_df, 'device', if_exists='append')
