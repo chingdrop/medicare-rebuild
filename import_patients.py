@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from db_utils import DatabaseManager
 from import_to_sql import DataImporter
 
 
