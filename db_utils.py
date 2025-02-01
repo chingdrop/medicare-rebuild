@@ -18,12 +18,18 @@ class DatabaseManager:
             },
         )
         self.engine = None
+        self.connection = None
 
-    def connect(self):
-        self.engine = create_engine(self.connection_url)
-        event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+    def create_engine(self,):
+        if not self.engine:
+            self.engine = create_engine(self.connection_url)
+            event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
 
-    def read_sql(self, query: str, parse_dates=None) -> pd.Dataframe:
+    def connect(self,):
+        if not self.connection and self.engine:
+            self.connection = self.engine.connect()
+
+    def read_sql(self, query: str, parse_dates=None) -> pd.DataFrame:
         """Executes a SQL query and returns the result as a DataFrame.
         
         Args:
@@ -34,7 +40,7 @@ class DatabaseManager:
         Returns:
             - pandas.DataFrame: The query results as a DataFrame.
         """
-        return pd.read_sql(query, self.engine, parse_dates=parse_dates)
+        return pd.read_sql(query, self.connection, parse_dates=parse_dates)
     
     def to_sql(self, df: pd.DataFrame, table_name: str, if_exists='fail', index=False) -> None:
         """Save a Pandas DataFrame to a SQL table.
@@ -53,10 +59,15 @@ class DatabaseManager:
         Returns:
             - None: This method performs the database operation and does not return anything.
         """
-        df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
+        df.to_sql(table_name, self.connection, if_exists=if_exists, index=index)
+
+    def close(self,):
+        if self.connection:
+            self.connection.close()
 
     def dispose(self,):
-        self.engine.dispose()
+        if self.engine and not self.connection:
+            self.engine.dispose()
 
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
