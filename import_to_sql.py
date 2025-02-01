@@ -20,49 +20,54 @@ class DataImporter:
         self.get_queries_dir = Path.cwd() / 'queries' / 'gets'
 
     def connect_gps_db(self,):
-        self.gps_db = DatabaseManager(
-            username=os.getenv('GPS_SQL_USERNAME'),
-            password=os.getenv('GPS_SQL_PASSWORD'),
-            host=os.getenv('GPS_SQL_HOST'),
-            database=os.getenv('GPS_SQL_DB')
-        )
-        self.gps_db.connect()
+        if not self.gps_db:
+            self.gps_db = DatabaseManager(
+                username=os.getenv('GPS_SQL_USERNAME'),
+                password=os.getenv('GPS_SQL_PASSWORD'),
+                host=os.getenv('GPS_SQL_HOST'),
+                database=os.getenv('GPS_SQL_DB')
+            )
+            self.gps_db.connect()
 
     def connect_notes_db(self,):
-        self.notes_db = DatabaseManager(
-            username=os.getenv('LEGACY_SQL_USERNAME'),
-            password=os.getenv('LEGACY_SQL_PASSWORD'),
-            host=os.getenv('LEGACY_SQL_HOST'),
-            database=os.getenv('LEGACY_SQL_SP_NOTES')
-        )
-        self.notes_db.connect()
+        if not self.notes_db:
+            self.notes_db = DatabaseManager(
+                username=os.getenv('LEGACY_SQL_USERNAME'),
+                password=os.getenv('LEGACY_SQL_PASSWORD'),
+                host=os.getenv('LEGACY_SQL_HOST'),
+                database=os.getenv('LEGACY_SQL_SP_NOTES')
+            )
+            self.notes_db.connect()
 
     def connect_time_db(self,):
-        self.time_db = DatabaseManager(
-            username=os.getenv('LEGACY_SQL_USERNAME'),
-            password=os.getenv('LEGACY_SQL_PASSWORD'),
-            host=os.getenv('LEGACY_SQL_HOST'),
-            database=os.getenv('LEGACY_SQL_SP_TIME')
-        )
-        self.time_db.connect()
+        if not self.time_db:
+            self.time_db = DatabaseManager(
+                username=os.getenv('LEGACY_SQL_USERNAME'),
+                password=os.getenv('LEGACY_SQL_PASSWORD'),
+                host=os.getenv('LEGACY_SQL_HOST'),
+                database=os.getenv('LEGACY_SQL_SP_TIME')
+            )
+            self.time_db.connect()
 
     def connect_fulfillment_db(self,):
-        self.fulfillment_db = DatabaseManager(
-            username=os.getenv('LEGACY_SQL_USERNAME'),
-            password=os.getenv('LEGACY_SQL_PASSWORD'),
-            host=os.getenv('LEGACY_SQL_HOST'),
-            database=os.getenv('LEGACY_SQL_SP_FULFILLMENT')
-        )
-        self.fulfillment_db.connect()
+        if not self.fulfillment_db:
+            self.fulfillment_db = DatabaseManager(
+                username=os.getenv('LEGACY_SQL_USERNAME'),
+                password=os.getenv('LEGACY_SQL_PASSWORD'),
+                host=os.getenv('LEGACY_SQL_HOST'),
+                database=os.getenv('LEGACY_SQL_SP_FULFILLMENT')
+            )
+            self.fulfillment_db.connect()
 
     def connect_readings_db(self,):
-        readings_db = DatabaseManager(
-            username=os.getenv('LEGACY_SQL_USERNAME'),
-            password=os.getenv('LEGACY_SQL_PASSWORD'),
-            host=os.getenv('LEGACY_SQL_HOST'),
-            database=os.getenv('LEGACY_SQL_SP_READINGS')
-        )
-        readings_db.connect()   
+        if not self.readings_db:
+            readings_db = DatabaseManager(
+                username=os.getenv('LEGACY_SQL_USERNAME'),
+                password=os.getenv('LEGACY_SQL_PASSWORD'),
+                host=os.getenv('LEGACY_SQL_HOST'),
+                database=os.getenv('LEGACY_SQL_SP_READINGS')
+            )
+            readings_db.connect()   
 
     # Patient data MUST be exported from SharePoint first.
     def import_patient_data(self, filename: Path) -> None:
