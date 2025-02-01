@@ -21,7 +21,7 @@ def import_patient_data(filename: Path, logger: logging.Logger=setup_logger('imp
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    gps_db.connect()
+    gps_db.create_engine()
     export_df = pd.read_csv(
         filename,
         dtype={
@@ -94,21 +94,21 @@ def import_patient_note_data(logger: logging.Logger=setup_logger('import_patient
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    gps_db.connect()
+    gps_db.create_engine()
     notes_db = DatabaseManager(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_NOTES')
     )
-    notes_db.connect()
+    notes_db.create_engine()
     time_db = DatabaseManager(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_TIME')
     )
-    time_db.connect()
+    time_db.create_engine()
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
     notes_stmt = read_sql_file(get_queries_dir / 'get_notes_log.sql')
@@ -148,14 +148,14 @@ def import_device_data(logger: logging.Logger=setup_logger('import_devices')):
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    gps_db.connect()
+    gps_db.create_engine()
     fulfillment_db = DatabaseManager(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_FULFILLMENT')
     )
-    fulfillment_db.connect()
+    fulfillment_db.create_engine()
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
     device_stmt = read_sql_file(get_queries_dir / 'get_fulfillment.sql')
@@ -187,14 +187,14 @@ def import_patient_reading_data(logger: logging.Logger=setup_logger('import_pati
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    gps_db.connect()
+    gps_db.create_engine()
     readings_db = DatabaseManager(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_READINGS')
     )
-    readings_db.connect()
+    readings_db.create_engine()
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
     bp_readings_stmt = read_sql_file(get_queries_dir / 'get_bp_readings.sql')
