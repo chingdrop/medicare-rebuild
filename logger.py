@@ -3,16 +3,14 @@ import colorlog
 from pathlib import Path
 
 
-def setup_logger(name: str, level: int=3) -> logging.Logger:
-    if not isinstance(level, int) and (level >= 1 and level <= 5):
-        raise ValueError("Level is not valid integer range.")
+def setup_logger(name: str, level: str='warning') -> logging.Logger:
     
     log_level = {
-        1: logging.CRITICAL,
-        2: logging.ERROR,
-        3: logging.WARNING,
-        4: logging.INFO,
-        5: logging.DEBUG
+        'critical': logging.CRITICAL,
+        'error': logging.ERROR,
+        'warning': logging.WARNING,
+        'info': logging.INFO,
+        'debug': logging.DEBUG
     }
     logger = logging.getLogger(name)
     if logger.hasHandlers():
