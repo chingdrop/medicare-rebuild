@@ -5,7 +5,7 @@ from sqlalchemy.engine import URL
 
 
 class DatabaseManager:
-    def __init__(self, username, password, host, database, logger):
+    def __init__(self, username, password, host, database, logger=None):
         self.connection_url = URL.create(
             "mssql+pyodbc",
             username=username,
@@ -48,7 +48,7 @@ class DatabaseManager:
             - pandas.DataFrame: The query results as a DataFrame.
         """
         df = pd.read_sql(query, self.engine, parse_dates=parse_dates)
-        self.logger.debug(f'Query:\n{query}')
+        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
     
