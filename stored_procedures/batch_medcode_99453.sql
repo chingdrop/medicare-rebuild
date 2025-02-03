@@ -4,7 +4,7 @@
 -- Revision date: 01/27/25
 -- Description:	Adds 99453 code to medical code for patients with 16 distinct days of testing.
 -- =============================================
-CREATE PROCEDURE batch_medcode_99453
+CREATE PROCEDURE [dbo].[batch_medcode_99453]
 
 AS
 BEGIN
@@ -39,7 +39,7 @@ BEGIN
 		WHERE mc.patient_id = d.patient_id
 			AND mcd.device_id = d.device_id
 	)
-	GROUP BY d.patient_id, d.device_id
+	GROUP BY d.patient_id
 	HAVING COUNT(DISTINCT CAST(gr.received_datetime AS DATE)) >= 16
 		OR COUNT(DISTINCT CAST(bpr.received_datetime AS DATE)) >= 16;
 
