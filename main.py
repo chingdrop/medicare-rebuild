@@ -12,9 +12,6 @@ from logger import setup_logger
 
 
 warnings.filterwarnings("ignore")
-logger = setup_logger('main', level='info')
-
-full_reset_stmt = read_sql_file(Path.cwd() / 'queries' / 'resets' / 'full_reset_patient_tables.sql', encoding="utf-8-sig")
 load_dotenv()
 gps_db = DatabaseManager(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
@@ -23,8 +20,9 @@ gps_db = DatabaseManager(
     database=os.getenv('LCH_SQL_GPS_DB')
 )
 with gps_db.begin() as conn:
-    conn.execute(text(full_reset_stmt))
+    conn.execute(text("EXEC reset_all_billing_tables"))
 
+logger = setup_logger('main', level='debug')
 import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', logger=logger)
 import_device_data(logger=logger)
 import_patient_note_data(logger=logger)
