@@ -17,6 +17,8 @@ def standardize_name(name: str, pattern: str) -> str:
     Returns:
         - string: The standardized name text.    
     """
+    if not name:
+        return None
     name = str(name).strip().title()
     name = re.sub(r'\s+', ' ', name)
     name = re.sub(pattern, '', name)
@@ -33,6 +35,8 @@ def standardize_email(email: str) -> str:
     Returns:
         - string: The standardized email address.    
     """
+    if not email:
+        return None
     email = str(email).strip().lower()
     email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
     email_match = re.search(email_pattern, email)
@@ -52,10 +56,10 @@ def standardize_state(state: str) -> str:
     Returns:
         - string: The standardized US state abbreviation.    
     """
+    if not state:
+        return None
     state = str(state).strip().title()
     state = state_abbreviations.get(state, state).upper()
-    if state == 'NAN':
-        return None
     return state
 
 
@@ -107,6 +111,8 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         - string: The standardized insurance name.    
     """
+    if not name:
+        return None
     name = str(name).strip().title()
     for standard_name, keyword_sets in insurance_keywords.items():
         for keyword_set in keyword_sets:
@@ -126,6 +132,8 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         - string: The standardized insurance ID.    
     """
+    if not ins_id:
+        return None
     insurance_id = str(ins_id).strip().upper()
     insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
     id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
