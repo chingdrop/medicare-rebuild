@@ -181,10 +181,10 @@ def import_patient_reading_data(logger: logging.Logger=setup_logger('import_pati
     )
     dbm.create_engine(
         'readings',
-        username=os.getenv('GPS_SQL_USERNAME'),
-        password=os.getenv('GPS_SQL_PASSWORD'),
-        host=os.getenv('GPS_SQL_HOST'),
-        database=os.getenv('GPS_SQL_DB')
+        username=os.getenv('LEGACY_SQL_USERNAME'),
+        password=os.getenv('LEGACY_SQL_PASSWORD'),
+        host=os.getenv('LEGACY_SQL_HOST'),
+        database=os.getenv('LEGACY_SQL_SP_READINGS')
     )
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
