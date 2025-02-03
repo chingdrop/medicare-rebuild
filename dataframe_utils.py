@@ -280,10 +280,12 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     # Check database constraints
-    patient_df = patient_df[patient_df['phone_number'].apply(lambda x: len(str(x)) == 10)]
-    patient_df = patient_df[patient_df['social_security'].apply(lambda x: len(str(x)) == 9)]
-    patient_df = patient_df[patient_df['zipcode'].apply(lambda x: len(str(x)) == 5)]
-    patient_df = patient_df[patient_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) == 11)]
+    patient_df = patient_df[patient_df['phone_number'].apply(lambda x: len(str(x)) <= 10)]
+    patient_df = patient_df[patient_df['social_security'].apply(lambda x: len(str(x)) <= 9)]
+    patient_df = patient_df[patient_df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
+    patient_df = patient_df[patient_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
+    patient_df = patient_df[patient_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    patient_df = patient_df[patient_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     return patient_df
 
 
