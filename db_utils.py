@@ -1,10 +1,11 @@
+import logging
 import pandas as pd
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import URL
 
 
 class DatabaseManager:
-    def __init__(self, username, password, host, database):
+    def __init__(self, username, password, host, database, logger):
         self.connection_url = URL.create(
             "mssql+pyodbc",
             username=username,
@@ -19,6 +20,7 @@ class DatabaseManager:
         )
         self.engine = None
         self.connection = None
+        self.logger = logger or logging.getLogger(DatabaseManager.__name__)
 
     def create_engine(self):
         self.engine = create_engine(self.connection_url)
@@ -45,7 +47,10 @@ class DatabaseManager:
         Returns:
             - pandas.DataFrame: The query results as a DataFrame.
         """
-        return pd.read_sql(query, self.engine, parse_dates=parse_dates)
+        df = pd.read_sql(query, self.engine, parse_dates=parse_dates)
+        self.logger.debug(f'Query:\n{query}')
+        self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
+        return df
     
     def to_sql(self, df: pd.DataFrame, table_name: str, if_exists='fail', index=False) -> None:
         """Save a Pandas DataFrame to a SQL table.
@@ -64,6 +69,7 @@ class DatabaseManager:
         Returns:
             - None: This method performs the database operation and does not return anything.
         """
+        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table_name}...')
         df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
 
     def dispose(self,):
