@@ -284,7 +284,7 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
     patient_df = patient_df[patient_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     patient_df = patient_df[patient_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     # Convert string Nan back to Null value.
-    patient_df.replace(r'(?i)^nan$', None, regex=True)
+    patient_df.replace(r'(?i)^nan$', None, regex=True, inplace=True)
     return patient_df
 
 
@@ -317,7 +317,7 @@ def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     # Convert string Nan back to Null value.
-    patient_note_df.replace(r'(?i)^nan$', None, regex=True)
+    patient_note_df.replace(r'(?i)^na(n)?$', None, regex=True, inplace=True)
     return patient_note_df
 
 
