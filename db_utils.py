@@ -77,7 +77,7 @@ class DatabaseManager:
         df.to_sql(table_name, engine, if_exists=if_exists, index=index)
 
     def dispose(self,):
-        for eng_name, engine in self.engines.items():
+        for eng_name, engine in list(self.engines.items()):
             engine.dispose()
             del self.engines[eng_name]
 
