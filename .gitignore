@@ -4,6 +4,7 @@
 ### Custom ignores ###
 data/
 logs/
+.vs/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
