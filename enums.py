@@ -3,12 +3,15 @@ state_abbreviations = {
     "Alaska": "AK",
     "Arizona": "AZ",
     "Arkansas": "AR",
+    "American Samoa": "AS",
     "California": "CA",
     "Colorado": "CO",
     "Connecticut": "CT",
     "Delaware": "DE",
+    "District of Columbia": "DC",
     "Florida": "FL",
     "Georgia": "GA",
+    "Guam": "GU",
     "Hawaii": "HI",
     "Idaho": "ID",
     "Illinois": "IL",
@@ -33,23 +36,28 @@ state_abbreviations = {
     "New York": "NY",
     "North Carolina": "NC",
     "North Dakota": "ND",
+    "Northern Mariana Islands": "MP",
     "Ohio": "OH",
     "Oklahoma": "OK",
     "Oregon": "OR",
     "Pennsylvania": "PA",
+    "Puerto Rico": "PR",
     "Rhode Island": "RI",
     "South Carolina": "SC",
     "South Dakota": "SD",
     "Tennessee": "TN",
     "Texas": "TX",
+    "Trust Territories": "TT",
     "Utah": "UT",
     "Vermont": "VT",
+    "Virgin Islands": "VI",
     "Virginia": "VA",
     "Washington": "WA",
     "West Virginia": "WV",
     "Wisconsin": "WI",
     "Wyoming": "WY"
 }
+
 
 # Key word lists must have all elements match in the target string.
 # Spelling errors and abbreviations are added to increase matching.
@@ -219,3 +227,7 @@ insurance_keywords = {
         ["western", "united"]
     ]
 }
+
+
+nurse_list = ['Joycelynn Harris', 'Melanie Coffey', 'Krista Lewin']
+alert_team_list = ['Christylyn Diosma', 'Maria Albingco', 'Mary Cortes', 'Richel Rodriguez', 'Rigel Sagayno']
