@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import URL
 
 
@@ -54,6 +54,12 @@ class DatabaseManager:
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
     
+    def read_sql_query(self, query: str, conn):
+        df = pd.read_sql_query(text(query), conn)
+        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
+        self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
+        return df
+
     def to_sql(self, df: pd.DataFrame, table_name: str, eng_name: str, if_exists='fail', index=False) -> None:
         """Save a Pandas DataFrame to a SQL table.
 
