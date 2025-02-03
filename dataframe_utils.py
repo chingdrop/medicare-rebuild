@@ -17,8 +17,6 @@ def standardize_name(name: str, pattern: str) -> str:
     Returns:
         - string: The standardized name text.    
     """
-    if not name:
-        return None
     name = str(name).strip().title()
     name = re.sub(r'\s+', ' ', name)
     name = re.sub(pattern, '', name)
@@ -35,8 +33,6 @@ def standardize_email(email: str) -> str:
     Returns:
         - string: The standardized email address.    
     """
-    if not email:
-        return None
     email = str(email).strip().lower()
     email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
     email_match = re.search(email_pattern, email)
@@ -59,8 +55,6 @@ def standardize_state(state: str) -> str:
     state = str(state).strip().title()
     state = state_abbreviations.get(state, state).upper()
     # NAN is checked here because of the default values dict.get() returns.
-    if state == 'NAN':
-        return None
     return state
 
 
@@ -112,8 +106,6 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         - string: The standardized insurance name.    
     """
-    if not name:
-        return None
     name = str(name).strip().title()
     for standard_name, keyword_sets in insurance_keywords.items():
         for keyword_set in keyword_sets:
@@ -133,8 +125,6 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         - string: The standardized insurance ID.    
     """
-    if not ins_id:
-        return None
     insurance_id = str(ins_id).strip().upper()
     insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
     id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
@@ -201,8 +191,6 @@ def standardize_note_types(note_type: str) -> str:
     Returns:
         - string: The standardized note type phrase.    
     """
-    if not note_type:
-        return None
     if note_type == 'Initial Evaluation with APRN':
         note_type = 'Initial Evaluation'
     return str(note_type).split(',')[0]
@@ -295,6 +283,8 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
     patient_df = patient_df[patient_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
     patient_df = patient_df[patient_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     patient_df = patient_df[patient_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    # Convert string Nan back to Null value.
+    patient_df.replace(r'(?i)^nan$', None, regex=True)
     return patient_df
 
 
@@ -326,6 +316,8 @@ def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
             'End_Time': 'end_call_datetime'
         }
     )
+    # Convert string Nan back to Null value.
+    patient_note_df.replace(r'(?i)^nan$', None, regex=True)
     return patient_note_df
 
 
