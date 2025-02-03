@@ -1,2 +1,2 @@
-SELECT vendor_id, name 
+SELECT vendor_id, name
 FROM vendor
