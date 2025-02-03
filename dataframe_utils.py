@@ -56,10 +56,11 @@ def standardize_state(state: str) -> str:
     Returns:
         - string: The standardized US state abbreviation.    
     """
-    if not state:
-        return None
     state = str(state).strip().title()
     state = state_abbreviations.get(state, state).upper()
+    # NAN is checked here because of the default values dict.get() returns.
+    if state == 'NAN':
+        return None
     return state
 
 
