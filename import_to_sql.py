@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
     standardize_devices, standardize_bp_readings, standardize_bg_readings
 from db_utils import DatabaseManager
-from helpers import read_sql_file
+from helpers import read_file
 from logger import setup_logger
 
 
@@ -34,7 +34,7 @@ def import_patient_data(filename: Path, logger: logging.Logger=setup_logger('imp
     )
     logger.debug(f"Sharepoint Online Patient Export (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
     
-    patient_id_stmt = read_sql_file(Path.cwd() / 'queries' / 'gets' / 'get_patient_id.sql')
+    patient_id_stmt = read_file(Path.cwd() / 'queries' / 'gets' / 'get_patient_id.sql')
     export_df = standardize_patients(export_df)
     patient_df = export_df[[
         'first_name',
@@ -108,9 +108,9 @@ def import_patient_note_data(logger: logging.Logger=setup_logger('import_patient
     )
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    notes_stmt = read_sql_file(get_queries_dir / 'get_notes_log.sql')
-    time_stmt = read_sql_file(get_queries_dir / 'get_time_log.sql')
-    patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
+    notes_stmt = read_file(get_queries_dir / 'get_notes_log.sql')
+    time_stmt = read_file(get_queries_dir / 'get_time_log.sql')
+    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
     
     notes_df = dbm.read_sql(notes_stmt, 'notes', parse_dates=['TimeStamp'])
     time_df = dbm.read_sql(time_stmt, 'time', parse_dates=['Start_Time', 'End_Time'])
@@ -151,9 +151,9 @@ def import_device_data(logger: logging.Logger=setup_logger('import_devices')):
     )
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    device_stmt = read_sql_file(get_queries_dir / 'get_fulfillment.sql')
-    patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
-    vendor_id_stmt = read_sql_file(get_queries_dir / 'get_vendor_id.sql')
+    device_stmt = read_file(get_queries_dir / 'get_fulfillment.sql')
+    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
+    vendor_id_stmt = read_file(get_queries_dir / 'get_vendor_id.sql')
     
     device_df = dbm.read_sql(device_stmt, 'fulfillment')
 
@@ -188,10 +188,10 @@ def import_patient_reading_data(logger: logging.Logger=setup_logger('import_pati
     )
 
     get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    bp_readings_stmt = read_sql_file(get_queries_dir / 'get_bp_readings.sql')
-    bg_readings_stmt = read_sql_file(get_queries_dir / 'get_bg_readings.sql')
-    patient_id_stmt = read_sql_file(get_queries_dir / 'get_patient_id.sql')
-    device_id_stmt = read_sql_file(get_queries_dir / 'get_device_id.sql')
+    bp_readings_stmt = read_file(get_queries_dir / 'get_bp_readings.sql')
+    bg_readings_stmt = read_file(get_queries_dir / 'get_bg_readings.sql')
+    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
+    device_id_stmt = read_file(get_queries_dir / 'get_device_id.sql')
     
     bp_readings_df = dbm.read_sql(bp_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
     bg_readings_df = dbm.read_sql(bg_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
