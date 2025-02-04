@@ -89,7 +89,7 @@ class DatabaseManager:
 
         Args:
             - df (pandas.DataFrame): The DataFrame to be written to the SQL table.
-            table_name (string): The name of the target SQL table where the DataFrame will be saved.
+            table (string): The name of the target SQL table where the DataFrame will be saved.
             - eng (str): Name of the SQLAlchemy engine obj.
             - if_exists (string, optional): Specifies what to do if the table already exists. 
             Options are:
