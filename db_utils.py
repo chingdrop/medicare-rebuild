@@ -49,15 +49,17 @@ class DatabaseManager:
             - pandas.DataFrame: The query results as a DataFrame.
         """
         engine = self.get_engine(eng_name)
-        df = pd.read_sql(query, engine, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
+        df = pd.read_sql(query, engine, parse_dates=parse_dates)
         return df
     
     def read_sql_query(self, query: str, conn):
-        df = pd.read_sql_query(text(query), conn)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
+        if isinstance(query, str):
+            query = text(query)
+        df = pd.read_sql_query(query, conn)
         return df
 
     def to_sql(self, df: pd.DataFrame, table_name: str, eng_name: str, if_exists='fail', index=False) -> None:
