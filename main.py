@@ -23,7 +23,7 @@ with dbm.begin('gps') as conn:
     dbm.execute("EXEC reset_all_billing_tables", conn)
 
 logger = setup_logger('main', level='debug')
-import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', logger=logger)
-import_device_data(logger=logger)
-import_patient_note_data(logger=logger)
-import_patient_reading_data(logger=logger)
+import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', snapshot=True, logger=logger)
+import_device_data(snapshot=True, logger=logger)
+import_patient_note_data(snapshot=True, logger=logger)
+import_patient_reading_data(snapshot=True, logger=logger)
