@@ -1,7 +1,6 @@
 import os
 import warnings
 from pathlib import Path
-from sqlalchemy import text
 from dotenv import load_dotenv
 
 from import_to_sql import import_patient_data, import_device_data, import_patient_note_data, \
