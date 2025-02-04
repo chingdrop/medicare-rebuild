@@ -377,8 +377,8 @@ def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
     """Merge pandas dataframes on specified column. Remove specified column after merge.
 
     Args:
-        - df (pandas.Dataframe): Target dataframe requiring ID column.
-        - id_df (pandas.Dataframe): ID datafrane containing ID column.
+        - df (pandas.DataFrame): Target dataframe requiring ID column.
+        - id_df (pandas.DataFrame): ID dataframe containing ID column.
         - col (string): Column name to be merged and deleted.
 
     Returns:
