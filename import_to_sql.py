@@ -135,7 +135,7 @@ def import_patient_note_data(
     })
 
     # Left join is needed for patient notes without any call time associated.
-    patient_note_df = pd.merge(notes_df, time_df, on=['SharePoint_ID'], how='left')
+    patient_note_df = pd.merge(notes_df, time_df, on=['SharePoint_ID', 'Note_ID', 'LCH_UPN'], how='left')
     patient_note_df['Time_Note'] = patient_note_df['Time_Note'].fillna(patient_note_df['Note_Type'])
     patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
     patient_note_df = standardize_patient_notes(patient_note_df)
