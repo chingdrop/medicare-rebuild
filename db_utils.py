@@ -1,6 +1,7 @@
 import logging
 import pandas as pd
-from sqlalchemy import create_engine, event, text, Connection, Result
+from typing import List
+from sqlalchemy import create_engine, event, text, Connection, Result, Engine
 from sqlalchemy.engine import URL
 
 
@@ -39,13 +40,13 @@ class DatabaseManager:
         event.listen(engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
         self.engines[name] = engine
 
-    def get_engine(self, name: str):
+    def get_engine(self, name: str) -> Engine:
         return self.engines[name]
 
-    def begin(self, name: str):
+    def begin(self, name: str) -> Connection:
         return self.engines[name].begin()
 
-    def connect(self, name: str):
+    def connect(self, name: str) -> Connection:
         return self.engines[name].connect()
 
     def execute(self, query: str, conn:Connection) -> Result:
@@ -65,7 +66,7 @@ class DatabaseManager:
         if res.rowcount > 0:
             return res.fetchall()
 
-    def read_sql(self, query: str, eng: str, parse_dates=None) -> pd.DataFrame:
+    def read_sql(self, query: str, eng: str, parse_dates: List[str]=None) -> pd.DataFrame:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:
@@ -83,7 +84,7 @@ class DatabaseManager:
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
 
-    def to_sql(self, df: pd.DataFrame, table_name: str, eng: str, if_exists='fail', index=False) -> None:
+    def to_sql(self, df: pd.DataFrame, table: str, eng: str, if_exists: str='fail', index: bool=False) -> None:
         """Save Pandas DataFrame to a SQL table.
 
         Args:
@@ -102,8 +103,8 @@ class DatabaseManager:
             - None
         """
         engine = self.get_engine(eng)
-        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table_name}...')
-        df.to_sql(table_name, engine, if_exists=if_exists, index=index)
+        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...')
+        df.to_sql(table, engine, if_exists=if_exists, index=index)
 
     def dispose(self,):
         for eng, engine in list(self.engines.items()):
