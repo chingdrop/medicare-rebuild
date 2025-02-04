@@ -16,7 +16,7 @@ class DatabaseManager:
         
         Args:
             - name (str): The name of the engine object.
-            - conn (str): The username of your credentials.
+            - username (str): The username of your credentials.
             - password (str): The password of your credentials.
             - host (str): The hostname of the SQL Server.
             - database (str): The name of your database.
