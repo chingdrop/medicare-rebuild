@@ -36,31 +36,31 @@ class DatabaseManager:
     def connect(self, name: str):
         return self.engines[name].connect()
 
-    def read_sql(self, query: str, eng_name: str, parse_dates=None) -> pd.DataFrame:
+    def read_sql(self, query: str, eng: str, parse_dates=None) -> pd.DataFrame:
         """Reads a SQL table and returns the result as a DataFrame.
         
         Args:
             - query_string (str): The SQL query to execute.
-            - eng_name (str): Name of the SQLAlchemy engine obj.
+            - eng (str): Name of the SQLAlchemy engine obj.
             - parse_dates (list or dict, optional): List of column names to parse as datetime or 
             a dictionary specifying column names and their respective date formats.
         
         Returns:
             - pandas.DataFrame: The query results as a DataFrame.
         """
-        engine = self.get_engine(eng_name)
+        engine = self.get_engine(eng)
         df = pd.read_sql(query, engine, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
 
-    def to_sql(self, df: pd.DataFrame, table_name: str, eng_name: str, if_exists='fail', index=False) -> None:
+    def to_sql(self, df: pd.DataFrame, table_name: str, eng: str, if_exists='fail', index=False) -> None:
         """Save a Pandas DataFrame to a SQL table.
 
         Args:
             - df (pandas.DataFrame): The DataFrame to be written to the SQL table.
             table_name (string): The name of the target SQL table where the DataFrame will be saved.
-            - eng_name (str): Name of the SQLAlchemy engine obj.
+            - eng (str): Name of the SQLAlchemy engine obj.
             - if_exists (string, optional): Specifies what to do if the table already exists. 
             Options are:
                 - 'fail' (default): Raise a ValueError.
@@ -72,7 +72,7 @@ class DatabaseManager:
         Returns:
             - None: This method performs the database operation and does not return anything.
         """
-        engine = self.get_engine(eng_name)
+        engine = self.get_engine(eng)
         self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table_name}...')
         df.to_sql(table_name, engine, if_exists=if_exists, index=index)
 
