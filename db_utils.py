@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, text, Connection, Result
 from sqlalchemy.engine import URL
 
 
@@ -35,6 +35,23 @@ class DatabaseManager:
 
     def connect(self, name: str):
         return self.engines[name].connect()
+
+    def execute(self, query: str, conn:Connection) -> Result:
+        """Executes a SQL query and returns the result object if any.
+        
+        Args:
+            - query (str): The SQL query to execute.
+            - conn (sqlalchemy.Connection): SQLAlchemy Connection object.
+        
+        Returns:
+            - sqlalchemy.Result: SQLAlchemy Result object,
+        """
+        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
+        if isinstance(query, str):
+            query = text(query)
+        res = conn.execute(query)
+        if res.rowcount > 0:
+            return res.fetchall()
 
     def read_sql(self, query: str, eng: str, parse_dates=None) -> pd.DataFrame:
         """Reads a SQL table and returns the result as a DataFrame.
