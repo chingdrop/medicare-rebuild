@@ -1,12 +1,30 @@
 import logging
 import pandas as pd
-from sqlalchemy import create_engine, event
+from typing import List
+from sqlalchemy import create_engine, event, text, Connection, Result, Engine
 from sqlalchemy.engine import URL
 
 
 class DatabaseManager:
-    def __init__(self, username, password, host, database, logger=None):
-        self.connection_url = URL.create(
+    def __init__(self, logger=None):
+        
+        self.engines = {}
+        self.logger = logger or logging.getLogger(DatabaseManager.__name__)
+
+    def create_engine(self, name: str, username: str, password: str, host: str, database: str):
+        """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
+        
+        Args:
+            - name (str): The name of the engine object.
+            - username (str): The username of your credentials.
+            - password (str): The password of your credentials.
+            - host (str): The hostname of the SQL Server.
+            - database (str): The name of your database.
+        
+        Returns:
+            - None
+        """
+        connection_url = URL.create(
             "mssql+pyodbc",
             username=username,
             password=password,
@@ -18,46 +36,61 @@ class DatabaseManager:
                 "TrustServerCertificate": "yes",
             },
         )
-        self.engine = None
-        self.connection = None
-        self.logger = logger or logging.getLogger(DatabaseManager.__name__)
+        engine = create_engine(connection_url)
+        event.listen(engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+        self.engines[name] = engine
 
-    def create_engine(self):
-        self.engine = create_engine(self.connection_url)
-        event.listen(self.engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+    def get_engine(self, name: str) -> Engine:
+        return self.engines[name]
 
-    def begin(self,):
-        if not self.engine:
-            self.create_engine()
-        return self.engine.begin()
+    def begin(self, name: str) -> Connection:
+        return self.engines[name].begin()
 
-    def connect(self,):
-        if not self.engine:
-            self.create_engine()
-        return self.engine.connect()
+    def connect(self, name: str) -> Connection:
+        return self.engines[name].connect()
 
-    def read_sql(self, query: str, parse_dates=None) -> pd.DataFrame:
-        """Executes a SQL query and returns the result as a DataFrame.
+    def execute(self, query: str, conn:Connection) -> Result:
+        """Executes a SQL query and returns the result object if any.
         
         Args:
-            - query_string (str): The SQL query to execute.
+            - query (str): The SQL query to execute.
+            - conn (sqlalchemy.Connection): SQLAlchemy Connection object.
+        
+        Returns:
+            - List[tuple()]: SQLAlchemy result rows.
+        """
+        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
+        if isinstance(query, str):
+            query = text(query)
+        res = conn.execute(query)
+        if res.rowcount > 0:
+            return res.fetchall()
+
+    def read_sql(self, query: str, eng: str, parse_dates: List[str]=None) -> pd.DataFrame:
+        """Reads SQL table and returns the result as a DataFrame.
+        
+        Args:
+            - query (str): The SQL query to execute.
+            - eng (str): Name of the SQLAlchemy engine obj.
             - parse_dates (list or dict, optional): List of column names to parse as datetime or 
             a dictionary specifying column names and their respective date formats.
         
         Returns:
             - pandas.DataFrame: The query results as a DataFrame.
         """
-        df = pd.read_sql(query, self.engine, parse_dates=parse_dates)
+        engine = self.get_engine(eng)
+        df = pd.read_sql(query, engine, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
-    
-    def to_sql(self, df: pd.DataFrame, table_name: str, if_exists='fail', index=False) -> None:
-        """Save a Pandas DataFrame to a SQL table.
+
+    def to_sql(self, df: pd.DataFrame, table: str, eng: str, if_exists: str='fail', index: bool=False) -> None:
+        """Save Pandas DataFrame to a SQL table.
 
         Args:
             - df (pandas.DataFrame): The DataFrame to be written to the SQL table.
-            table_name (string): The name of the target SQL table where the DataFrame will be saved.
+            table (string): The name of the target SQL table where the DataFrame will be saved.
+            - eng (str): Name of the SQLAlchemy engine obj.
             - if_exists (string, optional): Specifies what to do if the table already exists. 
             Options are:
                 - 'fail' (default): Raise a ValueError.
@@ -67,14 +100,16 @@ class DatabaseManager:
             Default is `False`, which means the index will not be written.
         
         Returns:
-            - None: This method performs the database operation and does not return anything.
+            - None
         """
-        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table_name}...')
-        df.to_sql(table_name, self.engine, if_exists=if_exists, index=index)
+        engine = self.get_engine(eng)
+        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...')
+        df.to_sql(table, engine, if_exists=if_exists, index=index)
 
     def dispose(self,):
-        self.engine.dispose()
-        self.engine = None
+        for eng, engine in list(self.engines.items()):
+            engine.dispose()
+            del self.engines[eng]
 
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
