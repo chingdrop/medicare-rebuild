@@ -63,7 +63,7 @@ class DatabaseManager:
         if isinstance(query, str):
             query = text(query)
         res = conn.execute(query)
-        if res.rowcount > 0:
+        if res.returns_rows:
             return res.fetchall()
 
     def read_sql(self, query: str, eng: str, parse_dates: List[str]=None) -> pd.DataFrame:
