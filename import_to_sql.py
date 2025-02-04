@@ -14,7 +14,11 @@ from logger import setup_logger
 load_dotenv()
 
 
-def import_patient_data(filename: Path, logger: logging.Logger=setup_logger('import_patients')) -> None:
+def import_patient_data(
+        filename: Path,
+        snapshot: bool=False,
+        logger: logging.Logger=setup_logger('import_patients')
+) -> None:
     dbm = DatabaseManager(logger=logger)
     dbm.create_engine(
         'gps',
@@ -65,6 +69,14 @@ def import_patient_data(filename: Path, logger: logging.Logger=setup_logger('imp
     patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
     patient_status_df['modified_date'] = pd.Timestamp.now()
     patient_status_df['temp_user'] = 'ITHelp'
+
+    if snapshot:
+        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
+        patient_df.to_csv(snapshot_dir / 'patient_snap.csv', index=False)
+        address_df.to_csv(snapshot_dir / 'patient_address_snap.csv', index=False)
+        insurance_df.to_csv(snapshot_dir / 'patient_insurance_snap.csv', index=False)
+        med_nec_df.to_csv(snapshot_dir / 'medical_necessity_snap.csv', index=False)
+        patient_status_df.to_csv(snapshot_dir / 'patient_status_snap.csv', index=False)
     
     # Patient data is imported first to get the patient_id.
     dbm.to_sql(patient_df, 'patient', 'gps', if_exists='append')
@@ -83,7 +95,10 @@ def import_patient_data(filename: Path, logger: logging.Logger=setup_logger('imp
     dbm.dispose()
 
 
-def import_patient_note_data(logger: logging.Logger=setup_logger('import_patient_notes')):
+def import_patient_note_data(
+        snapshot: bool=False,
+        logger: logging.Logger=setup_logger('import_patient_notes')
+):
     dbm = DatabaseManager(logger=logger)
     dbm.create_engine(
         'gps',
@@ -120,10 +135,13 @@ def import_patient_note_data(logger: logging.Logger=setup_logger('import_patient
     })
 
     # Left join is needed for patient notes without any call time associated.
-    patient_note_df = pd.merge(notes_df, time_df, on=['Note_ID', 'SharePoint_ID', 'LCH_UPN'], how='left')
+    patient_note_df = pd.merge(notes_df, time_df, on=['SharePoint_ID'], how='left')
     patient_note_df['Time_Note'] = patient_note_df['Time_Note'].fillna(patient_note_df['Note_Type'])
     patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
     patient_note_df = standardize_patient_notes(patient_note_df)
+    if snapshot:
+        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
+        patient_note_df.to_csv(snapshot_dir / 'patient_note_snap.csv', index=False)
     
     patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
     patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
@@ -133,7 +151,10 @@ def import_patient_note_data(logger: logging.Logger=setup_logger('import_patient
     dbm.dispose()
 
 
-def import_device_data(logger: logging.Logger=setup_logger('import_devices')):
+def import_device_data(
+        snapshot: bool=False,
+        logger: logging.Logger=setup_logger('import_devices')
+):
     dbm = DatabaseManager(logger=logger)
     dbm.create_engine(
         'gps',
@@ -158,6 +179,10 @@ def import_device_data(logger: logging.Logger=setup_logger('import_devices')):
     device_df = dbm.read_sql(device_stmt, 'fulfillment')
 
     device_df = standardize_devices(device_df)
+    if snapshot:
+        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
+        device_df.to_csv(snapshot_dir / 'device_snap.csv', index=False)
+
     patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
     vendor_id_df = dbm.read_sql(vendor_id_stmt, 'gps')
 
@@ -170,7 +195,10 @@ def import_device_data(logger: logging.Logger=setup_logger('import_devices')):
     dbm.dispose()
 
 
-def import_patient_reading_data(logger: logging.Logger=setup_logger('import_patient_readings')):
+def import_patient_reading_data(
+        snapshot: bool=False,
+        logger: logging.Logger=setup_logger('import_patient_readings')
+):
     dbm = DatabaseManager(logger=logger)
     dbm.create_engine(
         'gps',
@@ -198,6 +226,11 @@ def import_patient_reading_data(logger: logging.Logger=setup_logger('import_pati
 
     bp_readings_df = standardize_bp_readings(bp_readings_df)
     bg_readings_df = standardize_bg_readings(bg_readings_df)
+    if snapshot:
+        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
+        bp_readings_df.to_csv(snapshot_dir / 'blood_pressure_readings_snap.csv', index=False)
+        bg_readings_df.to_csv(snapshot_dir / 'glucose_readings_snap.csv', index=False)
+
     patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
     device_id_df = dbm.read_sql(device_id_stmt, 'gps')
     
