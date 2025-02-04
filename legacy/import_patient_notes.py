@@ -1,4 +1,0 @@
-from import_to_sql import import_patient_note_data
-
-
-import_patient_note_data()
