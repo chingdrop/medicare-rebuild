@@ -40,7 +40,7 @@ class DatabaseManager:
         """Reads a SQL table and returns the result as a DataFrame.
         
         Args:
-            - query_string (str): The SQL query to execute.
+            - query (str): The SQL query to execute.
             - eng (str): Name of the SQLAlchemy engine obj.
             - parse_dates (list or dict, optional): List of column names to parse as datetime or 
             a dictionary specifying column names and their respective date formats.
@@ -77,9 +77,9 @@ class DatabaseManager:
         df.to_sql(table_name, engine, if_exists=if_exists, index=index)
 
     def dispose(self,):
-        for eng_name, engine in list(self.engines.items()):
+        for eng, engine in list(self.engines.items()):
             engine.dispose()
-            del self.engines[eng_name]
+            del self.engines[eng]
 
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
