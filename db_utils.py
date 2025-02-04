@@ -11,6 +11,18 @@ class DatabaseManager:
         self.logger = logger or logging.getLogger(DatabaseManager.__name__)
 
     def create_engine(self, name: str, username: str, password: str, host: str, database: str):
+        """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
+        
+        Args:
+            - name (str): The name of the engine object.
+            - conn (str): The username of your credentials.
+            - password (str): The password of your credentials.
+            - host (str): The hostname of the SQL Server.
+            - database (str): The name of your database.
+        
+        Returns:
+            - None
+        """
         connection_url = URL.create(
             "mssql+pyodbc",
             username=username,
@@ -44,7 +56,7 @@ class DatabaseManager:
             - conn (sqlalchemy.Connection): SQLAlchemy Connection object.
         
         Returns:
-            - sqlalchemy.Result: SQLAlchemy Result object,
+            - List[tuple()]: SQLAlchemy result rows.
         """
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         if isinstance(query, str):
@@ -54,7 +66,7 @@ class DatabaseManager:
             return res.fetchall()
 
     def read_sql(self, query: str, eng: str, parse_dates=None) -> pd.DataFrame:
-        """Reads a SQL table and returns the result as a DataFrame.
+        """Reads SQL table and returns the result as a DataFrame.
         
         Args:
             - query (str): The SQL query to execute.
@@ -72,7 +84,7 @@ class DatabaseManager:
         return df
 
     def to_sql(self, df: pd.DataFrame, table_name: str, eng: str, if_exists='fail', index=False) -> None:
-        """Save a Pandas DataFrame to a SQL table.
+        """Save Pandas DataFrame to a SQL table.
 
         Args:
             - df (pandas.DataFrame): The DataFrame to be written to the SQL table.
@@ -87,7 +99,7 @@ class DatabaseManager:
             Default is `False`, which means the index will not be written.
         
         Returns:
-            - None: This method performs the database operation and does not return anything.
+            - None
         """
         engine = self.get_engine(eng)
         self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table_name}...')
