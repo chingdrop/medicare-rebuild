@@ -21,7 +21,7 @@ dbm.create_engine(
     database=os.getenv('LCH_SQL_GPS_DB')
 )
 with dbm.begin('gps') as conn:
-    conn.execute(text("EXEC reset_all_billing_tables"))
+    dbm.execute("EXEC reset_all_billing_tables", conn)
 
 logger = setup_logger('main', level='debug')
 import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', logger=logger)

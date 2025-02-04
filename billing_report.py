@@ -20,12 +20,12 @@ dbm.create_engine(
 queries_dir = Path.cwd() / 'queries'
 update_patient_note_stmt = read_sql_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding="utf-8-sig")
 with dbm.begin('gps') as conn:
-    conn.execute(text(update_patient_note_stmt))
-    conn.execute(text("EXEC batch_medcode_99202"))
-    conn.execute(text("EXEC batch_medcode_99453"))
-    conn.execute(text("EXEC batch_medcode_99454"))
-    conn.execute(text("EXEC batch_medcode_99457"))
-    conn.execute(text("EXEC batch_medcode_99458"))
+    dbm.execute(update_patient_note_stmt, conn)
+    dbm.execute("EXEC batch_medcode_99202", conn)
+    dbm.execute("EXEC batch_medcode_99453", conn)
+    dbm.execute("EXEC batch_medcode_99454", conn)
+    dbm.execute("EXEC batch_medcode_99457", conn)
+    dbm.execute("EXEC batch_medcode_99458", conn)
     
 df = dbm.read_sql("EXEC create_billing_report", 'gps')
 df.to_excel(Path.cwd() / 'data' / 'test_billing_report.xlsx', index=False, engine='openpyxl')
