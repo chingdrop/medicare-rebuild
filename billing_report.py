@@ -26,6 +26,6 @@ with dbm.begin('gps') as conn:
     conn.execute(text("EXEC batch_medcode_99454"))
     conn.execute(text("EXEC batch_medcode_99457"))
     conn.execute(text("EXEC batch_medcode_99458"))
-    df = dbm.read_sql_query("EXEC create_billing_report", conn)
     
+df = dbm.read_sql("EXEC create_billing_report", 'gps')
 df.to_excel(Path.cwd() / 'data' / 'test_billing_report.xlsx', index=False, engine='openpyxl')

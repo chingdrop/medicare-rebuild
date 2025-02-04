@@ -37,7 +37,7 @@ class DatabaseManager:
         return self.engines[name].connect()
 
     def read_sql(self, query: str, eng_name: str, parse_dates=None) -> pd.DataFrame:
-        """Executes a SQL query and returns the result as a DataFrame.
+        """Reads a SQL table and returns the result as a DataFrame.
         
         Args:
             - query_string (str): The SQL query to execute.
@@ -49,17 +49,9 @@ class DatabaseManager:
             - pandas.DataFrame: The query results as a DataFrame.
         """
         engine = self.get_engine(eng_name)
-        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
-        self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         df = pd.read_sql(query, engine, parse_dates=parse_dates)
-        return df
-    
-    def read_sql_query(self, query: str, conn):
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
-        if isinstance(query, str):
-            query = text(query)
-        df = pd.read_sql_query(query, conn)
         return df
 
     def to_sql(self, df: pd.DataFrame, table_name: str, eng_name: str, if_exists='fail', index=False) -> None:
