@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from db_utils import DatabaseManager
-from helpers import read_sql_file
+from helpers import read_file
 
 
 load_dotenv()
@@ -17,7 +17,7 @@ dbm.create_engine(
 )
 
 queries_dir = Path.cwd() / 'queries'
-update_patient_note_stmt = read_sql_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding="utf-8-sig")
+update_patient_note_stmt = read_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding="utf-8-sig")
 with dbm.begin('gps') as conn:
     dbm.execute(update_patient_note_stmt, conn)
     dbm.execute("EXEC batch_medcode_99202", conn)
