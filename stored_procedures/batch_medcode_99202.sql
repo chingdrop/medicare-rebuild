@@ -11,6 +11,11 @@ BEGIN
 	SET NOCOUNT ON;
 	DROP TABLE IF EXISTS #99202;
 
+	-- Create a temporary table #99202.
+	-- Select patient_id and latest note datetime from the patient notes and note types tables.
+	-- Only give me notes with the type of 'Initial Evaluation'.
+	-- Where a patient_id in the medical code table with a 9920X code doesn't exist.
+	-- Group by patient_id, only include call time minutes 15 or above and less than 30.
 	SELECT pn.patient_id,
 		MAX(pn.note_datetime) AS last_note
 	INTO #99202
@@ -30,6 +35,8 @@ BEGIN
 	HAVING FLOOR(SUM(pn.call_time_seconds)) / 60 >= 15
 		AND FLOOR(SUM(pn.call_time_seconds)) / 60 < 30;
 
+	-- Using the #99202 temporary table.
+	-- Insert patient_id, medical_code_type and latest note datetime into medical code table.
 	INSERT INTO medical_code (patient_id, med_code_type_id, timestamp_applied)
 	SELECT t.patient_id,
 		(
