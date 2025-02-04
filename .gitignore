@@ -5,6 +5,7 @@
 data/
 logs/
 .vs/
+.obsidian/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
