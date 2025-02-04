@@ -11,7 +11,14 @@ class DatabaseManager:
         self.engines = {}
         self.logger = logger or logging.getLogger(DatabaseManager.__name__)
 
-    def create_engine(self, name: str, username: str, password: str, host: str, database: str):
+    def create_engine(
+            self,
+            name: str,
+            username: str,
+            password: str,
+            host: str,
+            database: str
+    ):
         """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
         
         Args:
@@ -84,7 +91,14 @@ class DatabaseManager:
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
 
-    def to_sql(self, df: pd.DataFrame, table: str, eng: str, if_exists: str='fail', index: bool=False) -> None:
+    def to_sql(
+            self,
+            df: pd.DataFrame,
+            table: str,
+            eng: str,
+            if_exists: str='fail',
+            index: bool=False
+    ) -> None:
         """Save Pandas DataFrame to a SQL table.
 
         Args:
