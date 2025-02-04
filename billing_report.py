@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
-from sqlalchemy import text
 
 from db_utils import DatabaseManager
 from helpers import read_sql_file
