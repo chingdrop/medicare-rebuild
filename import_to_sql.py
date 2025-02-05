@@ -5,7 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
-    standardize_devices, standardize_bp_readings, standardize_bg_readings
+    standardize_devices, standardize_bp_readings, standardize_bg_readings, \
+    patient_check_db_constraints, patient_check_failed_data
 from db_utils import DatabaseManager
 from helpers import read_file
 from logger import setup_logger
@@ -40,6 +41,8 @@ def import_patient_data(
     
     patient_id_stmt = read_file(Path.cwd() / 'queries' / 'gets' / 'get_patient_id.sql')
     export_df = standardize_patients(export_df)
+    failed_df = patient_check_failed_data(export_df)
+    export_df = patient_check_db_constraints(export_df)
     patient_df = export_df[[
         'first_name',
         'last_name',
@@ -70,8 +73,10 @@ def import_patient_data(
     patient_status_df['modified_date'] = pd.Timestamp.now()
     patient_status_df['temp_user'] = 'ITHelp'
 
+    data_dir = Path.cwd() / 'data'
+    failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
     if snapshot:
-        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
+        snapshot_dir = data_dir / 'snapshots'
         patient_df.to_csv(snapshot_dir / 'patient_snap.csv', index=False)
         address_df.to_csv(snapshot_dir / 'patient_address_snap.csv', index=False)
         insurance_df.to_csv(snapshot_dir / 'patient_insurance_snap.csv', index=False)
