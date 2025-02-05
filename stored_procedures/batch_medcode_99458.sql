@@ -3,7 +3,8 @@
 -- Create date: 12/26/24
 -- Description:	Adds 99458 to medical code for patients with 20 mins of RPM.
 -- =============================================
-CREATE PROCEDURE [dbo].[batch_medcode_99458]	
+CREATE PROCEDURE [dbo].[batch_medcode_99458]
+	@today_date date
 AS
 BEGIN
 
@@ -17,6 +18,7 @@ BEGIN
 	INSERT INTO @numbers (n)
 	VALUES (1), (2), (3);
 
+	-- Create a temporary table #99458.
 	-- Select patient_id and latest note from the medical code and medical code type tables.
 	-- Left join on medical code and medical code types to include patients with 0 codes.
 	-- Calculate the number of RPM 20 min blocks, round down and coalesce nulls with zero. 
@@ -26,19 +28,19 @@ BEGIN
 	-- Group by patient_id
 	SELECT pn.patient_id,
 		CASE
-			WHEN COALESCE(FLOOR(SUM(pn.call_time_seconds) /1200), 0) > 4 THEN 4
-			ELSE COALESCE(FLOOR(SUM(pn.call_time_seconds) /1200), 0)
+		WHEN COALESCE(FLOOR(SUM(pn.call_time_seconds) /1200), 0) > 4 THEN 4
+		ELSE COALESCE(FLOOR(SUM(pn.call_time_seconds) /1200), 0)
 		END AS rpm_20_mins_blocks,
 		COALESCE(SUM(CASE WHEN mct.name = '99458' THEN 1 ELSE 0 END), 0) AS code_count,
 		MAX(pn.note_datetime) AS last_note
 	INTO #99458
 	FROM patient_note pn
 	LEFT JOIN medical_code mc
-		ON pn.patient_id = mc.patient_id
-		AND mc.timestamp_applied >= DATEADD(MONTH, -1, GETDATE())
+	ON pn.patient_id = mc.patient_id
+	AND mc.timestamp_applied >= DATEADD(MONTH, -1, @today_date)
 	LEFT JOIN medical_code_type mct
-		ON mc.med_code_type_id = mct.med_code_type_id
-	WHERE pn.note_datetime >= DATEADD(MONTH, -1, GETDATE())
+	ON mc.med_code_type_id = mct.med_code_type_id
+	WHERE pn.note_datetime >= DATEADD(MONTH, -1, @today_date)
 	GROUP BY pn.patient_id;
 
 	-- Using the #99458 temporary table.
@@ -49,12 +51,12 @@ BEGIN
 	-- The cross join and the last where statement should multiply the rows by the result. 
 	INSERT INTO medical_code (patient_id, med_code_type_id, timestamp_applied)
 	SELECT t.patient_id,
-		(
+	(
 		SELECT mct.med_code_type_id
 		FROM medical_code_type mct
 		WHERE mct.name = '99458'
-		),
-		t.last_note
+	),
+	t.last_note
 	FROM #99458 t
 	CROSS JOIN @numbers as n
 	WHERE (t.rpm_20_mins_blocks - t.code_count) > 1
