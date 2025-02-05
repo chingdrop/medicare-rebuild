@@ -56,7 +56,7 @@ class DatabaseManager:
     def connect(self, name: str) -> Connection:
         return self.engines[name].connect()
 
-    def execute(self, query: str, conn:Connection) -> Result:
+    def execute(self, query: str, params:dict=None, conn:Connection=None) -> Result:
         """Executes a SQL query and returns the result object if any.
         
         Args:
@@ -69,7 +69,7 @@ class DatabaseManager:
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         if isinstance(query, str):
             query = text(query)
-        res = conn.execute(query)
+        res = conn.execute(query, params)
         if res.returns_rows:
             return res.fetchall()
 
