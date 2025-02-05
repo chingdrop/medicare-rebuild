@@ -215,40 +215,40 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
     return row['Vendor']
 
 
-def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
-    patient_df['First Name'] = patient_df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
-    patient_df['Last Name'] = patient_df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
-    patient_df['Full Name'] = patient_df['First Name'] + ' ' + patient_df['Last Name']
-    patient_df['Middle Name'] = patient_df['Middle Name'].apply(standardize_name, args=(r'[^a-zA-Z-\s]',))
-    patient_df['Nickname'] = patient_df['Nickname'].str.strip().str.title()
-    patient_df['Phone Number'] = patient_df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
-    patient_df['Gender'] = patient_df['Gender'].replace({'Male': 'M', 'Female': 'F'})
-    patient_df['Email'] = patient_df['Email'].apply(standardize_email)
-    patient_df['Suffix'] = patient_df['Suffix'].str.strip().str.title()
-    patient_df['Social Security'] = patient_df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
+def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
+    df['First Name'] = df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
+    df['Last Name'] = df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
+    df['Full Name'] = df['First Name'] + ' ' + df['Last Name']
+    df['Middle Name'] = df['Middle Name'].apply(standardize_name, args=(r'[^a-zA-Z-\s]',))
+    df['Nickname'] = df['Nickname'].str.strip().str.title()
+    df['Phone Number'] = df['Phone Number'].astype(str).str.replace(r'\D', '', regex=True)
+    df['Gender'] = df['Gender'].replace({'Male': 'M', 'Female': 'F'})
+    df['Email'] = df['Email'].apply(standardize_email)
+    df['Suffix'] = df['Suffix'].str.strip().str.title()
+    df['Social Security'] = df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
 
     # The logic in standardize name can be used for address text as well.
-    patient_df['Mailing Address'] = patient_df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
-    patient_df['City'] = patient_df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
-    patient_df['State'] = patient_df['State'].apply(standardize_state)
-    patient_df['Zip code'] = patient_df['Zip code'].astype(str).str.split('-', n=1).str[0]
+    df['Mailing Address'] = df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
+    df['City'] = df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
+    df['State'] = df['State'].apply(standardize_state)
+    df['Zip code'] = df['Zip code'].astype(str).str.split('-', n=1).str[0]
 
-    patient_df['Medicare ID number'] = patient_df['Medicare ID number'].apply(standardize_mbi)
-    patient_df['DX_Code'] = patient_df['DX_Code'].apply(standardize_dx_code)
-    patient_df['Insurance ID:'] = patient_df['Insurance ID:'].apply(standardize_insurance_id)
-    patient_df['InsuranceID2'] = patient_df['InsuranceID2'].apply(standardize_insurance_id)
-    patient_df['Insurance Name:'] = patient_df.apply(fill_primary_payer, axis=1)
-    patient_df['Insurance ID:'] = patient_df.apply(fill_primary_payer_id, axis=1)
-    patient_df['Insurance Name:'] = patient_df['Insurance Name:'].apply(standardize_insurance_name)
-    patient_df['InsuranceName2'] = patient_df['InsuranceName2'].apply(standardize_insurance_name)
+    df['Medicare ID number'] = df['Medicare ID number'].apply(standardize_mbi)
+    df['DX_Code'] = df['DX_Code'].apply(standardize_dx_code)
+    df['Insurance ID:'] = df['Insurance ID:'].apply(standardize_insurance_id)
+    df['InsuranceID2'] = df['InsuranceID2'].apply(standardize_insurance_id)
+    df['Insurance Name:'] = df.apply(fill_primary_payer, axis=1)
+    df['Insurance ID:'] = df.apply(fill_primary_payer_id, axis=1)
+    df['Insurance Name:'] = df['Insurance Name:'].apply(standardize_insurance_name)
+    df['InsuranceName2'] = df['InsuranceName2'].apply(standardize_insurance_name)
 
     previous_patient_statuses = {
         'DO NOT CALL': 'Do Not Call' ,
         'In-Active': 'Inactive',
         'On-Board': 'Onboard'
     }
-    patient_df['Member_Status'] = patient_df['Member_Status'].replace(previous_patient_statuses)
-    patient_df = patient_df.rename(
+    df['Member_Status'] = df['Member_Status'].replace(previous_patient_statuses)
+    df = df.rename(
         columns={
             'First Name': 'first_name',
             'Last Name': 'last_name',
@@ -277,33 +277,33 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     # Check database constraints
-    patient_df = patient_df[patient_df['phone_number'].apply(lambda x: len(str(x)) <= 10)]
-    patient_df = patient_df[patient_df['social_security'].apply(lambda x: len(str(x)) <= 9)]
-    patient_df = patient_df[patient_df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
-    patient_df = patient_df[patient_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
-    patient_df = patient_df[patient_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
-    patient_df = patient_df[patient_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 10)]
+    df = df[df['social_security'].apply(lambda x: len(str(x)) <= 9)]
+    df = df[df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
+    df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
+    df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     # Convert string Nan back to Null value.
-    patient_df.replace(r'(?i)^nan$', None, regex=True, inplace=True)
-    return patient_df
+    df.replace(r'(?i)^nan$', None, regex=True, inplace=True)
+    return df
 
 
-def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
-    patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].apply(standardize_call_time)
-    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(['Joycelynn Harris']), 'Recording_Time'] = 900
+def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
+    df['Recording_Time'] = df['Recording_Time'].apply(standardize_call_time)
+    df.loc[df['LCH_UPN'].isin(['Joycelynn Harris']), 'Recording_Time'] = 900
 
-    patient_note_df['Notes'] = patient_note_df['Notes'].apply(html.unescape)
-    patient_note_df['Notes'] = patient_note_df['Notes'].str.replace(r'<.*?>', '', regex=True)
+    df['Notes'] = df['Notes'].apply(html.unescape)
+    df['Notes'] = df['Notes'].str.replace(r'<.*?>', '', regex=True)
 
-    patient_note_df['Time_Note'] = patient_note_df['Time_Note'].apply(standardize_note_types)
-    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Time_Note'] = 'Initial Evaluation'
-    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(alert_team_list), 'Time_Note'] = 'Alert'
+    df['Time_Note'] = df['Time_Note'].apply(standardize_note_types)
+    df.loc[df['LCH_UPN'].isin(nurse_list), 'Time_Note'] = 'Initial Evaluation'
+    df.loc[df['LCH_UPN'].isin(alert_team_list), 'Time_Note'] = 'Alert'
 
-    patient_note_df['SharePoint_ID'] = pd.to_numeric(patient_note_df['SharePoint_ID'], errors='coerce', downcast='integer')
+    df['SharePoint_ID'] = pd.to_numeric(df['SharePoint_ID'], errors='coerce', downcast='integer')
     # Boolean column is flipped because it's stored differently in the database.
-    patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].replace({True: 0, False: 1})
-    patient_note_df['Auto_Time'] = patient_note_df['Auto_Time'].astype('Int64')
-    patient_note_df = patient_note_df.rename(
+    df['Auto_Time'] = df['Auto_Time'].replace({True: 0, False: 1})
+    df['Auto_Time'] = df['Auto_Time'].astype('Int64')
+    df = df.rename(
         columns={
             'SharePoint_ID': 'sharepoint_id',
             'Notes': 'note_content',
@@ -317,31 +317,31 @@ def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
         }
     )
     # Convert string Nan back to Null value.
-    patient_note_df.replace(r'(?i)^na(n)?$', None, regex=True, inplace=True)
-    return patient_note_df
+    df.replace(r'(?i)^na(n)?$', None, regex=True, inplace=True)
+    return df
 
 
-def standardize_devices(device_df: pd.DataFrame) -> pd.DataFrame:
-    device_df['Patient_ID'] = device_df['Patient_ID'].astype('Int64')
-    device_df['Device_ID'] = device_df['Device_ID'].str.replace('-', '')
-    device_df['Vendor'] = device_df.apply(standardize_vendor, axis=1)
-    device_df = device_df.rename(
+def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
+    df['Patient_ID'] = df['Patient_ID'].astype('Int64')
+    df['Device_ID'] = df['Device_ID'].str.replace('-', '')
+    df['Vendor'] = df.apply(standardize_vendor, axis=1)
+    df = df.rename(
         columns={
             'Device_ID': 'model_number',
             'Device_Name': 'name',
             'Patient_ID': 'sharepoint_id'
         }
     )
-    return device_df
+    return df
 
 
-def standardize_bp_readings(bp_readings_df: pd.DataFrame) -> pd.DataFrame:
-    bp_readings_df['SharePoint_ID'] = bp_readings_df['SharePoint_ID'].astype('Int64')
-    bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].replace({True: 1, False: 0})
-    bp_readings_df['Manual_Reading'] = bp_readings_df['Manual_Reading'].astype('Int64')
-    bp_readings_df['BP_Reading_Systolic'] = bp_readings_df['BP_Reading_Systolic'].astype(float).round(2)
-    bp_readings_df['BP_Reading_Diastolic'] = bp_readings_df['BP_Reading_Diastolic'].astype(float).round(2)
-    bp_readings_df = bp_readings_df.rename(
+def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
+    df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
+    df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
+    df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
+    df['BP_Reading_Systolic'] = df['BP_Reading_Systolic'].astype(float).round(2)
+    df['BP_Reading_Diastolic'] = df['BP_Reading_Diastolic'].astype(float).round(2)
+    df = df.rename(
         columns={
             'SharePoint_ID': 'sharepoint_id',
             'Device_Model': 'temp_device',
@@ -352,15 +352,15 @@ def standardize_bp_readings(bp_readings_df: pd.DataFrame) -> pd.DataFrame:
             'Manual_Reading': 'is_manual'
         }
     )
-    return bp_readings_df
+    return df
 
 
-def standardize_bg_readings(bg_readings_df: pd.DataFrame) -> pd.DataFrame:
-    bg_readings_df['SharePoint_ID'] = bg_readings_df['SharePoint_ID'].astype('Int64')
-    bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].replace({True: 1, False: 0})
-    bg_readings_df['Manual_Reading'] = bg_readings_df['Manual_Reading'].astype('Int64')
-    bg_readings_df['BG_Reading'] = bg_readings_df['BG_Reading'].astype(float).round(2)
-    bg_readings_df = bg_readings_df.rename(
+def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
+    df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
+    df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
+    df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
+    df['BG_Reading'] = df['BG_Reading'].astype(float).round(2)
+    df = df.rename(
         columns={
             'SharePoint_ID': 'sharepoint_id',
             'Device_Model': 'temp_device',
@@ -370,7 +370,7 @@ def standardize_bg_readings(bg_readings_df: pd.DataFrame) -> pd.DataFrame:
             'Manual_Reading': 'is_manual'
         }
     )
-    return bg_readings_df
+    return df
 
 
 def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
