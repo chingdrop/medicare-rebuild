@@ -379,12 +379,12 @@ def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
     failed_df.loc[failed_df['primary_payer_id'].apply(lambda x: len(str(x)) != 30), 'error_type'] = 'primary payer id length error'
     failed_df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) != 30)]
     failed_df.loc[failed_df['secondary_payer_id'].apply(lambda x: len(str(x)) != 30), 'error_type'] = 'secondary payer id length error'
-    failed_df = df['primary_payer_name', 'primary_payer_id'].isnull().all(axis=1)
+    failed_df = df[df[['primary_payer_id', 'primary_payer_name']].isnull().all(axis=1)]
     failed_df.loc[failed_df[['primary_payer_name', 'primary_payer_id']].isnull().all(axis=1), 'error_type'] = 'missing insurance information'
     duplicate_df = df[df.duplicated(subset=['first_name', 'last_name', 'date_of_birth'], keep=False)]
     duplicate_df['error_type'] = 'duplicate patient'
     failed_df = pd.concat([failed_df, duplicate_df])
-    failed_df.insert(0, 'error_type', failed_df['error_type'])
+    failed_df.insert(0, 'error_type', failed_df.pop('error_type'))
     return failed_df
 
 
