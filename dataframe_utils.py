@@ -290,7 +290,7 @@ def standardize_patients(patient_df: pd.DataFrame) -> pd.DataFrame:
 
 def standardize_patient_notes(patient_note_df: pd.DataFrame) -> pd.DataFrame:
     patient_note_df['Recording_Time'] = patient_note_df['Recording_Time'].apply(standardize_call_time)
-    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(nurse_list), 'Recording_Time'] = 900
+    patient_note_df.loc[patient_note_df['LCH_UPN'].isin(['Joycelynn Harris']), 'Recording_Time'] = 900
 
     patient_note_df['Notes'] = patient_note_df['Notes'].apply(html.unescape)
     patient_note_df['Notes'] = patient_note_df['Notes'].str.replace(r'<.*?>', '', regex=True)
