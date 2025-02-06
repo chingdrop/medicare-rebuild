@@ -17,12 +17,14 @@ dbm.create_engine(
     database=os.getenv('LCH_SQL_GPS_DB')
 )
 
-queries_dir = Path.cwd() / 'queries'
-update_patient_note_stmt = read_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding='utf-8-sig')
+updates_dir = Path.cwd() / 'queries' / 'updates'
+update_patient_note_stmt = read_file(updates_dir / 'update_patient_note.sql', encoding='utf-8-sig')
+update_patient_status_stmt = read_file(updates_dir / 'update_patient_status.sql', encoding='utf-8-sig')
 sproc_params = {'today_date': datetime.strptime('2025-01-31', '%Y-%m-%d')}
 with dbm.begin('gps') as conn:
     dbm.execute("EXEC reset_medical_code_tables", conn=conn)
     dbm.execute(update_patient_note_stmt, conn=conn)
+    dbm.execute(update_patient_status_stmt, conn=conn)
     dbm.execute("EXEC batch_medcode_99202", conn=conn)
     dbm.execute("EXEC batch_medcode_99453_bg", conn=conn)
     dbm.execute("EXEC batch_medcode_99453_bp", conn=conn)
