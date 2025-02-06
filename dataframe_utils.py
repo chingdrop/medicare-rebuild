@@ -375,14 +375,15 @@ def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
     failed_df.loc[failed_df['zipcode'].apply(lambda x: len(str(x)) != 5), 'error_type'] = 'zipcode length error'
     failed_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11)]
     failed_df.loc[failed_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'medicare beneficiary id length error'
-    failed_df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) != 30)]
-    failed_df.loc[failed_df['primary_payer_id'].apply(lambda x: len(str(x)) != 30), 'error_type'] = 'primary payer id length error'
-    failed_df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) != 30)]
-    failed_df.loc[failed_df['secondary_payer_id'].apply(lambda x: len(str(x)) != 30), 'error_type'] = 'secondary payer id length error'
+    failed_df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    failed_df.loc[failed_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30), 'error_type'] = 'primary payer id length error'
+    failed_df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
+    failed_df.loc[failed_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30), 'error_type'] = 'secondary payer id length error'
     failed_df = df[df[['primary_payer_id', 'primary_payer_name']].isnull().all(axis=1)]
     failed_df.loc[failed_df[['primary_payer_name', 'primary_payer_id']].isnull().all(axis=1), 'error_type'] = 'missing insurance information'
     duplicate_df = df[df.duplicated(subset=['first_name', 'last_name', 'date_of_birth'], keep=False)]
     duplicate_df['error_type'] = 'duplicate patient'
+    duplicate_df.sort_values(by=['first_name', 'last_name'])
     failed_df = pd.concat([failed_df, duplicate_df])
     failed_df.insert(0, 'error_type', failed_df.pop('error_type'))
     return failed_df
