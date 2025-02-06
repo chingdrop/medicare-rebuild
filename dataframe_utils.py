@@ -106,6 +106,8 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         - string: The standardized insurance name.    
     """
+    if pd.isna(name):
+        return None
     name = str(name).strip().title()
     for standard_name, keyword_sets in insurance_keywords.items():
         for keyword_set in keyword_sets:
@@ -125,6 +127,8 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         - string: The standardized insurance ID.    
     """
+    if pd.isna(ins_id):
+        return None
     insurance_id = str(ins_id).strip().upper()
     insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
     id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
@@ -379,12 +383,12 @@ def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
     failed_df.loc[failed_df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30), 'error_type'] = 'primary payer id length error'
     failed_df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     failed_df.loc[failed_df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30), 'error_type'] = 'secondary payer id length error'
-    failed_df = df[df[['primary_payer_id', 'primary_payer_name']].isnull().all(axis=1)]
-    failed_df.loc[failed_df[['primary_payer_name', 'primary_payer_id']].isnull().all(axis=1), 'error_type'] = 'missing insurance information'
+    missing_df = df[df[['primary_payer_id', 'primary_payer_name']].isnull().all(axis=1)]
+    missing_df['error_type'] = 'missing insurance information'
     duplicate_df = df[df.duplicated(subset=['first_name', 'last_name', 'date_of_birth'], keep=False)]
     duplicate_df['error_type'] = 'duplicate patient'
     duplicate_df.sort_values(by=['first_name', 'last_name'])
-    failed_df = pd.concat([failed_df, duplicate_df])
+    failed_df = pd.concat([failed_df, duplicate_df, missing_df])
     failed_df.insert(0, 'error_type', failed_df.pop('error_type'))
     return failed_df
 
