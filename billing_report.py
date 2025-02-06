@@ -18,15 +18,18 @@ dbm.create_engine(
 )
 
 queries_dir = Path.cwd() / 'queries'
-update_patient_note_stmt = read_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding="utf-8-sig")
+update_patient_note_stmt = read_file(queries_dir / 'updates' / 'update_patient_note.sql', encoding='utf-8-sig')
 sproc_params = {'today_date': datetime.strptime('2025-01-31', '%Y-%m-%d')}
 with dbm.begin('gps') as conn:
+    dbm.execute("EXEC reset_medical_code_tables", conn=conn)
     dbm.execute(update_patient_note_stmt, conn=conn)
     dbm.execute("EXEC batch_medcode_99202", conn=conn)
-    dbm.execute("EXEC batch_medcode_99453", conn=conn)
-    dbm.execute("EXEC batch_medcode_99454 :today_date", sproc_params, conn=conn)
+    dbm.execute("EXEC batch_medcode_99453_bg", conn=conn)
+    dbm.execute("EXEC batch_medcode_99453_bp", conn=conn)
+    dbm.execute("EXEC batch_medcode_99454_bg :today_date", sproc_params, conn=conn)
+    dbm.execute("EXEC batch_medcode_99454_bp :today_date", sproc_params, conn=conn)
     dbm.execute("EXEC batch_medcode_99457 :today_date", sproc_params, conn=conn)
     dbm.execute("EXEC batch_medcode_99458 :today_date", sproc_params, conn=conn)
     
 df = dbm.read_sql("EXEC create_billing_report", 'gps')
-df.to_excel(Path.cwd() / 'data' / 'test_billing_report.xlsx', index=False, engine='openpyxl')
+df.to_excel(Path.cwd() / 'data' / 'LCH_Billing_Report.xlsx', index=False, engine='openpyxl')
