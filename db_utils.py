@@ -73,7 +73,7 @@ class DatabaseManager:
         if res.returns_rows:
             return res.fetchall()
 
-    def read_sql(self, query: str, eng: str='', params:dict=None, parse_dates: List[str]=None) -> pd.DataFrame:
+    def read_sql(self, query: str, eng: str, params:dict=None, parse_dates: List[str]=None) -> pd.DataFrame:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:
