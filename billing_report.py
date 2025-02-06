@@ -4,7 +4,8 @@ from pathlib import Path
 from datetime import datetime
 
 from db_utils import DatabaseManager
-from helpers import read_file, get_last_month_billing_cycle
+from helpers import get_last_month_billing_cycle
+from queries import update_patient_note_stmt, update_patient_status_stmt
 
 
 load_dotenv()
@@ -18,8 +19,6 @@ dbm.create_engine(
 )
 
 updates_dir = Path.cwd() / 'queries' / 'updates'
-update_patient_note_stmt = read_file(updates_dir / 'update_patient_note.sql', encoding='utf-8-sig')
-update_patient_status_stmt = read_file(updates_dir / 'update_patient_status.sql', encoding='utf-8-sig')
 medcode_params = {'today_date': datetime.strptime('2025-01-31', '%Y-%m-%d')}
 with dbm.begin('gps') as conn:
     dbm.execute("EXEC reset_medical_code_tables", conn=conn)
