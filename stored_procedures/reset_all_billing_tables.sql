@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE reset_all_billing_tables
+﻿CREATE PROCEDURE [dbo].[reset_all_billing_tables]
 AS
 BEGIN
 	
