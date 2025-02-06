@@ -73,7 +73,7 @@ class DatabaseManager:
         if res.returns_rows:
             return res.fetchall()
 
-    def read_sql(self, query: str, eng: str, parse_dates: List[str]=None) -> pd.DataFrame:
+    def read_sql(self, query: str, eng: str='', params:dict=None, parse_dates: List[str]=None) -> pd.DataFrame:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:
@@ -86,7 +86,7 @@ class DatabaseManager:
             - pandas.DataFrame: The query results as a DataFrame.
         """
         engine = self.get_engine(eng)
-        df = pd.read_sql(query, engine, parse_dates=parse_dates)
+        df = pd.read_sql(query, engine, params=params, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
