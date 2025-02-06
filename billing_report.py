@@ -34,6 +34,5 @@ with dbm.begin('gps') as conn:
     dbm.execute("EXEC batch_medcode_99458 :today_date", medcode_params, conn=conn)
     
 start_date, end_date = get_last_month_billing_cycle()
-billing_report_params = {'start_date': start_date, 'end_date': end_date}
-df = dbm.read_sql("EXEC create_billing_report :start_date, :end_date", 'gps', params=billing_report_params)
+df = dbm.read_sql("EXEC create_billing_report @start_date = ?, @end_date = ?", 'gps', params=(start_date, end_date))
 df.to_excel(Path.cwd() / 'data' / 'LCH_Billing_Report.xlsx', index=False, engine='openpyxl')
