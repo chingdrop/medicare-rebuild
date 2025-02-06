@@ -8,8 +8,10 @@ from dataframe_utils import add_id_col, standardize_patients, standardize_patien
     standardize_devices, standardize_bp_readings, standardize_bg_readings, \
     patient_check_db_constraints, patient_check_failed_data
 from db_utils import DatabaseManager
-from helpers import read_file
 from logger import setup_logger
+from queries import get_patient_id_stmt, get_notes_log_stmt, get_time_log_stmt, \
+    get_fulfillment_stmt, get_vendor_id_stmt, get_bg_readings_stmt, get_bp_readings_stmt, \
+    get_device_id_stmt
 
 
 load_dotenv()
@@ -39,7 +41,6 @@ def import_patient_data(
     )
     logger.debug(f"Sharepoint Online Patient Export (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
     
-    patient_id_stmt = read_file(Path.cwd() / 'queries' / 'gets' / 'get_patient_id.sql')
     export_df = standardize_patients(export_df)
     failed_df = patient_check_failed_data(export_df)
     export_df = patient_check_db_constraints(export_df)
@@ -85,7 +86,7 @@ def import_patient_data(
     
     # Patient data is imported first to get the patient_id.
     dbm.to_sql(patient_df, 'patient', 'gps', if_exists='append')
-    patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
+    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
     
     address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
     insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
@@ -126,14 +127,9 @@ def import_patient_note_data(
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_TIME')
     )
-
-    get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    notes_stmt = read_file(get_queries_dir / 'get_notes_log.sql')
-    time_stmt = read_file(get_queries_dir / 'get_time_log.sql')
-    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
     
-    notes_df = dbm.read_sql(notes_stmt, 'notes', parse_dates=['TimeStamp'])
-    time_df = dbm.read_sql(time_stmt, 'time', parse_dates=['Start_Time', 'End_Time'])
+    notes_df = dbm.read_sql(get_notes_log_stmt, 'notes', parse_dates=['TimeStamp'])
+    time_df = dbm.read_sql(get_time_log_stmt, 'time', parse_dates=['Start_Time', 'End_Time'])
     time_df = time_df.rename(columns={
         'SharPoint_ID': 'SharePoint_ID',
         'Notes': 'Note_Type'
@@ -148,7 +144,7 @@ def import_patient_note_data(
         snapshot_dir = Path.cwd() / 'data' / 'snapshots'
         patient_note_df.to_csv(snapshot_dir / 'patient_note_snap.csv', index=False)
     
-    patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
+    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
     patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
 
     dbm.to_sql(patient_note_df, 'patient_note', 'gps', if_exists='append')
@@ -175,21 +171,16 @@ def import_device_data(
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_FULFILLMENT')
     )
-
-    get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    device_stmt = read_file(get_queries_dir / 'get_fulfillment.sql')
-    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
-    vendor_id_stmt = read_file(get_queries_dir / 'get_vendor_id.sql')
     
-    device_df = dbm.read_sql(device_stmt, 'fulfillment')
+    device_df = dbm.read_sql(get_fulfillment_stmt, 'fulfillment')
 
     device_df = standardize_devices(device_df)
     if snapshot:
         snapshot_dir = Path.cwd() / 'data' / 'snapshots'
         device_df.to_csv(snapshot_dir / 'device_snap.csv', index=False)
 
-    patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
-    vendor_id_df = dbm.read_sql(vendor_id_stmt, 'gps')
+    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
+    vendor_id_df = dbm.read_sql(get_vendor_id_stmt, 'gps')
 
     device_df = add_id_col(df=device_df, id_df=patient_id_df, col='sharepoint_id')
     vendor_id_df = vendor_id_df.rename(columns={'name': 'Vendor'})
@@ -219,15 +210,9 @@ def import_patient_reading_data(
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_READINGS')
     )
-
-    get_queries_dir = Path.cwd() / 'queries' / 'gets'
-    bp_readings_stmt = read_file(get_queries_dir / 'get_bp_readings.sql')
-    bg_readings_stmt = read_file(get_queries_dir / 'get_bg_readings.sql')
-    patient_id_stmt = read_file(get_queries_dir / 'get_patient_id.sql')
-    device_id_stmt = read_file(get_queries_dir / 'get_device_id.sql')
     
-    bp_readings_df = dbm.read_sql(bp_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
-    bg_readings_df = dbm.read_sql(bg_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
+    bp_readings_df = dbm.read_sql(get_bp_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
+    bg_readings_df = dbm.read_sql(get_bg_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
 
     bp_readings_df = standardize_bp_readings(bp_readings_df)
     bg_readings_df = standardize_bg_readings(bg_readings_df)
@@ -236,8 +221,8 @@ def import_patient_reading_data(
         bp_readings_df.to_csv(snapshot_dir / 'blood_pressure_readings_snap.csv', index=False)
         bg_readings_df.to_csv(snapshot_dir / 'glucose_readings_snap.csv', index=False)
 
-    patient_id_df = dbm.read_sql(patient_id_stmt, 'gps')
-    device_id_df = dbm.read_sql(device_id_stmt, 'gps')
+    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
+    device_id_df = dbm.read_sql(get_device_id_stmt, 'gps')
     
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
