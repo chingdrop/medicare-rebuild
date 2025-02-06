@@ -1,6 +1,5 @@
 import calendar
 from datetime import datetime, timedelta
-from pathlib import Path
 
 
 def get_last_month_billing_cycle():
