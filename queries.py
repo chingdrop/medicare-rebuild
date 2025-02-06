@@ -1,13 +1,13 @@
 get_bg_readings_stmt = """
 SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BG_Reading, Manual_Reading
 FROM Glucose_Readings
-WHERE Time_Recorded <= :start_date AND Time_Recorded >= :end_date
+WHERE Time_Recorded <= ? AND Time_Recorded >= ?
 """
 
 get_bp_readings_stmt = """
 SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BP_Reading_Systolic, BP_Reading_Diastolic, Manual_Reading
 FROM Blood_Pressure_Readings
-WHERE Time_Recorded <= :start_date AND Time_Recorded >= :end_date
+WHERE Time_Recorded <= ? AND Time_Recorded >= ?
 """
 
 get_device_id_stmt = """
@@ -24,7 +24,7 @@ WHERE Resupply = 0 AND Vendor IN ('Tenovi', 'Omron')
 get_notes_log_stmt = """
 SELECT SharePoint_ID, Notes, TimeStamp, LCH_UPN, Time_Note, Note_ID
 FROM Medical_Notes
-WHERE TimeStamp <= :start_date AND TimeStamp >= :end_date
+WHERE TimeStamp <= ? AND TimeStamp >= ?
 """
 
 get_patient_id_stmt = """
@@ -35,7 +35,7 @@ FROM patient
 get_time_log_stmt = """
 SELECT SharPoint_ID, Recording_Time, LCH_UPN, Notes, Auto_Time, Start_Time, End_Time, Note_ID
 FROM Time_Log
-WHERE End_Time <= :start_date AND End_Time >= :end_date
+WHERE End_Time <= ? AND End_Time >= ?
 """
 
 get_vendor_id_stmt = """

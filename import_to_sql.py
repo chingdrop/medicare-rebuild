@@ -8,6 +8,7 @@ from dataframe_utils import add_id_col, standardize_patients, standardize_patien
     standardize_devices, standardize_bp_readings, standardize_bg_readings, \
     patient_check_db_constraints, patient_check_failed_data
 from db_utils import DatabaseManager
+from helpers import get_last_month_billing_cycle
 from logger import setup_logger
 from queries import get_patient_id_stmt, get_notes_log_stmt, get_time_log_stmt, \
     get_fulfillment_stmt, get_vendor_id_stmt, get_bg_readings_stmt, get_bp_readings_stmt, \
@@ -127,9 +128,15 @@ def import_patient_note_data(
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_TIME')
     )
-    
-    notes_df = dbm.read_sql(get_notes_log_stmt, 'notes', parse_dates=['TimeStamp'])
-    time_df = dbm.read_sql(get_time_log_stmt, 'time', parse_dates=['Start_Time', 'End_Time'])
+    start_date, end_date = get_last_month_billing_cycle()
+    notes_df = dbm.read_sql(get_notes_log_stmt,
+                            'notes',
+                            params=(start_date, end_date),
+                            parse_dates=['TimeStamp'])
+    time_df = dbm.read_sql(get_time_log_stmt,
+                           'time',
+                           params=(start_date, end_date),
+                           parse_dates=['Start_Time', 'End_Time'])
     time_df = time_df.rename(columns={
         'SharPoint_ID': 'SharePoint_ID',
         'Notes': 'Note_Type'
@@ -210,9 +217,15 @@ def import_patient_reading_data(
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_READINGS')
     )
-    
-    bp_readings_df = dbm.read_sql(get_bp_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
-    bg_readings_df = dbm.read_sql(get_bg_readings_stmt, 'readings', parse_dates=['Time_Recorded', 'Time_Recieved'])
+    start_date, end_date = get_last_month_billing_cycle()
+    bp_readings_df = dbm.read_sql(get_bp_readings_stmt,
+                                  'readings',
+                                  params=(start_date, end_date),
+                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
+    bg_readings_df = dbm.read_sql(get_bg_readings_stmt,
+                                  'readings',
+                                  params=(start_date, end_date),
+                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
 
     bp_readings_df = standardize_bp_readings(bp_readings_df)
     bg_readings_df = standardize_bg_readings(bg_readings_df)
