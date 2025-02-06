@@ -2,7 +2,7 @@ import re
 import html
 import pandas as pd
 
-from enums import alert_team_list, insurance_keywords, nurse_list, state_abbreviations
+from enums import insurance_keywords, state_abbreviations
 
 
 def standardize_name(name: str, pattern: str) -> str:
@@ -289,8 +289,8 @@ def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
     df['Notes'] = df['Notes'].str.replace(r'<.*?>', '', regex=True)
 
     df['Time_Note'] = df['Time_Note'].apply(standardize_note_types)
-    df.loc[df['LCH_UPN'].isin(nurse_list), 'Time_Note'] = 'Initial Evaluation'
-    df.loc[df['LCH_UPN'].isin(alert_team_list), 'Time_Note'] = 'Alert'
+    df.loc[df['LCH_UPN'].isin(['Joycelynn Harris', 'Melanie Coffey', 'Krista Lewin']), 'Time_Note'] = 'Initial Evaluation'
+    df.loc[df['LCH_UPN'].isin(['Christylyn Diosma', 'Maria Albingco', 'Mary Cortes', 'Richel Rodriguez', 'Rigel Sagayno']), 'Time_Note'] = 'Alert'
 
     df['SharePoint_ID'] = pd.to_numeric(df['SharePoint_ID'], errors='coerce', downcast='integer')
     # Boolean column is flipped because it's stored differently in the database.
