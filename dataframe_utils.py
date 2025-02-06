@@ -237,10 +237,10 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['DX_Code'] = df['DX_Code'].apply(standardize_dx_code)
     df['Insurance ID:'] = df['Insurance ID:'].apply(standardize_insurance_id)
     df['InsuranceID2'] = df['InsuranceID2'].apply(standardize_insurance_id)
-    df['Insurance Name:'] = df.apply(fill_primary_payer, axis=1)
-    df['Insurance ID:'] = df.apply(fill_primary_payer_id, axis=1)
     df['Insurance Name:'] = df['Insurance Name:'].apply(standardize_insurance_name)
     df['InsuranceName2'] = df['InsuranceName2'].apply(standardize_insurance_name)
+    df['Insurance Name:'] = df.apply(fill_primary_payer, axis=1)
+    df['Insurance ID:'] = df.apply(fill_primary_payer_id, axis=1)
 
     previous_patient_statuses = {
         'DO NOT CALL': 'Do Not Call' ,
