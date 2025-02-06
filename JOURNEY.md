@@ -1,6 +1,6 @@
 ## Notes
+- Queries that have multiple statements must be a stored procedure due to SQLAlchemy.
 - I got more accurate results in the billing report when I only imported data from the last month.
-	- Is there a way to dynamically search for the current billing cycle? i.e., Jan 1st to Jan 31st.
 
 ## To-Do List
 ### Infrastructure
@@ -13,12 +13,11 @@
 	- [ ] Configure server firewall
 - [ ] Add SSL certificate to Microsoft SQL Server.
 ### Code
-- [ ] Separate medical codes and retain their date of service.
-	- [ ] Fix the bug with some readings not having dates.
+- [ ] Add ability to filter patients by member_status.
+- [ ] Add ability to dynamically find the current billing cycle.
+	- [ ] Add start_date and end_date to the billing code sprocs as parameters.
 - [ ] Abstract the failed data check function.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
-- [ ] Improve the billing report function.
-	- [ ] Add delete medical code table to function.
 - [ ] Provide a more precise method for deleting data in tables.
 	- [ ] Add queries to check if certain tables have data.
 	- [ ] Add a method to DatabaseManager for deleting and resetting identity.
@@ -27,6 +26,10 @@
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
+- [x] Improve the billing report function.
+	- [x] Add delete medical code table to function.
+- [x] Separate medical codes and retain their date of service.
+	- [x] Fix the bug with some readings not having dates.
 - [x] Add parameters to the stored procedures for more accurate billing.
 - [x] Add ability to record and export failed data.
 - [x] Add snapshot switch for import functions.
