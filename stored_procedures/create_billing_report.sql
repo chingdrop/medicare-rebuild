@@ -37,11 +37,6 @@ BEGIN
 	ON p.patient_id = pin.patient_id
 	JOIN medical_necessity mn
 	ON p.patient_id = mn.patient_id
-	JOIN patient_status ps
-	ON p.patient_id = ps.patient_id
-	JOIN patient_status_type pst
-	ON ps.patient_status_type_id = pst.patient_status_type_id
-	AND pst.name IN ('New', 'Rx', 'Onboard', 'Active', 'Retention Pending')
 	JOIN medical_code mc
 	ON p.patient_id = mc.patient_id
 	AND mc.timestamp_applied <= @end_date
