@@ -1,6 +1,7 @@
 import re
 import html
 import pandas as pd
+import numpy as np
 
 from enums import insurance_keywords, state_abbreviations
 
@@ -107,7 +108,7 @@ def standardize_insurance_name(name: str) -> str:
         - string: The standardized insurance name.    
     """
     if pd.isna(name):
-        return None
+        return np.nan
     name = str(name).strip().title()
     for standard_name, keyword_sets in insurance_keywords.items():
         for keyword_set in keyword_sets:
@@ -128,7 +129,7 @@ def standardize_insurance_id(ins_id: str) -> str:
         - string: The standardized insurance ID.    
     """
     if pd.isna(ins_id):
-        return None
+        return np.nan
     insurance_id = str(ins_id).strip().upper()
     insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
     id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
