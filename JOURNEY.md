@@ -1,4 +1,5 @@
 ## Notes
+- Eventually, we will import all the data from SharePoint and the other databases.
 - Queries that have multiple statements must be a stored procedure due to SQLAlchemy.
 - I got more accurate results in the billing report when I only imported data from the last month.
 
@@ -14,9 +15,6 @@
 - [ ] Add SSL certificate to Microsoft SQL Server.
 ### Code
 - [ ] Add ability to filter patients by member_status.
-- [ ] Add ability to dynamically find the current billing cycle.
-	- [ ] Add start_date and end_date to the billing code sprocs as parameters.
-- [ ] Abstract the failed data check function.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
 - [ ] Provide a more precise method for deleting data in tables.
 	- [ ] Add queries to check if certain tables have data.
@@ -26,6 +24,10 @@
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
+- [x] Refine the fill_insurance info methods.
+- [x] Add ability to dynamically find the current billing cycle.
+	- [x] Add start_date and end_date to the data pulling queries.
+	- [x] Add start_date and end_date to the billing code sprocs as parameters.
 - [x] Improve the billing report function.
 	- [x] Add delete medical code table to function.
 - [x] Separate medical codes and retain their date of service.
@@ -35,3 +37,6 @@
 - [x] Add snapshot switch for import functions.
 - [x] Add the ability for DatabaseManager to handle multiple connections.
 - [x] Overhaul code repository to make code more abstract.
+
+## Rejected
+- [ ] Abstract the failed data check function and database constraint function.
