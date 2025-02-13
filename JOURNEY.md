@@ -19,8 +19,6 @@
 - [ ] Provide a more precise method for deleting data in tables.
 	- [ ] Add queries to check if certain tables have data.
 	- [ ] Add a method to DatabaseManager for deleting and resetting identity.
-- [ ] Refactor the import functions to use a class for state dependence.
-	- [ ] (Or) Refactor the import data functions to be cleaner.
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
@@ -39,4 +37,6 @@
 - [x] Overhaul code repository to make code more abstract.
 
 ## Rejected
+- [ ] Refactor the import functions to use a class for state dependence.
+	- [ ] (Or) Refactor the import data functions to be cleaner.
 - [ ] Abstract the failed data check function and database constraint function.
