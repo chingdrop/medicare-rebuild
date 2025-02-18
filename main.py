@@ -7,7 +7,7 @@ from import_to_sql import import_patient_data, import_device_data, import_patien
     import_patient_reading_data, import_user_data
 from db_utils import DatabaseManager
 from logger import setup_logger
-from queries import update_patient_note_stmt, update_patient_status_stmt
+from queries import update_patient_note_stmt, update_patient_status_stmt, update_user_stmt
 
 
 warnings.filterwarnings("ignore")
@@ -30,4 +30,5 @@ import_patient_reading_data(snapshot=True, logger=logger)
 
 gps.execute_query(update_patient_note_stmt)
 gps.execute_query(update_patient_status_stmt)
+gps.execute_query(update_user_stmt)
 gps.close()
