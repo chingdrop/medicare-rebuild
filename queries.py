@@ -1,3 +1,4 @@
+# --- GET Queries --- #
 get_bg_readings_stmt = """
 SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BG_Reading, Manual_Reading
 FROM Glucose_Readings
@@ -43,6 +44,7 @@ SELECT vendor_id, name
 FROM vendor
 """
 
+# --- UPDATE Queries --- #
 update_patient_note_stmt = """
 UPDATE patient_note
 SET patient_note.note_type_id = (
@@ -61,4 +63,14 @@ SET patient_status.patient_status_type_id = (
 	WHERE pst.name = patient_status.temp_status_type
 )
 WHERE patient_status.temp_status_type IS NOT NULL;
+"""
+
+update_user_stmt = """
+UPDATE patient
+SET patient.user_id = (
+	SELECT u.user_id
+	FROM [user] u
+	WHERE u.display_name = patient.temp_user
+)
+WHERE patient.temp_user IS NOT NULL;
 """
