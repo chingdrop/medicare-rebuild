@@ -36,15 +36,16 @@ class RestAdapter:
         :param data: Data to send in the request body (optional)
         :return: Response object
         """
-        self.logger.debug(f'Sending [{method}] to {self.base_url} {endpoint}...')
+        self.logger.debug(f'Request [{method}] - {self.base_url} {endpoint}')
         url = f"{self.base_url}{endpoint}"
         req = requests.Request(method, url, headers=self.session.headers, params=params, data=data)
         prep_req = self.session.prepare_request(req)
         try:
             response = self.session.send(prep_req)
             response.raise_for_status()
-            self.logger.debug(f'[{response.status_code}] - {response.encoding} - {response.reason}')
-            return response
+            self.logger.debug(f'Status [{response.status_code}] - {response.reason}')
+            if response:
+                return response.json()
         except requests.exceptions.HTTPError as errh:
             self.logger.error(f"HTTP Error: {errh}")
         except requests.exceptions.ConnectionError as errc:
@@ -61,9 +62,7 @@ class RestAdapter:
         :param params: URL parameters (optional)
         :return: JSON response or None if an error occurs
         """
-        response = self._send_request('GET', endpoint, params=params)
-        if response:
-            return response.json()
+        return self._send_request('GET', endpoint, params=params)
 
     def post(self, endpoint, data=None):
         """
@@ -72,9 +71,7 @@ class RestAdapter:
         :param data: Data to send in the request body
         :return: JSON response or None if an error occurs
         """
-        response = self._send_request('POST', endpoint, data=data)
-        if response:
-            return response.json()
+        return self._send_request('POST', endpoint, data=data)
 
     def put(self, endpoint, data=None):
         """
@@ -83,9 +80,7 @@ class RestAdapter:
         :param data: Data to send in the request body
         :return: JSON response or None if an error occurs
         """
-        response = self._send_request('PUT', endpoint, data=data)
-        if response:
-            return response.json()
+        return self._send_request('PUT', endpoint, data=data)
 
     def delete(self, endpoint, params=None):
         """
@@ -94,9 +89,7 @@ class RestAdapter:
         :param params: URL parameters (optional)
         :return: JSON response or None if an error occurs
         """
-        response = self._send_request('DELETE', endpoint, params=params)
-        if response:
-            return response.json()
+        return self._send_request('DELETE', endpoint, params=params)
 
 
 class MSGraphApi:
