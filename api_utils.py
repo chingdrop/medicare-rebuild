@@ -27,31 +27,23 @@ class RestAdapter:
         if self.headers:
             self.session.headers.update(self.headers)
 
-    def _prepare_request(self, method, endpoint, params=None, data=None):
+    def _send_request(self, method, endpoint, params=None, data=None):
         """
-        Prepare the request to be sent.
+        Prepare the request to be sent. Send the prepared request and return the response.
         :param method: HTTP method ('GET', 'POST', etc.)
         :param endpoint: API endpoint (e.g., '/users', '/posts')
         :param params: URL parameters (optional)
         :param data: Data to send in the request body (optional)
-        :return: Prepared request object
+        :return: Response object
         """
         url = f"{self.base_url}{endpoint}"
         req = requests.Request(method, url, headers=self.session.headers, params=params, data=data)
         prepared_req = self.session.prepare_request(req)
         print(prepared_req)
-        return prepared_req
-
-    def _send_request(self, prepared_req):
-        """
-        Send the prepared request and return the response.
-        :param prepared_req: The prepared request object
-        :return: Response object
-        """
         try:
             response = self.session.send(prepared_req)
-            response.raise_for_status()
             print(response)
+            response.raise_for_status()
             return response
         except requests.exceptions.HTTPError as errh:
             print(f"HTTP Error: {errh}")
@@ -69,8 +61,7 @@ class RestAdapter:
         :param params: URL parameters (optional)
         :return: JSON response or None if an error occurs
         """
-        prepared_req = self._prepare_request('GET', endpoint, params=params)
-        response = self._send_request(prepared_req)
+        response = self._send_request('GET', endpoint, params=params)
         if response:
             return response.json()
 
@@ -81,8 +72,7 @@ class RestAdapter:
         :param data: Data to send in the request body
         :return: JSON response or None if an error occurs
         """
-        prepared_req = self._prepare_request('POST', endpoint, data=data)
-        response = self._send_request(prepared_req)
+        response = self._send_request('POST', endpoint, data=data)
         if response:
             return response.json()
 
@@ -93,8 +83,7 @@ class RestAdapter:
         :param data: Data to send in the request body
         :return: JSON response or None if an error occurs
         """
-        prepared_req = self._prepare_request('PUT', endpoint, data=data)
-        response = self._send_request(prepared_req)
+        response = self._send_request('PUT', endpoint, data=data)
         if response:
             return response.json()
 
@@ -105,8 +94,7 @@ class RestAdapter:
         :param params: URL parameters (optional)
         :return: JSON response or None if an error occurs
         """
-        prepared_req = self._prepare_request('DELETE', endpoint, params=params)
-        response = self._send_request(prepared_req)
+        response = self._send_request('DELETE', endpoint, params=params)
         if response:
             return response.json()
 
