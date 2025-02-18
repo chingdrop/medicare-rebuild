@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 
+from api_utils import MSGraphApi
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
     standardize_devices, standardize_bp_readings, standardize_bg_readings, \
     patient_check_db_constraints, patient_check_failed_data
@@ -18,10 +19,40 @@ from queries import get_patient_id_stmt, get_notes_log_stmt, get_time_log_stmt, 
 load_dotenv()
 
 
+def import_user_data(logger=setup_logger('import_user_data')):
+    msg = MSGraphApi(
+        tenant_id=os.getenv('AZURE_TENANT_ID'),
+        client_id=os.getenv('AZURE_CLIENT_ID'),
+        client_secret=os.getenv('AZURE_CLIENT_SECRET'),
+        logger=logger
+    )
+    msg.request_access_token()
+    gps = DatabaseManager(logger=logger)
+    gps.create_engine(
+        username=os.getenv('LCH_SQL_GPS_USERNAME'),
+        password=os.getenv('LCH_SQL_GPS_PASSWORD'),
+        host=os.getenv('LCH_SQL_GPS_HOST'),
+        database=os.getenv('LCH_SQL_GPS_DB')
+    )
+
+    data = msg.get_group_members('4bbe3379-1250-4522-92e6-017f77517470')
+    user_df = pd.DataFrame(data['value'])
+    user_df = user_df[['givenName', 'surname', 'displayName', 'mail', 'id']]
+    user_df = user_df.rename(columns={
+        'givenName': 'first_name',
+        'surname': 'last_name',
+        'displayName': 'display_name',
+        'mail': 'email',
+        'id': 'ms_entra_id'
+    })
+    gps.to_sql(user_df, 'user', if_exists='append')
+    gps.close()
+
+
 def import_patient_data(
         filename: Path,
         snapshot: bool=False,
-        logger: logging.Logger=setup_logger('import_patients')
+        logger=setup_logger('import_patients')
 ) -> None:
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
@@ -103,7 +134,7 @@ def import_patient_data(
 
 def import_patient_note_data(
         snapshot: bool=False,
-        logger: logging.Logger=setup_logger('import_patient_notes')
+        logger=setup_logger('import_patient_notes')
 ):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
@@ -157,7 +188,7 @@ def import_patient_note_data(
 
 def import_device_data(
         snapshot: bool=False,
-        logger: logging.Logger=setup_logger('import_devices')
+        logger=setup_logger('import_devices')
 ):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
@@ -196,7 +227,7 @@ def import_device_data(
 
 def import_patient_reading_data(
         snapshot: bool=False,
-        logger: logging.Logger=setup_logger('import_patient_readings')
+        logger=setup_logger('import_patient_readings')
 ):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
