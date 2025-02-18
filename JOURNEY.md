@@ -9,9 +9,7 @@
 	- [ ] Remove unrelated Stored Procedures
 	- [ ] Remove unrelated Tables
 ### Code
-- [ ] Change format of docstrings for RestAdapter.
-- [ ] Add docstring to MSGraphApi.
-- [ ] Update docstring DatabaseManager.
+- [ ] Add Pydantic for JSON schema checking on API classes.
 - [ ] Add ability to filter patients by member_status in the billing report.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
 - [ ] Provide a more precise method for deleting data in tables.
@@ -20,6 +18,9 @@
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
+- [x] Change format of docstrings for RestAdapter.
+- [x] Add docstring to MSGraphApi.
+- [x] Update docstring DatabaseManager.
 - [x] Update the CSV snapshot option in the import data functions.
 - [x] Refine the fill_insurance info methods.
 - [x] Add ability to dynamically find the current billing cycle.
