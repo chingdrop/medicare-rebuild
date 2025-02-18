@@ -5,7 +5,6 @@ from datetime import datetime
 
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
-from queries import update_patient_note_stmt, update_patient_status_stmt
 
 
 load_dotenv()
@@ -20,8 +19,6 @@ gps.create_engine(
 updates_dir = Path.cwd() / 'queries' / 'updates'
 medcode_params = {'today_date': datetime.strptime('2025-01-31', '%Y-%m-%d')}
 gps.execute_query("EXEC reset_medical_code_tables")
-gps.execute_query(update_patient_note_stmt)
-gps.execute_query(update_patient_status_stmt)
 gps.execute_query("EXEC batch_medcode_99202")
 gps.execute_query("EXEC batch_medcode_99453_bg")
 gps.execute_query("EXEC batch_medcode_99453_bp")
