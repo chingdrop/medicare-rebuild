@@ -99,13 +99,20 @@ class RestAdapter:
 
 
 class MSGraphApi:
-    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
+    def __init__(
+            self,
+            tenant_id: str,
+            client_id: str,
+            client_secret: str,
+            logger=logging.getLogger()
+    ):
         self.tenant_id = tenant_id
         self.client_id = client_id,
         self.client_secret = client_secret
+        self.logger = logger
 
     def request_access_token(self,) -> None:
-        rest = RestAdapter('https://login.microsoftonline.com')
+        rest = RestAdapter('https://login.microsoftonline.com', logger=self.logger)
         data = {
             'grant_type': 'client_credentials',
             'client_id': self.client_id,
@@ -117,7 +124,7 @@ class MSGraphApi:
         headers = {
             'Authorization': f'Bearer {access_token}'
         }
-        self.rest = RestAdapter('https://graph.microsoft.com/v1.0', headers=headers)
+        self.rest = RestAdapter('https://graph.microsoft.com/v1.0', headers=headers, logger=self.logger)
 
     def get_group_members(self, group_id: str) -> dict:
         endpoint = f'/groups/{group_id}/members'
