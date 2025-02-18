@@ -278,7 +278,8 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
             'InsuranceName2': 'secondary_payer_name',
             'On-board Date': 'evaluation_datetime',
             'DX_Code': 'temp_dx_code',
-            'Member_Status': 'temp_status_type'
+            'Member_Status': 'temp_status_type',
+            'Health Coach': 'temp_user'
         }
     )
     # Convert string Nan back to Null value.
