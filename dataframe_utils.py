@@ -12,11 +12,11 @@ def standardize_name(name: str, pattern: str) -> str:
     Uses inverse regex pattern to replace all unmatched characters with empty string.
 
     Args:
-        - name (string): The value to be standardized.
-        - pattern (string): The inverse pattern used in replacing unwanted characters. 
+        name (str): The value to be standardized.
+        pattern (str): The inverse pattern used in replacing unwanted characters. 
 
     Returns:
-        - string: The standardized name text.    
+        str: The standardized name text.    
     """
     name = str(name).strip().title()
     name = re.sub(r'\s+', ' ', name)
@@ -29,10 +29,10 @@ def standardize_email(email: str) -> str:
     Trims whitespace and lowers the text. Regex matching attempts to find email addresses and extracts them.
 
     Args:
-        - email (string): The value to be standardized.
+        email (str): The value to be standardized.
 
     Returns:
-        - string: The standardized email address.    
+        str: The standardized email address.    
     """
     email = str(email).strip().lower()
     email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
@@ -48,10 +48,10 @@ def standardize_state(state: str) -> str:
     Searches state's name and correlates that with the State's two letter abbreviation.
 
     Args:
-        - state (string): The value to be standardized.
+        state (str): The value to be standardized.
 
     Returns:
-        - string: The standardized US state abbreviation.    
+        str: The standardized US state abbreviation.    
     """
     state = str(state).strip().title()
     state = state_abbreviations.get(state, state).upper()
@@ -65,10 +65,10 @@ def standardize_mbi(mbi: str) -> str:
     Regex matching attempts to find medicare beneficiary IDs and extracts them.
 
     Args:
-        - mbi (string): The value to be standardized.
+        mbi (str): The value to be standardized.
 
     Returns:
-        - string: The standardized medicare beneficiary ID.    
+        str: The standardized medicare beneficiary ID.    
     """
     mbi = str(mbi).strip().upper()
     mbi_pattern = r'([A-Z0-9]{11})'
@@ -84,10 +84,10 @@ def standardize_dx_code(dx_code: str) -> str:
     Joins all elements into a single string with commas as the separator. 
 
     Args:
-        - dx_code (string): The value to be standardized.
+        dx_code (str): The value to be standardized.
 
     Returns:
-        - string: string representation of the list of Dx codes.
+        str: string representation of the list of Dx codes.
     """
     dx_code = str(dx_code).strip().upper()
     matches = re.finditer(r'[E|I|R]\d+(\.\d+)?', dx_code)
@@ -102,10 +102,10 @@ def standardize_insurance_name(name: str) -> str:
     Keywords are held in lists where all elements of the list must be present for a positive match.
 
     Args:
-        - name (string): The value to be standardized.
+        name (str): The value to be standardized.
 
     Returns:
-        - string: The standardized insurance name.    
+        str: The standardized insurance name.    
     """
     if pd.isna(name):
         return np.nan
@@ -123,10 +123,10 @@ def standardize_insurance_id(ins_id: str) -> str:
     Regex matching attempts to find insurance IDs and extracts them.
 
     Args:
-        - ins_id (string): The value to be standardized.
+        ins_id (str): The value to be standardized.
 
     Returns:
-        - string: The standardized insurance ID.    
+        str: The standardized insurance ID.    
     """
     if pd.isna(ins_id):
         return np.nan
@@ -145,10 +145,10 @@ def fill_primary_payer(row: pd.Series) -> pd.Series:
     Then the primary payer name gets filled with 'Medicare Part B'.
 
     Args:
-        - row (pandas.Series): Row of Dataframe to be standardized.
+        row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        - pandas.Series: The standardized row of Dataframe.    
+        pandas.Series: The standardized row of Dataframe.    
     """
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
         return 'Medicare Part B'
@@ -161,10 +161,10 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     Then the primary payer ID gets filled with the medicare beneficiary ID.
 
     Args:
-        - row (pandas.Series): Row of Dataframe to be standardized.
+        row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        - pandas.Series: The standardized row of Dataframe.    
+        pandas.Series: The standardized row of Dataframe.    
     """
     if row['Insurance Name:'] == 'Medicare Part B' and pd.isnull(row['Insurance ID:']) :
         return row['Medicare ID number']
@@ -176,10 +176,10 @@ def standardize_call_time(call_time) -> int:
     Converts value to a timedelta object and then calculates total seconds.
 
     Args:
-        - call_time: The value to be standardized.
+        call_time: The value to be standardized.
 
     Returns:
-        - int: The standardized call time in seconds.    
+        int: The standardized call time in seconds.    
     """
     if not call_time:
         return 0
@@ -191,10 +191,10 @@ def standardize_note_types(note_type: str) -> str:
     Replaces common phrase for proper note type. Split note type by commas, then use the first element.
 
     Args:
-        - note_type (string): The value to be standardized.
+        note_type (str): The value to be standardized.
 
     Returns:
-        - string: The standardized note type phrase.    
+        str: The standardized note type phrase.    
     """
     if note_type == 'Initial Evaluation with APRN':
         note_type = 'Initial Evaluation'
@@ -207,10 +207,10 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
     Else, if 'Tenvoi' or 'Omron' is in Device name then return 'Tenvoi' or 'Omron' respectively.
 
     Args:
-        - row (pandas.Series): Row of Dataframe to be standardized.
+        row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        - pandas.Series: The standardized row of Dataframe.    
+        pandas.Series: The standardized row of Dataframe.    
     """
     if not row['Vendor'] in row['Device_Name']:
         if 'Tenovi' in row['Device_Name']:
@@ -409,12 +409,12 @@ def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
     """Merge pandas dataframes on specified column. Remove specified column after merge.
 
     Args:
-        - df (pandas.DataFrame): Target dataframe requiring ID column.
-        - id_df (pandas.DataFrame): ID dataframe containing ID column.
-        - col (string): Column name to be merged and deleted.
+        df (pandas.DataFrame): Target dataframe requiring ID column.
+        id_df (pandas.DataFrame): ID dataframe containing ID column.
+        col (str): Column name to be merged and deleted.
 
     Returns:
-        - pandas.Series: Target dataframe with newly added ID column.
+        pandas.Series: Target dataframe with newly added ID column.
     """
     df = pd.merge(df, id_df, on=col)
     df.drop(columns=[col], inplace=True)
