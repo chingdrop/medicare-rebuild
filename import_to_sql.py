@@ -200,7 +200,6 @@ def import_device_data(
     )
     fulfillment_db = DatabaseManager(logger=logger)
     fulfillment_db.create_engine(
-        'fulfillment',
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
