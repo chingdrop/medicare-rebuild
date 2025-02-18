@@ -49,10 +49,7 @@ def import_user_data(logger=setup_logger('import_user_data')):
     gps.close()
 
 
-def import_patient_data(
-        filename: Path,
-        logger=setup_logger('import_patients')
-) -> None:
+def import_patient_data(filename: Path, logger=setup_logger('import_patients')) -> None:
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
