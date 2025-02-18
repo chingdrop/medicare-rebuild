@@ -11,3 +11,4 @@ Here is a list of technologies used by LCH-Tools.
 	- pyodbc - Library used for interfacing with the ODBC driver.
 - Pandas - Structured data manipulation tool.
 	- openpyxl - Excel engine used by Pandas to create spreadsheets.
+- Requests - Library used for HTTP request handling.
