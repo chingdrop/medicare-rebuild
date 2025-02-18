@@ -14,7 +14,10 @@
 	- [ ] Configure server firewall
 - [ ] Add SSL certificate to Microsoft SQL Server.
 ### Code
-- [ ] Add ability to filter patients by member_status.
+- [ ] Change format of docstrings for RestAdapter.
+- [ ] Add docstring to MSGraphApi.
+- [ ] Update docstring DatabaseManager.
+- [ ] Add ability to filter patients by member_status in the billing report.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
 - [ ] Provide a more precise method for deleting data in tables.
 	- [ ] Add queries to check if certain tables have data.
@@ -22,6 +25,7 @@
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
+- [x] Update the CSV snapshot option in the import data functions.
 - [x] Refine the fill_insurance info methods.
 - [x] Add ability to dynamically find the current billing cycle.
 	- [x] Add start_date and end_date to the data pulling queries.
