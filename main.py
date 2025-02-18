@@ -11,16 +11,15 @@ from logger import setup_logger
 
 warnings.filterwarnings("ignore")
 load_dotenv()
-dbm = DatabaseManager()
-dbm.create_engine(
-    'gps',
+gps = DatabaseManager()
+gps.create_engine(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
     host=os.getenv('LCH_SQL_GPS_HOST'),
     database=os.getenv('LCH_SQL_GPS_DB')
 )
-with dbm.begin('gps') as conn:
-    dbm.execute("EXEC reset_all_billing_tables", conn=conn)
+gps.execute_query("EXEC reset_all_billing_tables")
+gps.close()
 
 logger = setup_logger('main', level='debug')
 import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', snapshot=True, logger=logger)

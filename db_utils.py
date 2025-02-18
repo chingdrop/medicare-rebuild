@@ -1,23 +1,24 @@
 import logging
 import pandas as pd
 from typing import List
-from sqlalchemy import create_engine, event, text, Connection, Result, Engine
+from sqlalchemy import create_engine, event, text, Connection, Result
 from sqlalchemy.engine import URL
+from sqlalchemy.orm import sessionmaker, Session
 
 
 class DatabaseManager:
-    def __init__(self, logger=None):
+    def __init__(self, logger=logging.getLogger()):
         
-        self.engines = {}
-        self.logger = logger or logging.getLogger(DatabaseManager.__name__)
+        self.engine = None
+        self.session = None
+        self.logger = logger
 
     def create_engine(
             self,
-            name: str,
-            username: str,
-            password: str,
-            host: str,
-            database: str
+            username,
+            password,
+            host,
+            database
     ):
         """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
         
@@ -45,18 +46,15 @@ class DatabaseManager:
         )
         engine = create_engine(connection_url)
         event.listen(engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
-        self.engines[name] = engine
+        self.engine = engine
+        self.session = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
-    def get_engine(self, name: str) -> Engine:
-        return self.engines[name]
+    def get_session(self,) -> Session:
+        if not self.session:
+            raise Exception("Database connection is not established. Call connect() first.")
+        return self.session()
 
-    def begin(self, name: str) -> Connection:
-        return self.engines[name].begin()
-
-    def connect(self, name: str) -> Connection:
-        return self.engines[name].connect()
-
-    def execute(self, query: str, params:dict=None, conn:Connection=None) -> Result:
+    def execute_query(self, query: str, params:dict=None) -> Result:
         """Executes a SQL query and returns the result object if any.
         
         Args:
@@ -66,14 +64,20 @@ class DatabaseManager:
         Returns:
             - List[tuple()]: SQLAlchemy result rows.
         """
-        self.logger.debug(f'Query: {query.replace('\n', ' ')}')
-        if isinstance(query, str):
-            query = text(query)
-        res = conn.execute(query, params)
-        if res.returns_rows:
-            return res.fetchall()
+        session = self.get_session()
+        try:
+            self.logger.debug(f'Query: {query.replace('\n', ' ')}')
+            res = session.execute(text(query), params)
+            session.commit()
+            if res.returns_rows:
+                return res.fetchall()
+        except Exception as e:
+            session.rollback()
+            self.logger.error(f'Error executing query: {e}')
+        finally:
+            session.close()
 
-    def read_sql(self, query: str, eng: str, params:tuple=None, parse_dates: List[str]=None) -> pd.DataFrame:
+    def read_sql(self, query: str, params:tuple=None, parse_dates: List[str]=None) -> pd.DataFrame:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:
@@ -85,8 +89,7 @@ class DatabaseManager:
         Returns:
             - pandas.DataFrame: The query results as a DataFrame.
         """
-        engine = self.get_engine(eng)
-        df = pd.read_sql(query, engine, params=params, parse_dates=parse_dates)
+        df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
         self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
         return df
@@ -95,7 +98,6 @@ class DatabaseManager:
             self,
             df: pd.DataFrame,
             table: str,
-            eng: str,
             if_exists: str='fail',
             index: bool=False
     ) -> None:
@@ -116,14 +118,12 @@ class DatabaseManager:
         Returns:
             - None
         """
-        engine = self.get_engine(eng)
         self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...')
-        df.to_sql(table, engine, if_exists=if_exists, index=index)
+        df.to_sql(table, self.engine, if_exists=if_exists, index=index)
 
-    def dispose(self,):
-        for eng, engine in list(self.engines.items()):
-            engine.dispose()
-            del self.engines[eng]
+    def close(self,):
+        if self.engine:
+            self.engine.dispose()
 
     @staticmethod
     def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):

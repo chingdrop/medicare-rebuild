@@ -99,42 +99,39 @@ def import_patient_data(
     dbm.to_sql(med_nec_df, 'medical_necessity', 'gps', if_exists='append')
     dbm.to_sql(patient_status_df, 'patient_status', 'gps', if_exists='append')
     
-    dbm.dispose()
+    dbm.close()
 
 
 def import_patient_note_data(
         snapshot: bool=False,
         logger: logging.Logger=setup_logger('import_patient_notes')
 ):
-    dbm = DatabaseManager(logger=logger)
-    dbm.create_engine(
-        'gps',
+    gps = DatabaseManager(logger=logger)
+    gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
         password=os.getenv('LCH_SQL_GPS_PASSWORD'),
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    dbm.create_engine(
-        'notes',
+    notes_db = DatabaseManager(logger=logger)
+    notes_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_NOTES')
     )
-    dbm.create_engine(
-        'time',
+    time_db = DatabaseManager(logger=logger)
+    time_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_TIME')
     )
     start_date, end_date = get_last_month_billing_cycle()
-    notes_df = dbm.read_sql(get_notes_log_stmt,
-                            'notes',
+    notes_df = notes_db.read_sql(get_notes_log_stmt,
                             params=(start_date, end_date),
                             parse_dates=['TimeStamp'])
-    time_df = dbm.read_sql(get_time_log_stmt,
-                           'time',
+    time_df = time_db.read_sql(get_time_log_stmt,
                            params=(start_date, end_date),
                            parse_dates=['Start_Time', 'End_Time'])
     time_df = time_df.rename(columns={
@@ -151,27 +148,27 @@ def import_patient_note_data(
         snapshot_dir = Path.cwd() / 'data' / 'snapshots'
         patient_note_df.to_csv(snapshot_dir / 'patient_note_snap.csv', index=False)
     
-    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
+    patient_id_df = gps.read_sql(get_patient_id_stmt)
     patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
 
-    dbm.to_sql(patient_note_df, 'patient_note', 'gps', if_exists='append')
+    gps.to_sql(patient_note_df, 'patient_note', if_exists='append')
     
-    dbm.dispose()
+    gps.close()
 
 
 def import_device_data(
         snapshot: bool=False,
         logger: logging.Logger=setup_logger('import_devices')
 ):
-    dbm = DatabaseManager(logger=logger)
-    dbm.create_engine(
-        'gps',
+    gps = DatabaseManager(logger=logger)
+    gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
         password=os.getenv('LCH_SQL_GPS_PASSWORD'),
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    dbm.create_engine(
+    fulfillment_db = DatabaseManager(logger=logger)
+    fulfillment_db.create_engine(
         'fulfillment',
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
@@ -179,51 +176,48 @@ def import_device_data(
         database=os.getenv('LCH_SQL_SP_FULFILLMENT')
     )
     
-    device_df = dbm.read_sql(get_fulfillment_stmt, 'fulfillment')
+    device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
 
     device_df = standardize_devices(device_df)
     if snapshot:
         snapshot_dir = Path.cwd() / 'data' / 'snapshots'
         device_df.to_csv(snapshot_dir / 'device_snap.csv', index=False)
 
-    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
-    vendor_id_df = dbm.read_sql(get_vendor_id_stmt, 'gps')
+    patient_id_df = gps.read_sql(get_patient_id_stmt)
+    vendor_id_df = gps.read_sql(get_vendor_id_stmt)
 
     device_df = add_id_col(df=device_df, id_df=patient_id_df, col='sharepoint_id')
     vendor_id_df = vendor_id_df.rename(columns={'name': 'Vendor'})
     device_df = add_id_col(df=device_df, id_df=vendor_id_df, col='Vendor')
     
-    dbm.to_sql(device_df, 'device', 'gps', if_exists='append')
+    gps.to_sql(device_df, 'device', if_exists='append')
     
-    dbm.dispose()
+    gps.close()
 
 
 def import_patient_reading_data(
         snapshot: bool=False,
         logger: logging.Logger=setup_logger('import_patient_readings')
 ):
-    dbm = DatabaseManager(logger=logger)
-    dbm.create_engine(
-        'gps',
+    gps = DatabaseManager(logger=logger)
+    gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
         password=os.getenv('LCH_SQL_GPS_PASSWORD'),
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    dbm.create_engine(
-        'readings',
+    readings_db = DatabaseManager(logger=logger)
+    readings_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_READINGS')
     )
     start_date, end_date = get_last_month_billing_cycle()
-    bp_readings_df = dbm.read_sql(get_bp_readings_stmt,
-                                  'readings',
+    bp_readings_df = readings_db.read_sql(get_bp_readings_stmt,
                                   params=(start_date, end_date),
                                   parse_dates=['Time_Recorded', 'Time_Recieved'])
-    bg_readings_df = dbm.read_sql(get_bg_readings_stmt,
-                                  'readings',
+    bg_readings_df = readings_db.read_sql(get_bg_readings_stmt,
                                   params=(start_date, end_date),
                                   parse_dates=['Time_Recorded', 'Time_Recieved'])
 
@@ -234,15 +228,15 @@ def import_patient_reading_data(
         bp_readings_df.to_csv(snapshot_dir / 'blood_pressure_readings_snap.csv', index=False)
         bg_readings_df.to_csv(snapshot_dir / 'glucose_readings_snap.csv', index=False)
 
-    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
-    device_id_df = dbm.read_sql(get_device_id_stmt, 'gps')
+    patient_id_df = gps.read_sql(get_patient_id_stmt)
+    device_id_df = gps.read_sql(get_device_id_stmt)
     
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=patient_id_df, col='sharepoint_id')
     bp_readings_df = add_id_col(df=bp_readings_df, id_df=device_id_df, col='patient_id')
     bg_readings_df = add_id_col(df=bg_readings_df, id_df=patient_id_df, col='sharepoint_id')
     bg_readings_df = add_id_col(df=bg_readings_df, id_df=device_id_df, col='patient_id')
     
-    dbm.to_sql(bp_readings_df, 'blood_pressure_reading', 'gps', if_exists='append')
-    dbm.to_sql(bg_readings_df, 'glucose_reading', 'gps', if_exists='append')
+    gps.to_sql(bp_readings_df, 'blood_pressure_reading', if_exists='append')
+    gps.to_sql(bg_readings_df, 'glucose_reading', if_exists='append')
     
-    dbm.dispose()
+    gps.close()
