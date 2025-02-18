@@ -23,9 +23,8 @@ def import_patient_data(
         snapshot: bool=False,
         logger: logging.Logger=setup_logger('import_patients')
 ) -> None:
-    dbm = DatabaseManager(logger=logger)
-    dbm.create_engine(
-        'gps',
+    gps = DatabaseManager(logger=logger)
+    gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
         password=os.getenv('LCH_SQL_GPS_PASSWORD'),
         host=os.getenv('LCH_SQL_GPS_HOST'),
@@ -86,20 +85,20 @@ def import_patient_data(
         patient_status_df.to_csv(snapshot_dir / 'patient_status_snap.csv', index=False)
     
     # Patient data is imported first to get the patient_id.
-    dbm.to_sql(patient_df, 'patient', 'gps', if_exists='append')
-    patient_id_df = dbm.read_sql(get_patient_id_stmt, 'gps')
+    gps.to_sql(patient_df, 'patient', if_exists='append')
+    patient_id_df = gps.read_sql(get_patient_id_stmt)
     
     address_df = add_id_col(df=address_df, id_df=patient_id_df, col='sharepoint_id')
     insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
     med_nec_df = add_id_col(df=med_nec_df, id_df=patient_id_df, col='sharepoint_id')
     patient_status_df = add_id_col(df=patient_status_df, id_df=patient_id_df, col='sharepoint_id')
     
-    dbm.to_sql(address_df, 'patient_address', 'gps', if_exists='append')
-    dbm.to_sql(insurance_df, 'patient_insurance', 'gps', if_exists='append')
-    dbm.to_sql(med_nec_df, 'medical_necessity', 'gps', if_exists='append')
-    dbm.to_sql(patient_status_df, 'patient_status', 'gps', if_exists='append')
+    gps.to_sql(address_df, 'patient_address', if_exists='append')
+    gps.to_sql(insurance_df, 'patient_insurance', if_exists='append')
+    gps.to_sql(med_nec_df, 'medical_necessity', if_exists='append')
+    gps.to_sql(patient_status_df, 'patient_status', if_exists='append')
     
-    dbm.close()
+    gps.close()
 
 
 def import_patient_note_data(
