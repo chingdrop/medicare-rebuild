@@ -15,6 +15,16 @@
 - [ ] Add SSL certificate to Microsoft SQL Server.
 ### Code
 - [ ] Add Pydantic for JSON schema checking on API classes.
+- [ ] Add mechanism for importing readings directly from Tenovi into the DB.
+	- [ ] Add Tenovi API class. 
+	- [ ] Add Tenovi data standardization with Pandas.
+	- [ ] Pick pieces of data to send to the readings tables.
+- [ ] Add mechanism for importing PVerify data into the DB.
+	- [ ] Add PVerify API class.
+	- [ ] Add Pverify data standardization with Pandas.
+	- [ ] Pick pieces of data to add to patient insurance.
+	- [ ] Store the rest of the JSON in holder field in DB.
+- [ ] Add docstring for setup_logger function.
 - [ ] Add ability to filter patients by member_status in the billing report.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
 - [ ] Provide a more precise method for deleting data in tables.
