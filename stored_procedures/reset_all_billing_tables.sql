@@ -50,4 +50,8 @@ BEGIN
 	DELETE FROM patient;
 	DBCC CHECKIDENT ('patient', RESEED, 0);
 
+	PRINT('User');
+	DELETE FROM [user];
+	DBCC CHECKIDENT ('user', RESEED, 0);
+
 END
