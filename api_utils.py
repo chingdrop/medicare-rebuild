@@ -10,11 +10,12 @@ class RestAdapter:
             auth=None,
             logger=logging.getLogger()
     ):
-        """
-        Initialize the RequestHandler instance.
-        :param base_url: The base URL for the API
-        :param headers: Default headers (optional)
-        :param auth: Authentication information (optional)
+        """Initialize the RequestHandler instance.
+
+        Args:
+            base_url (str): The base URL for the API
+            headers (dict): Default headers (optional)
+            auth: Authentication information (optional)
         """
         self.base_url = base_url
         self.headers = headers if headers else {}
@@ -34,13 +35,16 @@ class RestAdapter:
             params: dict=None,
             data: dict=None
     ) -> dict:
-        """
-        Prepare the request to be sent. Send the prepared request and return the response.
-        :param method: HTTP method ('GET', 'POST', etc.)
-        :param endpoint: API endpoint (e.g., '/users', '/posts')
-        :param params: URL parameters (optional)
-        :param data: Data to send in the request body (optional)
-        :return: Response object
+        """Prepare the request to be sent. Send the prepared request and return the response.
+        
+        Args:
+            method (str): HTTP method ('GET', 'POST', etc.)
+            endpoint (str): API endpoint (e.g., '/users', '/posts')
+            params (dict): URL parameters (optional)
+            data (dict): Data to send in the request body. (optional)
+        
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
         """
         self.logger.debug(f'Request [{method}] - {self.base_url} {endpoint}')
         url = f"{self.base_url}{endpoint}"
@@ -61,39 +65,51 @@ class RestAdapter:
         except requests.exceptions.RequestException as err:
             self.logger.error(f"An Unexpected Error: {err}")
 
-    def get(self, endpoint: str, params: dict=None):
-        """
-        Make a GET request.
-        :param endpoint: API endpoint
-        :param params: URL parameters (optional)
-        :return: JSON response or None if an error occurs
+    def get(self, endpoint: str, params: dict=None) -> dict:
+        """Make a GET request.
+        
+        Args:
+            endpoint (str): API endpoint
+            params (dict): URL parameters (optional)
+
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
         """
         return self._send_request('GET', endpoint, params=params)
 
-    def post(self, endpoint: str, data: dict=None):
-        """
-        Make a POST request.
-        :param endpoint: API endpoint
-        :param data: Data to send in the request body
-        :return: JSON response or None if an error occurs
+    def post(self, endpoint: str, data: dict=None) -> dict:
+        """Make a POST request.
+
+        Args:
+            endpoint (str): API endpoint
+            data (dict): Data to send in the request body.
+
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
         """
         return self._send_request('POST', endpoint, data=data)
 
-    def put(self, endpoint: str, data: dict=None):
-        """
-        Make a PUT request.
-        :param endpoint: API endpoint
-        :param data: Data to send in the request body
-        :return: JSON response or None if an error occurs
+    def put(self, endpoint: str, data: dict=None) -> dict:
+        """Make a PUT request.
+
+        Args:
+            endpoint (str): API endpoint
+            data (dict): Data to send in the request body.
+
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
         """
         return self._send_request('PUT', endpoint, data=data)
 
-    def delete(self, endpoint: str, params: dict=None):
-        """
-        Make a DELETE request.
-        :param endpoint: API endpoint
-        :param params: URL parameters (optional)
-        :return: JSON response or None if an error occurs
+    def delete(self, endpoint: str, params: dict=None) -> dict:
+        """Make a DELETE request.
+
+        Args:
+            endpoint (str): API endpoint
+            params (dict): URL parameters (optional)
+
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
         """
         return self._send_request('DELETE', endpoint, params=params)
 
@@ -112,6 +128,7 @@ class MSGraphApi:
         self.logger = logger
 
     def request_access_token(self,) -> None:
+        """Uses tenant ID, client ID and client secret to request for an access token with privileges outlined in the application object."""
         rest = RestAdapter('https://login.microsoftonline.com', logger=self.logger)
         data = {
             'grant_type': 'client_credentials',
@@ -127,5 +144,13 @@ class MSGraphApi:
         self.rest = RestAdapter('https://graph.microsoft.com/v1.0', headers=headers, logger=self.logger)
 
     def get_group_members(self, group_id: str) -> dict:
+        """Get all members that belong to a specific group.
+
+        Args:
+            group_id (str): GUID of the desired group.
+
+        Returns:
+            dict: JSON serialized response body or None if an error occurs.
+        """
         endpoint = f'/groups/{group_id}/members'
         return self.rest.get(endpoint)

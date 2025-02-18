@@ -1,14 +1,13 @@
 import logging
 import pandas as pd
 from typing import List
-from sqlalchemy import create_engine, event, text, Connection, Result
+from sqlalchemy import create_engine, event, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker, Session
 
 
 class DatabaseManager:
     def __init__(self, logger=logging.getLogger()):
-        
         self.engine = None
         self.session = None
         self.logger = logger
@@ -20,17 +19,14 @@ class DatabaseManager:
             host: str,
             database: str
     ) -> None:
-        """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
+        """Creates SQLAlchemy engine object with credentials.
+        Creates an event listener on cursor's receive_many flag, enables fast execute_many.
         
         Args:
-            - name (str): The name of the engine object.
-            - username (str): The username of your credentials.
-            - password (str): The password of your credentials.
-            - host (str): The hostname of the SQL Server.
-            - database (str): The name of your database.
-        
-        Returns:
-            - None
+            username (str): The username of your credentials.
+            password (str): The password of your credentials.
+            host (str): The hostname of the SQL Server.
+            database (str): The name of your database.
         """
         connection_url = URL.create(
             "mssql+pyodbc",
@@ -54,15 +50,15 @@ class DatabaseManager:
             raise Exception("Database connection is not established. Call connect() first.")
         return self.session()
 
-    def execute_query(self, query: str, params: dict=None) -> Result:
+    def execute_query(self, query: str, params: dict=None) -> List[Row]:
         """Executes a SQL query and returns the result object if any.
         
         Args:
-            - query (str): The SQL query to execute.
-            - conn (sqlalchemy.Connection): SQLAlchemy Connection object.
+            query (str) : The SQL query to execute.
+            params (dict) : Query parameters used in execution.
         
         Returns:
-            - List[tuple()]: SQLAlchemy result rows.
+            List[Row]: SQLAlchemy result rows.
         """
         session = self.get_session()
         try:
@@ -81,13 +77,12 @@ class DatabaseManager:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:
-            - query (str): The SQL query to execute.
-            - eng (str): Name of the SQLAlchemy engine obj.
-            - parse_dates (list or dict, optional): List of column names to parse as datetime or 
-            a dictionary specifying column names and their respective date formats.
+            query (str): The SQL query to execute.
+            eng (str): Name of the SQLAlchemy engine obj.
+            parse_dates (list or dict, optional): List of column names to parse as datetime or a dictionary specifying column names and their respective date formats.
         
         Returns:
-            - pandas.DataFrame: The query results as a DataFrame.
+            pandas.DataFrame: The query results as a DataFrame.
         """
         df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace('\n', ' ')}')
@@ -104,19 +99,10 @@ class DatabaseManager:
         """Save Pandas DataFrame to a SQL table.
 
         Args:
-            - df (pandas.DataFrame): The DataFrame to be written to the SQL table.
-            table (string): The name of the target SQL table where the DataFrame will be saved.
-            - eng (str): Name of the SQLAlchemy engine obj.
-            - if_exists (string, optional): Specifies what to do if the table already exists. 
-            Options are:
-                - 'fail' (default): Raise a ValueError.
-                - 'replace': Drop the table and recreate it.
-                - 'append': Append the DataFrame to the existing table.
-            - index (bool, optional): Whether to write the DataFrame's index as a column in the table.
-            Default is `False`, which means the index will not be written.
-        
-        Returns:
-            - None
+            df (pandas.DataFrame): The DataFrame to be written to the SQL table.
+            table (str): The name of the target SQL table where the DataFrame will be saved.
+            if_exists (str, optional): Specifies what to do if the table already exists. Default is `fail`, which means the operation will fail if a table already exists.
+            index (bool, optional): Whether to write the DataFrame's index as a column in the table. Default is `False`, which means the index will not be written.
         """
         self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...')
         df.to_sql(table, self.engine, if_exists=if_exists, index=index)
