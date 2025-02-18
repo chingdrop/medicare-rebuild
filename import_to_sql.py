@@ -51,7 +51,6 @@ def import_user_data(logger=setup_logger('import_user_data')):
 
 def import_patient_data(
         filename: Path,
-        snapshot: bool=False,
         logger=setup_logger('import_patients')
 ) -> None:
     gps = DatabaseManager(logger=logger)
@@ -108,13 +107,6 @@ def import_patient_data(
 
     data_dir = Path.cwd() / 'data'
     failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
-    if snapshot:
-        snapshot_dir = data_dir / 'snapshots'
-        patient_df.to_csv(snapshot_dir / 'patient_snap.csv', index=False)
-        address_df.to_csv(snapshot_dir / 'patient_address_snap.csv', index=False)
-        insurance_df.to_csv(snapshot_dir / 'patient_insurance_snap.csv', index=False)
-        med_nec_df.to_csv(snapshot_dir / 'medical_necessity_snap.csv', index=False)
-        patient_status_df.to_csv(snapshot_dir / 'patient_status_snap.csv', index=False)
     
     # Patient data is imported first to get the patient_id.
     gps.to_sql(patient_df, 'patient', if_exists='append')
@@ -133,10 +125,7 @@ def import_patient_data(
     gps.close()
 
 
-def import_patient_note_data(
-        snapshot: bool=False,
-        logger=setup_logger('import_patient_notes')
-):
+def import_patient_note_data(logger=setup_logger('import_patient_notes')):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
@@ -175,22 +164,15 @@ def import_patient_note_data(
     patient_note_df['Time_Note'] = patient_note_df['Time_Note'].fillna(patient_note_df['Note_Type'])
     patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
     patient_note_df = standardize_patient_notes(patient_note_df)
-    if snapshot:
-        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
-        patient_note_df.to_csv(snapshot_dir / 'patient_note_snap.csv', index=False)
     
     patient_id_df = gps.read_sql(get_patient_id_stmt)
     patient_note_df = add_id_col(df=patient_note_df, id_df=patient_id_df, col='sharepoint_id')
 
     gps.to_sql(patient_note_df, 'patient_note', if_exists='append')
-    
     gps.close()
 
 
-def import_device_data(
-        snapshot: bool=False,
-        logger=setup_logger('import_devices')
-):
+def import_device_data(logger=setup_logger('import_devices')):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
@@ -207,11 +189,7 @@ def import_device_data(
     )
     
     device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
-
     device_df = standardize_devices(device_df)
-    if snapshot:
-        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
-        device_df.to_csv(snapshot_dir / 'device_snap.csv', index=False)
 
     patient_id_df = gps.read_sql(get_patient_id_stmt)
     vendor_id_df = gps.read_sql(get_vendor_id_stmt)
@@ -221,14 +199,10 @@ def import_device_data(
     device_df = add_id_col(df=device_df, id_df=vendor_id_df, col='Vendor')
     
     gps.to_sql(device_df, 'device', if_exists='append')
-    
     gps.close()
 
 
-def import_patient_reading_data(
-        snapshot: bool=False,
-        logger=setup_logger('import_patient_readings')
-):
+def import_patient_reading_data(logger=setup_logger('import_patient_readings')):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
         username=os.getenv('LCH_SQL_GPS_USERNAME'),
@@ -253,10 +227,6 @@ def import_patient_reading_data(
 
     bp_readings_df = standardize_bp_readings(bp_readings_df)
     bg_readings_df = standardize_bg_readings(bg_readings_df)
-    if snapshot:
-        snapshot_dir = Path.cwd() / 'data' / 'snapshots'
-        bp_readings_df.to_csv(snapshot_dir / 'blood_pressure_readings_snap.csv', index=False)
-        bg_readings_df.to_csv(snapshot_dir / 'glucose_readings_snap.csv', index=False)
 
     patient_id_df = gps.read_sql(get_patient_id_stmt)
     device_id_df = gps.read_sql(get_device_id_stmt)
@@ -268,5 +238,4 @@ def import_patient_reading_data(
     
     gps.to_sql(bp_readings_df, 'blood_pressure_reading', if_exists='append')
     gps.to_sql(bg_readings_df, 'glucose_reading', if_exists='append')
-    
     gps.close()
