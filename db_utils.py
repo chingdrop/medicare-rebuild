@@ -15,11 +15,11 @@ class DatabaseManager:
 
     def create_engine(
             self,
-            username,
-            password,
-            host,
-            database
-    ):
+            username: str,
+            password: str,
+            host: str,
+            database: str
+    ) -> None:
         """Creates SQLAlchemy engine object with credentials. Creates an event listener on cursor's receive_many flag, enables fast execute_many.
         
         Args:
@@ -54,7 +54,7 @@ class DatabaseManager:
             raise Exception("Database connection is not established. Call connect() first.")
         return self.session()
 
-    def execute_query(self, query: str, params:dict=None) -> Result:
+    def execute_query(self, query: str, params: dict=None) -> Result:
         """Executes a SQL query and returns the result object if any.
         
         Args:
@@ -77,7 +77,7 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def read_sql(self, query: str, params:tuple=None, parse_dates: List[str]=None) -> pd.DataFrame:
+    def read_sql(self, query: str, params: tuple=None, parse_dates: List[str]=None) -> pd.DataFrame:
         """Reads SQL table and returns the result as a DataFrame.
         
         Args:

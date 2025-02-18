@@ -5,8 +5,8 @@ import requests
 class RestAdapter:
     def __init__(
             self,
-            base_url,
-            headers=None,
+            base_url: str,
+            headers: dict=None,
             auth=None,
             logger=logging.getLogger()
     ):
@@ -27,7 +27,13 @@ class RestAdapter:
         if self.headers:
             self.session.headers.update(self.headers)
 
-    def _send_request(self, method, endpoint, params=None, data=None):
+    def _send_request(
+            self,
+            method: str,
+            endpoint: str,
+            params: dict=None,
+            data: dict=None
+    ) -> dict:
         """
         Prepare the request to be sent. Send the prepared request and return the response.
         :param method: HTTP method ('GET', 'POST', etc.)
@@ -55,7 +61,7 @@ class RestAdapter:
         except requests.exceptions.RequestException as err:
             self.logger.error(f"An Unexpected Error: {err}")
 
-    def get(self, endpoint, params=None):
+    def get(self, endpoint: str, params: dict=None):
         """
         Make a GET request.
         :param endpoint: API endpoint
@@ -64,7 +70,7 @@ class RestAdapter:
         """
         return self._send_request('GET', endpoint, params=params)
 
-    def post(self, endpoint, data=None):
+    def post(self, endpoint: str, data: dict=None):
         """
         Make a POST request.
         :param endpoint: API endpoint
@@ -73,7 +79,7 @@ class RestAdapter:
         """
         return self._send_request('POST', endpoint, data=data)
 
-    def put(self, endpoint, data=None):
+    def put(self, endpoint: str, data: dict=None):
         """
         Make a PUT request.
         :param endpoint: API endpoint
@@ -82,7 +88,7 @@ class RestAdapter:
         """
         return self._send_request('PUT', endpoint, data=data)
 
-    def delete(self, endpoint, params=None):
+    def delete(self, endpoint: str, params: dict=None):
         """
         Make a DELETE request.
         :param endpoint: API endpoint
@@ -93,12 +99,12 @@ class RestAdapter:
 
 
 class MSGraphApi:
-    def __init__(self, tenant_id, client_id, client_secret):
+    def __init__(self, tenant_id: str, client_id: str, client_secret: str):
         self.tenant_id = tenant_id
         self.client_id = client_id,
         self.client_secret = client_secret
 
-    def request_access_token(self,):
+    def request_access_token(self,) -> None:
         rest = RestAdapter('https://login.microsoftonline.com')
         data = {
             'grant_type': 'client_credentials',
@@ -113,6 +119,6 @@ class MSGraphApi:
         }
         self.rest = RestAdapter('https://graph.microsoft.com/v1.0', headers=headers)
 
-    def get_group_members(self, group_id):
+    def get_group_members(self, group_id: str) -> dict:
         endpoint = f'/groups/{group_id}/members'
         return self.rest.get(endpoint)
