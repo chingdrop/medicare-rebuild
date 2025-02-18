@@ -36,23 +36,23 @@ class RestAdapter:
         :param data: Data to send in the request body (optional)
         :return: Response object
         """
+        self.logger.debug(f'Sending [{method}] to {self.base_url} {endpoint}...')
         url = f"{self.base_url}{endpoint}"
         req = requests.Request(method, url, headers=self.session.headers, params=params, data=data)
-        prepared_req = self.session.prepare_request(req)
-        print(prepared_req)
+        prep_req = self.session.prepare_request(req)
         try:
-            response = self.session.send(prepared_req)
-            print(response)
+            response = self.session.send(prep_req)
             response.raise_for_status()
+            self.logger.debug(f'[{response.status_code}] - {response.encoding} - {response.reason}')
             return response
         except requests.exceptions.HTTPError as errh:
-            print(f"HTTP Error: {errh}")
+            self.logger.error(f"HTTP Error: {errh}")
         except requests.exceptions.ConnectionError as errc:
-            print(f"Error Connecting: {errc}")
+            self.logger.error(f"Error Connecting: {errc}")
         except requests.exceptions.Timeout as errt:
-            print(f"Timeout Error: {errt}")
+            self.logger.error(f"Timeout Error: {errt}")
         except requests.exceptions.RequestException as err:
-            print(f"An Unexpected Error: {err}")
+            self.logger.error(f"An Unexpected Error: {err}")
 
     def get(self, endpoint, params=None):
         """
