@@ -87,7 +87,8 @@ def import_patient_data(
         'email',
         'phone_number',
         'social_security',
-        'sharepoint_id'
+        'sharepoint_id',
+        'temp_user'
     ]]
     address_df = export_df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
     insurance_df = export_df[[
