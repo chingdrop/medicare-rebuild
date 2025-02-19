@@ -74,3 +74,13 @@ SET patient.user_id = (
 )
 WHERE patient.temp_user IS NOT NULL;
 """
+
+update_user_note_stmt = """
+UPDATE patient_note
+SET patient_note.user_id = (
+	SELECT u.user_id
+	FROM [user] u
+	WHERE u.display_name = patient_note.temp_user
+)
+WHERE patient_note.temp_user IS NOT NULL;
+"""
