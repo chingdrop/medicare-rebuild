@@ -1,6 +1,6 @@
 import os
-import logging
 import pandas as pd
+from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -144,7 +144,8 @@ def import_patient_note_data(logger=setup_logger('import_patient_notes')):
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_TIME')
     )
-    start_date, end_date = get_last_month_billing_cycle()
+    start_date, _ = get_last_month_billing_cycle()
+    end_date = datetime.now()
     notes_df = notes_db.read_sql(get_notes_log_stmt,
                             params=(start_date, end_date),
                             parse_dates=['TimeStamp'])
@@ -214,7 +215,8 @@ def import_patient_reading_data(logger=setup_logger('import_patient_readings')):
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_READINGS')
     )
-    start_date, end_date = get_last_month_billing_cycle()
+    start_date, _ = get_last_month_billing_cycle()
+    end_date = datetime.now()
     bp_readings_df = readings_db.read_sql(get_bp_readings_stmt,
                                   params=(start_date, end_date),
                                   parse_dates=['Time_Recorded', 'Time_Recieved'])
