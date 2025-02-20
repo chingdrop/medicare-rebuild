@@ -1,5 +1,5 @@
-﻿DECLARE @user_email varchar(150);
-SET @user_email = 'ITHelp@livecarehealth.com';
+﻿DECLARE @display_name varchar(150);
+SET @display_name = 'ITHelp';
 
 DECLARE @first_of_month DATE;
 SET @first_of_month = DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0);
@@ -11,7 +11,7 @@ WITH monthly_minutes AS (
 	FROM patient p
 	JOIN [user] u
 	ON p.user_id = u.user_id
-	AND u.email = @user_email
+	AND u.display_name = @display_name
 	LEFT JOIN patient_note pn
 	ON p.patient_id = pn.patient_id
 	AND pn.note_datetime >= @first_of_month
@@ -37,7 +37,7 @@ monthly_count AS (
 	FROM patient p
 	JOIN [user] u
 	ON p.user_id = u.user_id
-	AND u.email = @user_email
+	AND u.display_name = @display_name
 	LEFT JOIN device d
 	ON p.patient_id = d.patient_id
 	LEFT JOIN glucose_reading gr

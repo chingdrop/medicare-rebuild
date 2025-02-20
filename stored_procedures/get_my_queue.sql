@@ -1,6 +1,6 @@
 ﻿
 CREATE PROCEDURE [dbo].[get_my_queue] 
-	@user_email varchar(150)
+	@display_name varchar(150)
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -14,7 +14,7 @@ BEGIN
 		FROM patient p
 		JOIN [user] u
 		ON p.user_id = u.user_id
-		AND u.email = @user_email
+		AND u.display_name = @display_name
 		LEFT JOIN patient_note pn
 		ON p.patient_id = pn.patient_id
 		AND pn.note_datetime >= @first_of_month
@@ -40,7 +40,7 @@ BEGIN
 		FROM patient p
 		JOIN [user] u
 		ON p.user_id = u.user_id
-		AND u.email = @user_email
+		AND u.display_name = @display_name
 		LEFT JOIN device d
 		ON p.patient_id = d.patient_id
 		LEFT JOIN glucose_reading gr
@@ -54,7 +54,8 @@ BEGIN
 		GROUP BY p.patient_id, d.device_id
 	)
 
-	SELECT p.first_name,
+	SELECT p.patient_id,
+		p.first_name,
 		p.last_name,
 		ps.temp_status_type,
 		pa.temp_state,
@@ -63,9 +64,6 @@ BEGIN
 		mc.mon_count,
 		mc.last_reading_date
 	FROM patient p
-	JOIN [user] u
-	ON p.user_id = u.user_id
-	AND u.email = @user_email
 	JOIN patient_status ps
 	ON p.patient_id = ps.patient_id
 	JOIN patient_address pa
