@@ -101,7 +101,29 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
     patient_status_df['modified_date'] = pd.Timestamp.now()
     patient_status_df['temp_user'] = 'ITHelp'
-
+    emcontacts_df1 = export_df[[
+        'emergency_full_name',
+        'emergency_phone_number',
+        'emergency_relationship',
+        'sharepoint_id'
+    ]]
+    emcontacts_df1 = emcontacts_df1.rename(columns={
+        'emergency_full_name': 'full_name',
+        'emergency_phone_number': 'phone_number',
+        'emergency_relationship': 'relationship'
+    })
+    emcontacts_df2 = export_df[[
+        'emergency_full_name2',
+        'emergency_phone_number2',
+        'emergency_relationship2',
+        'sharepoint_id'
+    ]]
+    emcontacts_df2 = emcontacts_df2.rename(columns={
+        'emergency_full_name2': 'full_name',
+        'emergency_phone_number2': 'phone_number',
+        'emergency_relationship2': 'relationship'
+    })
+    emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
     data_dir = Path.cwd() / 'data'
     failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
     
@@ -113,11 +135,13 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     insurance_df = add_id_col(df=insurance_df, id_df=patient_id_df, col='sharepoint_id')
     med_nec_df = add_id_col(df=med_nec_df, id_df=patient_id_df, col='sharepoint_id')
     patient_status_df = add_id_col(df=patient_status_df, id_df=patient_id_df, col='sharepoint_id')
+    emcontacts_df = add_id_col(df=emcontacts_df, id_df=patient_id_df, col='sharepoint_id')
     
     gps.to_sql(address_df, 'patient_address', if_exists='append')
     gps.to_sql(insurance_df, 'patient_insurance', if_exists='append')
     gps.to_sql(med_nec_df, 'medical_necessity', if_exists='append')
     gps.to_sql(patient_status_df, 'patient_status', if_exists='append')
+    gps.to_sql(emcontacts_df, 'emergency_contact', if_exists='append')
     
     gps.close()
 

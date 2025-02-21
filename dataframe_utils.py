@@ -220,6 +220,24 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
     return row['Vendor']
 
 
+def standardize_emcontact_relationship(name: str) -> str:
+    """Standardizes emergency contact relationships.
+    Trims whitespace and titles the text.
+    Searches the emergency contact name for keywords and correlates that with a list of standard relationship names.
+
+    Args:
+        name (str): The value to be standardized.
+
+    Returns:
+        str: The standardized relatioship name. Or None
+    """
+    name = str(name).strip().title()
+    for standard_name, keyword in insurance_keywords.items():
+        if re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()):
+            return standard_name
+    return None
+
+
 def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['First Name'] = df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     df['Last Name'] = df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
@@ -237,6 +255,13 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['City'] = df['City'].apply(standardize_name, args=(r'[^a-zA-Z-]',))
     df['State'] = df['State'].apply(standardize_state)
     df['Zip code'] = df['Zip code'].astype(str).str.split('-', n=1).str[0]
+
+    df['EmergencyRelationship'] = df['EmergencyName'].apply(standardize_emcontact_relationship)
+    df['EmergencyRelationship2'] = df['EmergencyName2'].apply(standardize_emcontact_relationship)
+    df['EmergencyName'] = df['EmergencyName'].apply(standardize_name, args=(r'[^a-zA-Z\s.-/()]',))
+    df['EmergencyNumber'] = df['EmergencyNumber'].astype(str).str.replace(r'\D', '', regex=True)
+    df['EmergencyName2'] = df['EmergencyName2'].apply(standardize_name, args=(r'[^a-zA-Z\s.-/()]',))
+    df['EmergencyNumber2'] = df['EmergencyNumber2'].astype(str).str.replace(r'\D', '', regex=True)
 
     df['Medicare ID number'] = df['Medicare ID number'].apply(standardize_mbi)
     df['DX_Code'] = df['DX_Code'].apply(standardize_dx_code)
@@ -271,6 +296,12 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
             'City': 'city',
             'State': 'temp_state',
             'Zip code': 'zipcode',
+            'EmergencyName': 'emergency_full_name',
+            'EmergencyNumber': 'emergency_phone_number',
+            'EmergencyRelationship': 'emergency_relationship',
+            'EmergencyName2': 'emergency_full_name2',
+            'EmergencyNumber2': 'emergency_phone_number2',
+            'EmergencyRelationship2': 'emergency_relationship2',
             'Medicare ID number': 'medicare_beneficiary_id',
             'Insurance ID:': 'primary_payer_id',
             'Insurance Name:': 'primary_payer_name',
