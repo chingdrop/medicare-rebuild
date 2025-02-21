@@ -9,6 +9,8 @@
 	- [ ] Remove unrelated Stored Procedures
 	- [ ] Remove unrelated Tables
 ### Code
+- [ ] Add Days Since calculation to Last Reading Date and Last Note Date.
+- [ ] Improve the Status Dropdown function on the MyQueue page.
 - [ ] Add Pydantic for JSON schema checking on API classes.
 - [ ] Add mechanism for importing readings directly from Tenovi into the DB.
 	- [ ] Add Tenovi API class. 
@@ -20,6 +22,7 @@
 	- [ ] Pick pieces of data to add to patient insurance.
 	- [ ] Store the rest of the JSON in holder field in DB.
 - [ ] Add docstring for setup_logger function.
+- [ ] Alter the stored procedures to find the current billing cycle on their own.
 - [ ] Add ability to filter patients by member_status in the billing report.
 - [ ] Fix the anomaly of more bp/bg readings being written than read.
 - [ ] Provide a more precise method for deleting data in tables.
