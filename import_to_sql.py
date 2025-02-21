@@ -69,7 +69,7 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     logger.debug(f"Sharepoint Online Patient Export (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
     
     export_df = standardize_patients(export_df)
-    failed_df = patient_check_failed_data(export_df)
+    # failed_df = patient_check_failed_data(export_df)
     export_df = patient_check_db_constraints(export_df)
     patient_df = export_df[[
         'first_name',
@@ -125,7 +125,7 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     })
     emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
     data_dir = Path.cwd() / 'data'
-    failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
+    # failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
     
     # Patient data is imported first to get the patient_id.
     gps.to_sql(patient_df, 'patient', if_exists='append')
