@@ -373,8 +373,8 @@ def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
-    failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 10)]
-    failed_df.loc[failed_df['phone_number'].apply(lambda x: len(str(x)) != 10), 'error_type'] = 'phone number length error'
+    failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 11)]
+    failed_df.loc[failed_df['phone_number'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
     failed_df = df[df['social_security'].apply(lambda x: len(str(x)) != 9)]
     failed_df.loc[failed_df['social_security'].apply(lambda x: len(str(x)) != 9), 'error_type'] = 'social security length error'
     failed_df = df[df['zipcode'].apply(lambda x: len(str(x)) != 5)]
@@ -396,7 +396,7 @@ def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def patient_check_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
-    df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 10)]
+    df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['social_security'].apply(lambda x: len(str(x)) <= 9)]
     df = df[df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
     df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
