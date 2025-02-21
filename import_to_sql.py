@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from api_utils import MSGraphApi
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
     standardize_devices, standardize_bp_readings, standardize_bg_readings, \
-    patient_check_db_constraints, patient_check_failed_data
+    patient_check_db_constraints
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
 from logger import setup_logger
