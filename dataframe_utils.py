@@ -3,7 +3,7 @@ import html
 import pandas as pd
 import numpy as np
 
-from enums import insurance_keywords, state_abbreviations
+from enums import insurance_keywords, state_abbreviations, relationship_keywords
 
 
 def standardize_name(name: str, pattern: str) -> str:
@@ -232,7 +232,7 @@ def standardize_emcontact_relationship(name: str) -> str:
         str: The standardized relatioship name. Or None
     """
     name = str(name).strip().title()
-    for standard_name, keyword in insurance_keywords.items():
+    for standard_name, keyword in relationship_keywords.items():
         if re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()):
             return standard_name
     return None
