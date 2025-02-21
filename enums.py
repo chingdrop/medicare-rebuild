@@ -227,3 +227,25 @@ insurance_keywords = {
         ["western", "united"]
     ]
 }
+
+relationship_keywords = {
+    'Mother': 'mother',
+    'Father': 'father',
+    'Daughter': 'daughter',
+    'Son': 'son',
+    'Grandson': 'grandson',
+    'Granddaughter': 'granddaughter',
+    'Sister': 'sister',
+    'Brother': 'brother',
+    'Nephew': 'nephew',
+    'Niece': 'niece',
+    'Cousin': 'cousin',
+    'Girlfriend': 'girlfriend',
+    'Boyfriend': 'boyfriend',
+    'Wife': 'wife',
+    'Husband': 'husband',
+    'Fiance': 'fiance',
+    'Caregiver': 'caregiver',
+    'Friend': 'friend',
+    'Neighbor': 'neighbor'
+}
