@@ -410,6 +410,10 @@ def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
     failed_df.loc[failed_df['social_security'].apply(lambda x: len(str(x)) != 9), 'error_type'] = 'social security length error'
     failed_df = df[df['zipcode'].apply(lambda x: len(str(x)) != 5)]
     failed_df.loc[failed_df['zipcode'].apply(lambda x: len(str(x)) != 5), 'error_type'] = 'zipcode length error'
+    failed_df = df[df['emergency_phone_number'].apply(lambda x: len(str(x)) != 11)]
+    failed_df.loc[failed_df['emergency_phone_number'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
+    failed_df = df[df['emergency_phone_number2'].apply(lambda x: len(str(x)) != 11)]
+    failed_df.loc[failed_df['emergency_phone_number2'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
     failed_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11)]
     failed_df.loc[failed_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'medicare beneficiary id length error'
     failed_df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
@@ -430,6 +434,8 @@ def patient_check_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['social_security'].apply(lambda x: len(str(x)) <= 9)]
     df = df[df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
+    df = df[df['emergency_phone_number'].apply(lambda x: len(str(x)) <= 11)]
+    df = df[df['emergency_phone_number2'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
     df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) <= 30)]
