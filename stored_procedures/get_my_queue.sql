@@ -72,5 +72,6 @@ BEGIN
 	ON p.patient_id = mm.patient_id
 	JOIN monthly_count mc
 	ON p.patient_id = mc.patient_id
+	GROUP BY p.patient_id, p.first_name, p.last_name, ps.temp_status_type, pa.temp_state, mm.mon_min, mm.last_note_date, mc.mon_count, mc.last_reading_date
 	RETURN;
 END
