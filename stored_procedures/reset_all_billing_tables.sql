@@ -45,6 +45,10 @@ BEGIN
 	DELETE FROM patient_status;
 	DBCC CHECKIDENT ('patient_status', RESEED, 0);
 
+	PRINT('Emergency Contacts');
+	DELETE FROM emergency_contact;
+	DBCC CHECKIDENT ('emergency_contact', RESEED, 0);
+
 	-- Patient records are deleted last due to foreign key constraints.
 	PRINT('Patient');
 	DELETE FROM patient;
