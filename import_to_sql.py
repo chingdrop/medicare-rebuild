@@ -124,7 +124,7 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
         'emergency_relationship2': 'relationship'
     })
     emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
-    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number', 'relationship'], how='all')
+    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number'])
     # failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
     
     # Patient data is imported first to get the patient_id.
