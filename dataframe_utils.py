@@ -7,6 +7,23 @@ from enums import insurance_keywords, state_abbreviations, relationship_keywords
     race_keywords
 
 
+def keyword_search(value, keywords, keep_original=False):
+    value = str(value).strip().title()
+    for standard_name, keyword in keywords.items():
+        if re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()):
+            return standard_name
+    return value if keep_original else np.nan
+
+
+def keyword_list_search(value, keywords, keep_original=False):
+    value = str(value).strip().title()
+    for standard_name, keyword_sets in keywords.items():
+        for keyword_set in keyword_sets:
+            if all(re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()) for keyword in keyword_set):
+                return standard_name
+    return value if keep_original else np.nan
+
+
 def standardize_name(name: str, pattern: str) -> str:
     """Standardizes strings from name-like texts.
     Trims whitespace and titles the text. Flattens remaining whitespace to one space.
@@ -108,14 +125,7 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         str: The standardized insurance name.    
     """
-    if pd.isna(name):
-        return np.nan
-    name = str(name).strip().title()
-    for standard_name, keyword_sets in insurance_keywords.items():
-        for keyword_set in keyword_sets:
-            if all(re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()) for keyword in keyword_set):
-                return standard_name
-    return name
+    return keyword_list_search(name, insurance_keywords, keep_original=True)
 
 
 def standardize_insurance_id(ins_id: str) -> str:
@@ -232,14 +242,10 @@ def standardize_emcontact_relationship(name: str) -> str:
     Returns:
         str: The standardized relatioship name. Or None
     """
-    name = str(name).strip().title()
-    for standard_name, keyword in relationship_keywords.items():
-        if re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()):
-            return standard_name
-    return None
+    return keyword_search(name, relationship_keywords)
 
 
-def standardize_race(name: str) -> str:
+def standardize_race(race: str) -> str:
     """Standardizes patient race strings.
     Trims whitespace and titles the text.
     Searches the race for keywords and correlates that with a list of standard races.
@@ -251,14 +257,7 @@ def standardize_race(name: str) -> str:
     Returns:
         str: The standardized race.    
     """
-    if pd.isna(name):
-        return np.nan
-    name = str(name).strip().title()
-    for standard_name, keyword_sets in race_keywords.items():
-        for keyword_set in keyword_sets:
-            if all(re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()) for keyword in keyword_set):
-                return standard_name
-    return name
+    return keyword_list_search(race, race_keywords, keep_original=True)
 
 
 def standardize_weight(weight: str) -> str:
