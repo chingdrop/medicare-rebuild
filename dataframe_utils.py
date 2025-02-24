@@ -3,7 +3,8 @@ import html
 import pandas as pd
 import numpy as np
 
-from enums import insurance_keywords, state_abbreviations, relationship_keywords
+from enums import insurance_keywords, state_abbreviations, relationship_keywords, \
+    race_keywords
 
 
 def standardize_name(name: str, pattern: str) -> str:
@@ -238,6 +239,51 @@ def standardize_emcontact_relationship(name: str) -> str:
     return None
 
 
+def standardize_race(name: str) -> str:
+    """Standardizes patient race strings.
+    Trims whitespace and titles the text.
+    Searches the race for keywords and correlates that with a list of standard races.
+    Keywords are held in lists where all elements of the list must be present for a positive match.
+
+    Args:
+        name (str): The value to be standardized.
+
+    Returns:
+        str: The standardized race.    
+    """
+    if pd.isna(name):
+        return np.nan
+    name = str(name).strip().title()
+    for standard_name, keyword_sets in race_keywords.items():
+        for keyword_set in keyword_sets:
+            if all(re.search(r'\b' + re.escape(keyword) + r'\b', name.lower()) for keyword in keyword_set):
+                return standard_name
+    return name
+
+
+def standardize_weight(weight: str) -> str:
+    weight = str(weight).strip()
+    height_chars = ["'", '"', 'ft', 'in']
+    if any(char in weight.lower() for char in height_chars):
+        return np.nan
+    weight = re.sub(r'\D', '', weight)
+    if len(weight) > 3:
+        weight = weight[:3]
+    return int(weight) if weight else 0
+
+
+def standardize_height(height: str) -> str:
+    height = str(height).strip()
+    weight_chars = ['lbs', 'kg']
+    if any(char in height.lower() for char in weight_chars):
+        return np.nan
+    match = re.match(r'^(\d+)[\D]*?(\d+)?[\D]*?$', height)
+    if match:
+        feet = int(match.group(1))
+        inches = int(match.group(2)) if match.group(2) else 0
+        return (feet * 12) + inches
+
+
 def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['First Name'] = df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     df['Last Name'] = df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
@@ -249,6 +295,9 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['Email'] = df['Email'].apply(standardize_email)
     df['Suffix'] = df['Suffix'].str.strip().str.title()
     df['Social Security'] = df['Social Security'].astype(str).str.replace(r'\D', '', regex=True)
+    df['Race'] = df['Race'].apply(standardize_race)
+    df['Weight'] = df['Weight'].apply(standardize_weight)
+    df['Height'] = df['Height'].apply(standardize_height)
 
     # The logic in standardize name can be used for address text as well.
     df['Mailing Address'] = df['Mailing Address'].apply(standardize_name, args=(r'[^a-zA-Z0-9\s#.-/]',))
@@ -291,6 +340,11 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
             'Email': 'email',
             'Phone Number': 'phone_number',
             'Social Security': 'social_security',
+            'Race': 'temp_race',
+            'Relationship_Status': 'temp_marital_status',
+            'Preferred_Language': 'preferred_language',
+            'Weight': 'weight_lbs',
+            'Height': 'height_in',
             'ID': 'sharepoint_id',
             'Mailing Address': 'street_address',
             'City': 'city',

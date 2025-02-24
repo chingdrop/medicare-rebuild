@@ -249,3 +249,32 @@ relationship_keywords = {
     'Friend': 'friend',
     'Neighbor': 'neighbor'
 }
+
+race_keywords = {
+    'Asian': [
+        ['asian']
+    ],
+    'Black': [
+        ['black'],
+        ['african american']
+    ],
+    'Hispanic/Latin': [
+        ['hispanic'],
+        ['latin']
+    ],
+    'Middle Eastern': [
+        ['middle', 'eastern']
+    ],
+    'Native American': [
+        ['native', 'american'],
+        ['alaska', 'native']
+    ],
+    'Pacific Islander': [
+        ['pacific', 'islander'],
+        ['native', 'hawaiian']
+    ],
+    'White': [
+        ['white'],
+        ['caucasian'],
+    ]
+}
