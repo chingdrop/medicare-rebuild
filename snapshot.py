@@ -1,7 +1,9 @@
 import os
+import warnings
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 
 from api_utils import MSGraphApi
 from db_utils import DatabaseManager
@@ -134,6 +136,8 @@ def snap_reading_data():
     bg_readings_df.to_excel(data_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
+warnings.filterwarnings("ignore")
+load_dotenv()
 snap_user_data()
 snap_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
 snap_patient_note_data()
