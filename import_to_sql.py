@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 from api_utils import MSGraphApi
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
     standardize_devices, standardize_bp_readings, standardize_bg_readings, \
-    patient_check_db_constraints
+    patient_check_db_constraints, \
+    create_patient_df, create_patient_address_df, create_patient_insurance_df, \
+    create_med_necessity_df, create_patient_status_df, create_emcontacts_df
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
 from logger import setup_logger
@@ -71,66 +73,12 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     export_df = standardize_patients(export_df)
     # failed_df = patient_check_failed_data(export_df)
     export_df = patient_check_db_constraints(export_df)
-    patient_df = export_df[[
-        'first_name',
-        'last_name',
-        'middle_name',
-        'name_suffix',
-        'full_name',
-        'nick_name',
-        'date_of_birth',
-        'sex',
-        'email',
-        'phone_number',
-        'social_security',
-        'temp_race',
-        'temp_marital_status',
-        'preferred_language',
-        'weight_lbs',
-        'height_in',
-        'sharepoint_id',
-        'temp_user'
-    ]]
-    address_df = export_df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
-    insurance_df = export_df[[
-        'medicare_beneficiary_id',
-        'primary_payer_id',
-        'primary_payer_name',
-        'secondary_payer_id',
-        'secondary_payer_name',
-        'sharepoint_id'
-    ]]
-    med_nec_df = export_df[['evaluation_datetime', 'temp_dx_code', 'sharepoint_id']]
-    med_nec_df.loc[:, 'temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
-    med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
-    patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
-    patient_status_df['modified_date'] = pd.Timestamp.now()
-    patient_status_df['temp_user'] = 'ITHelp'
-
-    emcontacts_df1 = export_df[[
-        'emergency_full_name',
-        'emergency_phone_number',
-        'emergency_relationship',
-        'sharepoint_id'
-    ]]
-    emcontacts_df1 = emcontacts_df1.rename(columns={
-        'emergency_full_name': 'full_name',
-        'emergency_phone_number': 'phone_number',
-        'emergency_relationship': 'relationship'
-    })
-    emcontacts_df2 = export_df[[
-        'emergency_full_name2',
-        'emergency_phone_number2',
-        'emergency_relationship2',
-        'sharepoint_id'
-    ]]
-    emcontacts_df2 = emcontacts_df2.rename(columns={
-        'emergency_full_name2': 'full_name',
-        'emergency_phone_number2': 'phone_number',
-        'emergency_relationship2': 'relationship'
-    })
-    emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
-    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number'])
+    patient_df = create_patient_df(export_df)
+    address_df = create_patient_address_df(export_df)
+    insurance_df = create_patient_insurance_df(export_df)
+    med_nec_df = create_med_necessity_df(export_df)
+    patient_status_df = create_patient_status_df(export_df)
+    emcontacts_df = create_emcontacts_df(export_df)
     # failed_df.to_csv(data_dir / 'failed_patient_export.csv', index=False)
     
     # Patient data is imported first to get the patient_id.

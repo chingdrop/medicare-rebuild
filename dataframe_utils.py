@@ -371,6 +371,86 @@ def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def create_patient_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[[
+        'first_name',
+        'last_name',
+        'middle_name',
+        'name_suffix',
+        'full_name',
+        'nick_name',
+        'date_of_birth',
+        'sex',
+        'email',
+        'phone_number',
+        'social_security',
+        'temp_race',
+        'temp_marital_status',
+        'preferred_language',
+        'weight_lbs',
+        'height_in',
+        'sharepoint_id',
+        'temp_user'
+    ]]
+
+
+def create_patient_address_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
+
+
+def create_patient_insurance_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[[
+        'medicare_beneficiary_id',
+        'primary_payer_id',
+        'primary_payer_name',
+        'secondary_payer_id',
+        'secondary_payer_name',
+        'sharepoint_id'
+    ]]
+
+
+def create_med_necessity_df(df: pd.DataFrame) -> pd.DataFrame:
+    med_nec_df = df[['evaluation_datetime', 'temp_dx_code', 'sharepoint_id']]
+    med_nec_df.loc[:, 'temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
+    med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
+    return med_nec_df
+
+
+def create_patient_status_df(df: pd.DataFrame) -> pd.DataFrame:
+    patient_status_df = df[['temp_status_type', 'sharepoint_id']]
+    patient_status_df['modified_date'] = pd.Timestamp.now()
+    patient_status_df['temp_user'] = 'ITHelp'
+    return patient_status_df
+
+
+def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
+    emcontacts_df1 = df[[
+        'emergency_full_name',
+        'emergency_phone_number',
+        'emergency_relationship',
+        'sharepoint_id'
+    ]]
+    emcontacts_df1 = emcontacts_df1.rename(columns={
+        'emergency_full_name': 'full_name',
+        'emergency_phone_number': 'phone_number',
+        'emergency_relationship': 'relationship'
+    })
+    emcontacts_df2 = df[[
+        'emergency_full_name2',
+        'emergency_phone_number2',
+        'emergency_relationship2',
+        'sharepoint_id'
+    ]]
+    emcontacts_df2 = emcontacts_df2.rename(columns={
+        'emergency_full_name2': 'full_name',
+        'emergency_phone_number2': 'phone_number',
+        'emergency_relationship2': 'relationship'
+    })
+    emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
+    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number'])
+    return emcontacts_df
+
+
 def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
     df['Recording_Time'] = df['Recording_Time'].apply(standardize_call_time)
     df.loc[df['LCH_UPN'].isin(['Joycelynn Harris']), 'Recording_Time'] = 900
