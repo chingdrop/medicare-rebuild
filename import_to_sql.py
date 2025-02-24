@@ -83,6 +83,11 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
         'email',
         'phone_number',
         'social_security',
+        'temp_race',
+        'temp_marital_status',
+        'preferred_language',
+        'weight_lbs',
+        'height_in',
         'sharepoint_id',
         'temp_user'
     ]]
@@ -101,6 +106,7 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
     patient_status_df = export_df[['temp_status_type', 'sharepoint_id']]
     patient_status_df['modified_date'] = pd.Timestamp.now()
     patient_status_df['temp_user'] = 'ITHelp'
+
     emcontacts_df1 = export_df[[
         'emergency_full_name',
         'emergency_phone_number',
