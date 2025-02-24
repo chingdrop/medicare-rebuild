@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
+from api_utils import MSGraphApi
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
 from dataframe_utils import standardize_patients, standardize_patient_notes, standardize_devices, \
@@ -11,6 +12,26 @@ from dataframe_utils import standardize_patients, standardize_patient_notes, sta
     create_med_necessity_df, create_patient_status_df, create_emcontacts_df
 from queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt, \
     get_bg_readings_stmt, get_bp_readings_stmt
+
+
+def snap_user_data():
+    msg = MSGraphApi(
+        tenant_id=os.getenv('AZURE_TENANT_ID'),
+        client_id=os.getenv('AZURE_CLIENT_ID'),
+        client_secret=os.getenv('AZURE_CLIENT_SECRET')
+    )
+    msg.request_access_token()
+    data = msg.get_group_members('4bbe3379-1250-4522-92e6-017f77517470')
+    user_df = pd.DataFrame(data['value'])
+    user_df = user_df[['givenName', 'surname', 'displayName', 'mail', 'id']]
+    user_df = user_df.rename(columns={
+        'givenName': 'first_name',
+        'surname': 'last_name',
+        'displayName': 'display_name',
+        'mail': 'email',
+        'id': 'ms_entra_id'
+    })
+    user_df.to_excel(Path.cwd() / 'data' / 'snap_user_df.xlsx', index=False, engine='openpyxl')
 
 
 def snap_patient_data(filename) -> None:
@@ -113,6 +134,7 @@ def snap_reading_data():
     bg_readings_df.to_excel(data_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
+snap_user_data()
 snap_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
 snap_patient_note_data()
 snap_device_data()
