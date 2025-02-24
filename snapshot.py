@@ -116,3 +116,4 @@ def snap_reading_data():
 snap_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
 snap_patient_note_data()
 snap_device_data()
+snap_reading_data()
