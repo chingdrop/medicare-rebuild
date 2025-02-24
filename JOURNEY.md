@@ -36,6 +36,9 @@
 - [ ] Automate the exporting of the Patient data from SharePoint Online.
 
 ## Completed
+- [x] Add snapshot functions that will save standardized data to files for viewing.
+- [x] Abstract the keyword search function used in dataframe_utils.
+- [x] Create functions for splitting the dataframes into their respective tables.
 - [x] Change format of docstrings for RestAdapter.
 - [x] Add docstring to MSGraphApi.
 - [x] Update docstring DatabaseManager.
