@@ -6,10 +6,11 @@ from pathlib import Path
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
 from dataframe_utils import standardize_patients, standardize_patient_notes, standardize_devices, \
-    patient_check_db_constraints, \
+    standardize_bg_readings, standardize_bp_readings, patient_check_db_constraints, \
     create_patient_df, create_patient_address_df, create_patient_insurance_df, \
     create_med_necessity_df, create_patient_status_df, create_emcontacts_df
-from queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt
+from queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt, \
+    get_bg_readings_stmt, get_bp_readings_stmt
 
 
 def snap_patient_data(filename) -> None:
@@ -85,6 +86,31 @@ def snap_device_data():
     device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
     device_df = standardize_devices(device_df)
     device_df.to_excel(Path.cwd() / 'data' / 'snap_device_df.xlsx', index=False, engine='openpyxl')
+
+
+def snap_reading_data():
+    readings_db = DatabaseManager()
+    readings_db.create_engine(
+        username=os.getenv('LCH_SQL_USERNAME'),
+        password=os.getenv('LCH_SQL_PASSWORD'),
+        host=os.getenv('LCH_SQL_HOST'),
+        database=os.getenv('LCH_SQL_SP_READINGS')
+    )
+    start_date, _ = get_last_month_billing_cycle()
+    end_date = datetime.now()
+    bp_readings_df = readings_db.read_sql(get_bp_readings_stmt,
+                                  params=(start_date, end_date),
+                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
+    bg_readings_df = readings_db.read_sql(get_bg_readings_stmt,
+                                  params=(start_date, end_date),
+                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
+
+    bp_readings_df = standardize_bp_readings(bp_readings_df)
+    bg_readings_df = standardize_bg_readings(bg_readings_df)
+
+    data_dir = Path.cwd() / 'data'
+    bp_readings_df.to_excel(data_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
+    bg_readings_df.to_excel(data_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
 snap_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
