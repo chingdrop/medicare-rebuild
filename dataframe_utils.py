@@ -24,6 +24,14 @@ def keyword_list_search(value, keywords, keep_original=False):
     return value if keep_original else np.nan
 
 
+def extract_regex_pattern(value, pattern, keep_original=False):
+    value = str(value).strip()
+    match = re.search(pattern, value)
+    if match:
+        return match.group(0)
+    return value if keep_original else np.nan
+
+
 def standardize_name(name: str, pattern: str) -> str:
     """Standardizes strings from name-like texts.
     Trims whitespace and titles the text. Flattens remaining whitespace to one space.
@@ -52,12 +60,8 @@ def standardize_email(email: str) -> str:
     Returns:
         str: The standardized email address.    
     """
-    email = str(email).strip().lower()
-    email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
-    email_match = re.search(email_pattern, email)
-    if email_match:
-        return email_match.group(0)
-    return email
+    email_pattern = r'(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)'
+    return extract_regex_pattern(email, email_pattern, keep_original=True).lower()
 
 
 def standardize_state(state: str) -> str:
@@ -73,7 +77,6 @@ def standardize_state(state: str) -> str:
     """
     state = str(state).strip().title()
     state = state_abbreviations.get(state, state).upper()
-    # NAN is checked here because of the default values dict.get() returns.
     return state
 
 
@@ -88,12 +91,8 @@ def standardize_mbi(mbi: str) -> str:
     Returns:
         str: The standardized medicare beneficiary ID.    
     """
-    mbi = str(mbi).strip().upper()
-    mbi_pattern = r'([A-Z0-9]{11})'
-    mbi_match = re.search(mbi_pattern, mbi)
-    if mbi_match:
-        return mbi_match.group(0)
-    return mbi
+    mbi_pattern = r'([A-Za-z0-9]{11})'
+    return extract_regex_pattern(mbi, mbi_pattern, keep_original=True).upper()
 
 
 def standardize_dx_code(dx_code: str) -> str:
@@ -139,15 +138,9 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         str: The standardized insurance ID.    
     """
-    if pd.isna(ins_id):
-        return np.nan
-    insurance_id = str(ins_id).strip().upper()
-    insurance_id = re.sub(r'[^A-Z0-9]', '', insurance_id)
-    id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
-    id_match = re.search(id_pattern, insurance_id)
-    if id_match:
-        return id_match.group(0)
-    return insurance_id
+    insurance_id = re.sub(r'[^A-Za-z0-9]', '', insurance_id)
+    id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d*)'
+    return extract_regex_pattern(insurance_id, id_pattern, keep_original=True).upper()
 
 
 def fill_primary_payer(row: pd.Series) -> pd.Series:
