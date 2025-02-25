@@ -18,9 +18,6 @@ from queries import get_patient_id_stmt, get_notes_log_stmt, get_time_log_stmt, 
     get_device_id_stmt
 
 
-load_dotenv()
-
-
 def import_user_data(logger=setup_logger('import_user_data')):
     msg = MSGraphApi(
         tenant_id=os.getenv('AZURE_TENANT_ID'),
