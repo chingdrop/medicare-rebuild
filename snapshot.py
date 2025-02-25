@@ -112,7 +112,9 @@ def snap_patient_note_data(logger=logging.getLogger()):
     patient_note_df = standardize_patient_notes(patient_note_df)
 
     logger.debug(f'Writing Patient Note DataFrame (rows: {patient_note_df.shape[0]}, cols: {patient_note_df.shape[1]})...')
-    patient_note_df.to_excel(Path.cwd() / 'data' / 'snap_patient_note_df.xlsx', index=False, engine='openpyxl')
+    patient_note_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_patient_note_df.xlsx',
+                             index=False, 
+                             engine='openpyxl')
 
 
 def snap_device_data(logger=logging.getLogger()):
