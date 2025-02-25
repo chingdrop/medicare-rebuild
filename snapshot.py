@@ -146,7 +146,7 @@ load_dotenv()
 
 data_dir = Path.cwd() / 'data'
 snaps_dir = data_dir / 'snaps'
-if not snaps_dir.is_dir():
+if not snaps_dir.exists():
     create_directory(snaps_dir)
 if get_files_in_dir(snaps_dir):
     delete_files_in_dir(snaps_dir)

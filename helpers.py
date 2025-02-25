@@ -6,8 +6,7 @@ from pathlib import Path
 def create_directory(path: Path | str) -> None:
     if isinstance(path, str):
         path = Path(path)
-    if path.is_dir():
-        path.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
 
 def get_files_in_dir(path: Path | str):
@@ -20,7 +19,7 @@ def get_files_in_dir(path: Path | str):
 def delete_files_in_dir(path: Path | str) -> None:
     if isinstance(path, str):
         path = Path(path)
-    if path.is_dir():
+    if path.exists():
         for file in path.glob('*'):
             if file.is_file():
                 file.unlink()
