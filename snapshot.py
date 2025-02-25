@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 
 from api_utils import MSGraphApi
 from db_utils import DatabaseManager
-from helpers import get_last_month_billing_cycle
+from helpers import get_last_month_billing_cycle, \
+    create_directory, delete_files_in_dir, get_files_in_dir
 from dataframe_utils import standardize_patients, standardize_patient_notes, standardize_devices, \
     standardize_bg_readings, standardize_bp_readings, patient_check_db_constraints, \
     create_patient_df, create_patient_address_df, create_patient_insurance_df, \
@@ -33,7 +34,9 @@ def snap_user_data():
         'mail': 'email',
         'id': 'ms_entra_id'
     })
-    user_df.to_excel(Path.cwd() / 'data' / 'snap_user_df.xlsx', index=False, engine='openpyxl')
+    user_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_user_df.xlsx', 
+                     index=False, 
+                     engine='openpyxl')
 
 
 def snap_patient_data(filename) -> None:
@@ -55,13 +58,13 @@ def snap_patient_data(filename) -> None:
     patient_status_df = create_patient_status_df(export_df)
     emcontacts_df = create_emcontacts_df(export_df)
 
-    data_dir = Path.cwd() / 'data'
-    patient_df.to_excel(data_dir / 'snap_patient_df.xlsx', index=False, engine='openpyxl')
-    address_df.to_excel(data_dir / 'snap_patient_address_df.xlsx', index=False, engine='openpyxl')
-    insurance_df.to_excel(data_dir / 'snap_patient_insurance_df.xlsx', index=False, engine='openpyxl')
-    med_nec_df.to_excel(data_dir / 'snap_med_necessity_df.xlsx', index=False, engine='openpyxl')
-    patient_status_df.to_excel(data_dir / 'snap_patient_status_df.xlsx', index=False, engine='openpyxl')
-    emcontacts_df.to_excel(data_dir / 'snap_emcontacts_df.xlsx', index=False, engine='openpyxl')
+    snaps_dir = Path.cwd() / 'data' / 'snaps'
+    patient_df.to_excel(snaps_dir / 'snap_patient_df.xlsx', index=False, engine='openpyxl')
+    address_df.to_excel(snaps_dir / 'snap_patient_address_df.xlsx', index=False, engine='openpyxl')
+    insurance_df.to_excel(snaps_dir / 'snap_patient_insurance_df.xlsx', index=False, engine='openpyxl')
+    med_nec_df.to_excel(snaps_dir / 'snap_med_necessity_df.xlsx', index=False, engine='openpyxl')
+    patient_status_df.to_excel(snaps_dir / 'snap_patient_status_df.xlsx', index=False, engine='openpyxl')
+    emcontacts_df.to_excel(snaps_dir / 'snap_emcontacts_df.xlsx', index=False, engine='openpyxl')
 
 
 def snap_patient_note_data():
@@ -108,7 +111,9 @@ def snap_device_data():
     )
     device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
     device_df = standardize_devices(device_df)
-    device_df.to_excel(Path.cwd() / 'data' / 'snap_device_df.xlsx', index=False, engine='openpyxl')
+    device_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_device_df.xlsx', 
+                       index=False, 
+                       engine='openpyxl')
 
 
 def snap_reading_data():
@@ -131,15 +136,23 @@ def snap_reading_data():
     bp_readings_df = standardize_bp_readings(bp_readings_df)
     bg_readings_df = standardize_bg_readings(bg_readings_df)
 
-    data_dir = Path.cwd() / 'data'
-    bp_readings_df.to_excel(data_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
-    bg_readings_df.to_excel(data_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
+    snaps_dir = Path.cwd() / 'data' / 'snaps'
+    bp_readings_df.to_excel(snaps_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
+    bg_readings_df.to_excel(snaps_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
 warnings.filterwarnings("ignore")
 load_dotenv()
+
+data_dir = Path.cwd() / 'data'
+snaps_dir = data_dir / 'snaps'
+if not snaps_dir.is_dir():
+    create_directory(snaps_dir)
+if get_files_in_dir(snaps_dir):
+    delete_files_in_dir(snaps_dir)
+
 snap_user_data()
-snap_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv')
+snap_patient_data(data_dir / 'Patient_Export.csv')
 snap_patient_note_data()
 snap_device_data()
 snap_reading_data()
