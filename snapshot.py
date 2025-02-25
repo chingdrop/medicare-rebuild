@@ -1,4 +1,5 @@
 import os
+import logging
 import warnings
 import pandas as pd
 from datetime import datetime
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 
 from api_utils import MSGraphApi
 from db_utils import DatabaseManager
+from logger import setup_logger
 from helpers import get_last_month_billing_cycle, \
     create_directory, delete_files_in_dir, get_files_in_dir
 from dataframe_utils import standardize_patients, standardize_patient_notes, standardize_devices, \
@@ -17,11 +19,12 @@ from queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt,
     get_bg_readings_stmt, get_bp_readings_stmt
 
 
-def snap_user_data():
+def snap_user_data(logger=logging.getLogger()):
     msg = MSGraphApi(
         tenant_id=os.getenv('AZURE_TENANT_ID'),
         client_id=os.getenv('AZURE_CLIENT_ID'),
-        client_secret=os.getenv('AZURE_CLIENT_SECRET')
+        client_secret=os.getenv('AZURE_CLIENT_SECRET'),
+        logger=logger
     )
     msg.request_access_token()
     data = msg.get_group_members('4bbe3379-1250-4522-92e6-017f77517470')
@@ -34,12 +37,13 @@ def snap_user_data():
         'mail': 'email',
         'id': 'ms_entra_id'
     })
+    logger.debug(f'Writing DataFrame (rows: {user_df.shape[0]}, cols: {user_df.shape[1]})...')
     user_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_user_df.xlsx', 
                      index=False, 
                      engine='openpyxl')
 
 
-def snap_patient_data(filename) -> None:
+def snap_patient_data(filename, logger=logging.getLogger()) -> None:
     export_df = pd.read_csv(
         filename,
         dtype={
@@ -49,6 +53,8 @@ def snap_patient_data(filename) -> None:
         },
         parse_dates=['DOB', 'On-board Date']
     )
+    logger.debug(f"Sharepoint Online Patient Export (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
+
     export_df = standardize_patients(export_df)
     export_df = patient_check_db_constraints(export_df)
     patient_df = create_patient_df(export_df)
@@ -59,23 +65,29 @@ def snap_patient_data(filename) -> None:
     emcontacts_df = create_emcontacts_df(export_df)
 
     snaps_dir = Path.cwd() / 'data' / 'snaps'
+    logger.debug(f'Writing DataFrame (rows: {patient_df.shape[0]}, cols: {patient_df.shape[1]})...')
     patient_df.to_excel(snaps_dir / 'snap_patient_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {address_df.shape[0]}, cols: {address_df.shape[1]})...')
     address_df.to_excel(snaps_dir / 'snap_patient_address_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {insurance_df.shape[0]}, cols: {insurance_df.shape[1]})...')
     insurance_df.to_excel(snaps_dir / 'snap_patient_insurance_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {med_nec_df.shape[0]}, cols: {med_nec_df.shape[1]})...')
     med_nec_df.to_excel(snaps_dir / 'snap_med_necessity_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {patient_status_df.shape[0]}, cols: {patient_status_df.shape[1]})...')
     patient_status_df.to_excel(snaps_dir / 'snap_patient_status_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {emcontacts_df.shape[0]}, cols: {emcontacts_df.shape[1]})...')
     emcontacts_df.to_excel(snaps_dir / 'snap_emcontacts_df.xlsx', index=False, engine='openpyxl')
 
 
-def snap_patient_note_data():
-    notes_db = DatabaseManager()
+def snap_patient_note_data(logger=logging.getLogger()):
+    notes_db = DatabaseManager(logger=logger)
     notes_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
         host=os.getenv('LCH_SQL_HOST'),
         database=os.getenv('LCH_SQL_SP_NOTES')
     )
-    time_db = DatabaseManager()
+    time_db = DatabaseManager(logger=logger)
     time_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
@@ -98,11 +110,13 @@ def snap_patient_note_data():
     patient_note_df['Time_Note'] = patient_note_df['Time_Note'].fillna(patient_note_df['Note_Type'])
     patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
     patient_note_df = standardize_patient_notes(patient_note_df)
+
+    logger.debug(f'Writing DataFrame (rows: {patient_note_df.shape[0]}, cols: {patient_note_df.shape[1]})...')
     patient_note_df.to_excel(Path.cwd() / 'data' / 'snap_patient_note_df.xlsx', index=False, engine='openpyxl')
 
 
-def snap_device_data():
-    fulfillment_db = DatabaseManager()
+def snap_device_data(logger=logging.getLogger()):
+    fulfillment_db = DatabaseManager(logger=logger)
     fulfillment_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
@@ -111,13 +125,15 @@ def snap_device_data():
     )
     device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
     device_df = standardize_devices(device_df)
+
+    logger.debug(f'Writing DataFrame (rows: {device_df.shape[0]}, cols: {device_df.shape[1]})...')
     device_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_device_df.xlsx', 
                        index=False, 
                        engine='openpyxl')
 
 
-def snap_reading_data():
-    readings_db = DatabaseManager()
+def snap_reading_data(logger=logging.getLogger()):
+    readings_db = DatabaseManager(logger=logger)
     readings_db.create_engine(
         username=os.getenv('LCH_SQL_USERNAME'),
         password=os.getenv('LCH_SQL_PASSWORD'),
@@ -137,12 +153,15 @@ def snap_reading_data():
     bg_readings_df = standardize_bg_readings(bg_readings_df)
 
     snaps_dir = Path.cwd() / 'data' / 'snaps'
+    logger.debug(f'Writing DataFrame (rows: {bp_readings_df.shape[0]}, cols: {bp_readings_df.shape[1]})...')
     bp_readings_df.to_excel(snaps_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing DataFrame (rows: {bg_readings_df.shape[0]}, cols: {bg_readings_df.shape[1]})...')
     bg_readings_df.to_excel(snaps_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
 warnings.filterwarnings("ignore")
 load_dotenv()
+logger = setup_logger('snapshot', level='debug')
 
 data_dir = Path.cwd() / 'data'
 snaps_dir = data_dir / 'snaps'
@@ -151,8 +170,8 @@ if not snaps_dir.exists():
 if get_files_in_dir(snaps_dir):
     delete_files_in_dir(snaps_dir)
 
-snap_user_data()
-snap_patient_data(data_dir / 'Patient_Export.csv')
-snap_patient_note_data()
-snap_device_data()
-snap_reading_data()
+snap_user_data(logger=logger)
+snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
+snap_patient_note_data(logger=logger)
+snap_device_data(logger=logger)
+snap_reading_data(logger=logger)
