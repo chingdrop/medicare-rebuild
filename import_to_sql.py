@@ -2,7 +2,6 @@ import os
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
 
 from api_utils import MSGraphApi
 from dataframe_utils import add_id_col, standardize_patients, standardize_patient_notes, \
