@@ -138,7 +138,7 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         str: The standardized insurance ID.    
     """
-    insurance_id = re.sub(r'[^A-Za-z0-9]', '', insurance_id)
+    insurance_id = re.sub(r'[^A-Za-z0-9]', '', ins_id)
     id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d*)'
     return extract_regex_pattern(insurance_id, id_pattern, keep_original=True).upper()
 
