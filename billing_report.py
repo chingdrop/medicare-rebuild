@@ -1,14 +1,19 @@
 import os
+import warnings
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
 
 from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
+from logger import setup_logger
 
 
+warnings.filterwarnings("ignore")
 load_dotenv()
-gps = DatabaseManager()
+logger = setup_logger('billing_report', level='debug')
+
+gps = DatabaseManager(logger=logger)
 gps.create_engine(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
