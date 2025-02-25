@@ -8,7 +8,7 @@ from enums import insurance_keywords, state_abbreviations, relationship_keywords
 
 
 def keyword_search(value, keywords, keep_original=False):
-    value = str(value).strip().title()
+    value = str(value).strip()
     for standard_name, keyword in keywords.items():
         if re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()):
             return standard_name
@@ -16,7 +16,7 @@ def keyword_search(value, keywords, keep_original=False):
 
 
 def keyword_list_search(value, keywords, keep_original=False):
-    value = str(value).strip().title()
+    value = str(value).strip()
     for standard_name, keyword_sets in keywords.items():
         for keyword_set in keyword_sets:
             if all(re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()) for keyword in keyword_set):
@@ -75,9 +75,7 @@ def standardize_state(state: str) -> str:
     Returns:
         str: The standardized US state abbreviation.    
     """
-    state = str(state).strip().title()
-    state = state_abbreviations.get(state, state).upper()
-    return state
+    return keyword_search(state.title(), state_abbreviations, keep_original=True)
 
 
 def standardize_mbi(mbi: str) -> str:
@@ -124,7 +122,7 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         str: The standardized insurance name.    
     """
-    return keyword_list_search(name, insurance_keywords, keep_original=True)
+    return keyword_list_search(name.title(), insurance_keywords, keep_original=True)
 
 
 def standardize_insurance_id(ins_id: str) -> str:
@@ -235,7 +233,7 @@ def standardize_emcontact_relationship(name: str) -> str:
     Returns:
         str: The standardized relatioship name. Or None
     """
-    return keyword_search(name, relationship_keywords)
+    return keyword_search(name.title(), relationship_keywords)
 
 
 def standardize_race(race: str) -> str:
@@ -250,7 +248,7 @@ def standardize_race(race: str) -> str:
     Returns:
         str: The standardized race.    
     """
-    return keyword_list_search(race, race_keywords, keep_original=True)
+    return keyword_list_search(race.title(), race_keywords, keep_original=True)
 
 
 def standardize_weight(weight: str) -> str:
