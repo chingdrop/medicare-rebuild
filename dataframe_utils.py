@@ -7,14 +7,35 @@ from enums import insurance_keywords, state_abbreviations, relationship_keywords
     race_keywords
 
 
-def keyword_search(value: str, keywords: dict, keep_original=False):
+def keyword_search(value: str, keywords: dict, keep_original=False) -> str:
+    """Searches for a keyword being present in the value.
+    
+    Args:
+        value (str): The value to be standardized.
+        keywords (dict): The keyword dictionary, holding the desired name and the keyword.
+        keep_original (bool): Option for keeping the original value provided.
+
+    Returns:
+        str: The standardized name, found as the key in the keyword list. 
+    """
     for standard_name, keyword in keywords.items():
         if re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()):
             return standard_name
     return value if keep_original else np.nan
 
 
-def keyword_list_search(value: str, keywords: dict, keep_original=False):
+def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str:
+    """Searches for a keyword being present in the value. Keywords are stored in lists of lists.
+    All keywords must be present in the value to be considered True.
+    
+    Args:
+        value (str): The value to be standardized.
+        keywords (dict): The keyword dictionary, holding the desired name and the keyword.
+        keep_original (bool): Option for keeping the original value provided.
+
+    Returns:
+        str: The standardized name, found as the key in the keyword list.
+    """
     for standard_name, keyword_sets in keywords.items():
         for keyword_set in keyword_sets:
             if all(re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()) for keyword in keyword_set):
@@ -22,7 +43,17 @@ def keyword_list_search(value: str, keywords: dict, keep_original=False):
     return value if keep_original else np.nan
 
 
-def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False):
+def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False) -> str:
+    """Searches the value for a matching regex pattern.
+    
+    Args:
+        value (str): The value to be standardized.
+        pattern (re.Pattern): The regex pattern object.
+        keep_original (bool): Option for keeping the original value provided.
+
+    Returns:
+        str: The entire matching group of the regex pattern.
+    """
     match = re.search(pattern, value)
     if match:
         return match.group(0)
@@ -49,7 +80,7 @@ def standardize_name(name: str, pattern: str) -> str:
 
 def standardize_email(email: str) -> str:
     """Standardizes email address strings.
-    Trims whitespace and lowers the text. Regex matching attempts to find email addresses and extracts them.
+    Trims whitespace and lowers the text. Regex matching attempts to find an email address and extracts it.
 
     Args:
         email (str): The value to be standardized.
@@ -63,8 +94,7 @@ def standardize_email(email: str) -> str:
 
 
 def standardize_state(state: str) -> str:
-    """Standardizes US state strings.
-    Trims whitespace and titles the text. 
+    """Standardizes US state strings. Trims whitespace and titles the text. 
     Searches state's name and correlates that with the State's two letter abbreviation.
 
     Args:
@@ -78,9 +108,8 @@ def standardize_state(state: str) -> str:
 
 
 def standardize_mbi(mbi: str) -> str:
-    """Standardizes medicare beneficiary ID strings.
-    Trims whitespace and lowers the text. 
-    Regex matching attempts to find medicare beneficiary IDs and extracts them.
+    """Standardizes medicare beneficiary ID strings. Trims whitespace and lowers the text. 
+    Regex matching attempts to find a medicare beneficiary ID and extracts it.
 
     Args:
         mbi (str): The value to be standardized.
@@ -111,10 +140,8 @@ def standardize_dx_code(dx_code: str) -> str:
 
 
 def standardize_insurance_name(name: str) -> str:
-    """Standardizes insurance name strings.
-    Trims whitespace and titles the text.
+    """Standardizes insurance name strings. Trims whitespace and titles the text.
     Searches the insurance name for keywords and correlates that with a list of standard insurance names.
-    Keywords are held in lists where all elements of the list must be present for a positive match.
 
     Args:
         name (str): The value to be standardized.
@@ -127,8 +154,8 @@ def standardize_insurance_name(name: str) -> str:
 
 
 def standardize_insurance_id(ins_id: str) -> str:
-    """Standardizes insurance ID strings.
-    Trims whitespace and uppers the text. Any non-alphanumeric character is replaced with empty string.
+    """Standardizes insurance ID strings. Trims whitespace and uppers the text.
+    Any non-alphanumeric character is replaced with empty string.
     Regex matching attempts to find insurance IDs and extracts them.
 
     Args:
@@ -258,6 +285,15 @@ def standardize_race(race: str) -> str:
 
 
 def standardize_weight(weight: str) -> str:
+    """Standardizes patient weight strings. Search values for common characters indicating height and remove them.
+    Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to only 3 characers.
+
+    Args:
+        weight (str): The value to be standardized.
+
+    Returns:
+        int: The standardized weight in pounds.    
+    """
     weight = str(weight).strip()
     height_chars = ["'", '"', 'ft', 'in']
     if any(char in weight.lower() for char in height_chars):
@@ -269,6 +305,15 @@ def standardize_weight(weight: str) -> str:
 
 
 def standardize_height(height: str) -> str:
+    """Standardizes patient height strings. Search values for common characters indicating weight and remove them.
+    Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to inches.
+
+    Args:
+        height (str): The value to be standardized.
+
+    Returns:
+        int: The standardized height in inches.    
+    """
     height = str(height).strip()
     weight_chars = ['lbs', 'kg']
     if any(char in height.lower() for char in weight_chars):
