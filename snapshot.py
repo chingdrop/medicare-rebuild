@@ -37,7 +37,7 @@ def snap_user_data(logger=logging.getLogger()):
         'mail': 'email',
         'id': 'ms_entra_id'
     })
-    logger.debug(f'Writing DataFrame (rows: {user_df.shape[0]}, cols: {user_df.shape[1]})...')
+    logger.debug(f'Writing User DataFrame (rows: {user_df.shape[0]}, cols: {user_df.shape[1]})...')
     user_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_user_df.xlsx', 
                      index=False, 
                      engine='openpyxl')
@@ -65,17 +65,17 @@ def snap_patient_data(filename, logger=logging.getLogger()) -> None:
     emcontacts_df = create_emcontacts_df(export_df)
 
     snaps_dir = Path.cwd() / 'data' / 'snaps'
-    logger.debug(f'Writing DataFrame (rows: {patient_df.shape[0]}, cols: {patient_df.shape[1]})...')
+    logger.debug(f'Writing Patient DataFrame (rows: {patient_df.shape[0]}, cols: {patient_df.shape[1]})...')
     patient_df.to_excel(snaps_dir / 'snap_patient_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {address_df.shape[0]}, cols: {address_df.shape[1]})...')
+    logger.debug(f'Writing Patient Address DataFrame (rows: {address_df.shape[0]}, cols: {address_df.shape[1]})...')
     address_df.to_excel(snaps_dir / 'snap_patient_address_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {insurance_df.shape[0]}, cols: {insurance_df.shape[1]})...')
+    logger.debug(f'Writing Patient Insurance DataFrame (rows: {insurance_df.shape[0]}, cols: {insurance_df.shape[1]})...')
     insurance_df.to_excel(snaps_dir / 'snap_patient_insurance_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {med_nec_df.shape[0]}, cols: {med_nec_df.shape[1]})...')
+    logger.debug(f'Writing Medical Necessity DataFrame (rows: {med_nec_df.shape[0]}, cols: {med_nec_df.shape[1]})...')
     med_nec_df.to_excel(snaps_dir / 'snap_med_necessity_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {patient_status_df.shape[0]}, cols: {patient_status_df.shape[1]})...')
+    logger.debug(f'Writing Patient Status DataFrame (rows: {patient_status_df.shape[0]}, cols: {patient_status_df.shape[1]})...')
     patient_status_df.to_excel(snaps_dir / 'snap_patient_status_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {emcontacts_df.shape[0]}, cols: {emcontacts_df.shape[1]})...')
+    logger.debug(f'Writing Emergency Contacts DataFrame (rows: {emcontacts_df.shape[0]}, cols: {emcontacts_df.shape[1]})...')
     emcontacts_df.to_excel(snaps_dir / 'snap_emcontacts_df.xlsx', index=False, engine='openpyxl')
 
 
@@ -111,7 +111,7 @@ def snap_patient_note_data(logger=logging.getLogger()):
     patient_note_df.drop(columns=['Note_ID', 'Note_Type'], inplace=True)
     patient_note_df = standardize_patient_notes(patient_note_df)
 
-    logger.debug(f'Writing DataFrame (rows: {patient_note_df.shape[0]}, cols: {patient_note_df.shape[1]})...')
+    logger.debug(f'Writing Patient Note DataFrame (rows: {patient_note_df.shape[0]}, cols: {patient_note_df.shape[1]})...')
     patient_note_df.to_excel(Path.cwd() / 'data' / 'snap_patient_note_df.xlsx', index=False, engine='openpyxl')
 
 
@@ -126,7 +126,7 @@ def snap_device_data(logger=logging.getLogger()):
     device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
     device_df = standardize_devices(device_df)
 
-    logger.debug(f'Writing DataFrame (rows: {device_df.shape[0]}, cols: {device_df.shape[1]})...')
+    logger.debug(f'Writing Device DataFrame (rows: {device_df.shape[0]}, cols: {device_df.shape[1]})...')
     device_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_device_df.xlsx', 
                        index=False, 
                        engine='openpyxl')
@@ -153,9 +153,9 @@ def snap_reading_data(logger=logging.getLogger()):
     bg_readings_df = standardize_bg_readings(bg_readings_df)
 
     snaps_dir = Path.cwd() / 'data' / 'snaps'
-    logger.debug(f'Writing DataFrame (rows: {bp_readings_df.shape[0]}, cols: {bp_readings_df.shape[1]})...')
+    logger.debug(f'Writing Blood Pressure DataFrame (rows: {bp_readings_df.shape[0]}, cols: {bp_readings_df.shape[1]})...')
     bp_readings_df.to_excel(snaps_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing DataFrame (rows: {bg_readings_df.shape[0]}, cols: {bg_readings_df.shape[1]})...')
+    logger.debug(f'Writing Glucose DataFrame (rows: {bg_readings_df.shape[0]}, cols: {bg_readings_df.shape[1]})...')
     bg_readings_df.to_excel(snaps_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
 
 
