@@ -7,16 +7,14 @@ from enums import insurance_keywords, state_abbreviations, relationship_keywords
     race_keywords
 
 
-def keyword_search(value, keywords, keep_original=False):
-    value = str(value).strip()
+def keyword_search(value: str, keywords: dict, keep_original=False):
     for standard_name, keyword in keywords.items():
         if re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()):
             return standard_name
     return value if keep_original else np.nan
 
 
-def keyword_list_search(value, keywords, keep_original=False):
-    value = str(value).strip()
+def keyword_list_search(value: str, keywords: dict, keep_original=False):
     for standard_name, keyword_sets in keywords.items():
         for keyword_set in keyword_sets:
             if all(re.search(r'\b' + re.escape(keyword) + r'\b', value.lower()) for keyword in keyword_set):
@@ -24,8 +22,7 @@ def keyword_list_search(value, keywords, keep_original=False):
     return value if keep_original else np.nan
 
 
-def extract_regex_pattern(value, pattern, keep_original=False):
-    value = str(value).strip()
+def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False):
     match = re.search(pattern, value)
     if match:
         return match.group(0)
@@ -60,8 +57,9 @@ def standardize_email(email: str) -> str:
     Returns:
         str: The standardized email address.    
     """
-    email_pattern = r'(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$)'
-    return extract_regex_pattern(email, email_pattern, keep_original=True).lower()
+    email = str(email).strip().lower()
+    email_pattern = r'(^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$)'
+    return extract_regex_pattern(email, email_pattern)
 
 
 def standardize_state(state: str) -> str:
@@ -75,7 +73,8 @@ def standardize_state(state: str) -> str:
     Returns:
         str: The standardized US state abbreviation.    
     """
-    return keyword_search(state.title(), state_abbreviations, keep_original=True)
+    state = str(state).strip().title()
+    return keyword_search(state, state_abbreviations, keep_original=True).upper()
 
 
 def standardize_mbi(mbi: str) -> str:
@@ -89,8 +88,9 @@ def standardize_mbi(mbi: str) -> str:
     Returns:
         str: The standardized medicare beneficiary ID.    
     """
-    mbi_pattern = r'([A-Za-z0-9]{11})'
-    return extract_regex_pattern(mbi, mbi_pattern, keep_original=True).upper()
+    mbi = str(mbi).strip().upper()
+    mbi_pattern = r'([A-Z0-9]{11})'
+    return extract_regex_pattern(mbi, mbi_pattern, keep_original=True)
 
 
 def standardize_dx_code(dx_code: str) -> str:
@@ -122,7 +122,8 @@ def standardize_insurance_name(name: str) -> str:
     Returns:
         str: The standardized insurance name.    
     """
-    return keyword_list_search(name.title(), insurance_keywords, keep_original=True)
+    name = str(name).strip().title()
+    return keyword_list_search(name, insurance_keywords, keep_original=True)
 
 
 def standardize_insurance_id(ins_id: str) -> str:
@@ -136,9 +137,10 @@ def standardize_insurance_id(ins_id: str) -> str:
     Returns:
         str: The standardized insurance ID.    
     """
-    insurance_id = re.sub(r'[^A-Za-z0-9]', '', ins_id)
-    id_pattern = r'([A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d+[A-Za-z]*\d*)'
-    return extract_regex_pattern(insurance_id, id_pattern, keep_original=True).upper()
+    ins_id = str(ins_id).strip().upper()
+    ins_id = re.sub(r'[^A-Z0-9]', '', ins_id)
+    id_pattern = r'([A-Z]*\d+[A-Z]*\d+[A-Z]*\d+[A-Z]*\d*)'
+    return extract_regex_pattern(ins_id, id_pattern, keep_original=True)
 
 
 def fill_primary_payer(row: pd.Series) -> pd.Series:
@@ -152,6 +154,7 @@ def fill_primary_payer(row: pd.Series) -> pd.Series:
     Returns:
         pandas.Series: The standardized row of Dataframe.    
     """
+    row.replace(r'(?i)^nan$', np.nan, regex=True, inplace=True)
     if pd.isnull(row['Insurance Name:']) and pd.isnull(row['Insurance ID:']) and not pd.isnull(row['Medicare ID number']):
         return 'Medicare Part B'
     return row['Insurance Name:']
@@ -168,6 +171,7 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     Returns:
         pandas.Series: The standardized row of Dataframe.    
     """
+    row.replace(r'(?i)^nan$', np.nan, regex=True, inplace=True)
     if row['Insurance Name:'] == 'Medicare Part B' and pd.isnull(row['Insurance ID:']) :
         return row['Medicare ID number']
     return row['Insurance ID:']
@@ -233,7 +237,8 @@ def standardize_emcontact_relationship(name: str) -> str:
     Returns:
         str: The standardized relatioship name. Or None
     """
-    return keyword_search(name.title(), relationship_keywords)
+    name = str(name).strip().title()
+    return keyword_search(name, relationship_keywords)
 
 
 def standardize_race(race: str) -> str:
@@ -248,7 +253,8 @@ def standardize_race(race: str) -> str:
     Returns:
         str: The standardized race.    
     """
-    return keyword_list_search(race.title(), race_keywords, keep_original=True)
+    race = str(race).strip().title()
+    return keyword_list_search(race, race_keywords, keep_original=True)
 
 
 def standardize_weight(weight: str) -> str:
