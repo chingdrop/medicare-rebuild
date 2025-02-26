@@ -146,30 +146,28 @@ def snap_device_data(logger=logging.getLogger()):
 
 
 def snap_reading_data(logger=logging.getLogger()):
-    readings_db = DatabaseManager(logger=logger)
-    readings_db.create_engine(
-        username=os.getenv('LCH_SQL_USERNAME'),
-        password=os.getenv('LCH_SQL_PASSWORD'),
-        host=os.getenv('LCH_SQL_HOST'),
-        database=os.getenv('LCH_SQL_SP_READINGS')
+    tenovi = TenoviApi(
+        'livecare',
+        api_key=os.getenv('TENOVI_API_KEY'),
+        logger=logger
     )
-    start_date, _ = get_last_month_billing_cycle()
-    end_date = datetime.now()
-    bp_readings_df = readings_db.read_sql(get_bp_readings_stmt,
-                                  params=(start_date, end_date),
-                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
-    bg_readings_df = readings_db.read_sql(get_bg_readings_stmt,
-                                  params=(start_date, end_date),
-                                  parse_dates=['Time_Recorded', 'Time_Recieved'])
-
-    bp_readings_df = standardize_bp_readings(bp_readings_df)
-    bg_readings_df = standardize_bg_readings(bg_readings_df)
-
     snaps_dir = Path.cwd() / 'data' / 'snaps'
-    logger.debug(f'Writing Blood Pressure DataFrame (rows: {bp_readings_df.shape[0]}, cols: {bp_readings_df.shape[1]})...')
-    bp_readings_df.to_excel(snaps_dir / 'snap_bp_reading_df.xlsx', index=False, engine='openpyxl')
-    logger.debug(f'Writing Glucose DataFrame (rows: {bg_readings_df.shape[0]}, cols: {bg_readings_df.shape[1]})...')
-    bg_readings_df.to_excel(snaps_dir / 'snap_bg_reading_df.xlsx', index=False, engine='openpyxl')
+    device_df = snaps_dir / 'snap_device_df.xlsx'
+    if device_df.exists():
+        device_df = pd.read_excel(device_df, engine='openpyxl')
+        hwi_device_ids = device_df['hwi_id'].to_list()
+    else:
+        res_data = tenovi.get_devices()
+        hwi_device_ids = [device['id'] for device in res_data]
+
+    start_date, _ = get_last_month_billing_cycle()
+    total_readings = []
+    for hwi_device_id in hwi_device_ids:
+        readings_data = tenovi.get_readings(hwi_device_id, created_gte=start_date)
+        total_readings.extend(readings_data)
+    readings_df = pd.DataFrame(total_readings)
+    logger.debug(f'Writing Glucose DataFrame (rows: {readings_df.shape[0]}, cols: {readings_df.shape[1]})...')
+    readings_df.to_excel(snaps_dir / 'snap_readings_df.xlsx', index=False, engine='openpyxl')
 
 
 warnings.filterwarnings("ignore")
@@ -180,11 +178,11 @@ data_dir = Path.cwd() / 'data'
 snaps_dir = data_dir / 'snaps'
 if not snaps_dir.exists():
     create_directory(snaps_dir)
-if get_files_in_dir(snaps_dir):
-    delete_files_in_dir(snaps_dir)
+# if get_files_in_dir(snaps_dir):
+#     delete_files_in_dir(snaps_dir)
 
-snap_user_data(logger=logger)
-snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
-snap_device_data(logger=logger)
-snap_patient_note_data(logger=logger)
+# snap_user_data(logger=logger)
+# snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
+# snap_device_data(logger=logger)
+# snap_patient_note_data(logger=logger)
 snap_reading_data(logger=logger)

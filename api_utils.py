@@ -1,5 +1,7 @@
 import logging
 import requests
+from typing import List
+from datetime import datetime
 
 
 class RestAdapter:
@@ -175,5 +177,12 @@ class TenoviApi:
                                 logger=logger)
         self.logger = logger
 
-    def get_devices(self,) -> dict:
+    def get_devices(self,) -> List[dict]:
         return self.rest.get('/hwi/hwi-devices')
+    
+    def get_readings(self, hwi_device_id: str, created_gte: datetime | str) -> List[dict]:
+        if not isinstance(created_gte, str):
+            created_gte = created_gte.strftime("%Y-%m-%dT%H:%M:%SZ")
+        params = {'created__gte': created_gte}
+        return self.rest.get(f'/hwi/hwi-devices/{hwi_device_id}/measurements/',
+                             params=params)
