@@ -145,7 +145,9 @@ class MSGraphApi:
         res = rest.post(f'/{self.tenant_id}/oauth2/v2.0/token', data=data)
         access_token = res.get('access_token')
         headers = {'Authorization': f'Bearer {access_token}'}
-        self.rest = RestAdapter('https://graph.microsoft.com/v1.0', headers=headers, logger=self.logger)
+        self.rest = RestAdapter('https://graph.microsoft.com/v1.0',
+                                headers=headers,
+                                logger=self.logger)
 
     def get_group_members(self, group_id: str) -> dict:
         """Get all members that belong to a specific group.
