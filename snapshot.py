@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
-from api_utils import MSGraphApi
+from api_utils import MSGraphApi, TenoviApi
 from db_utils import DatabaseManager
 from logger import setup_logger
 from helpers import get_last_month_billing_cycle, \
@@ -118,15 +118,26 @@ def snap_patient_note_data(logger=logging.getLogger()):
 
 
 def snap_device_data(logger=logging.getLogger()):
-    fulfillment_db = DatabaseManager(logger=logger)
-    fulfillment_db.create_engine(
-        username=os.getenv('LCH_SQL_USERNAME'),
-        password=os.getenv('LCH_SQL_PASSWORD'),
-        host=os.getenv('LCH_SQL_HOST'),
-        database=os.getenv('LCH_SQL_SP_FULFILLMENT')
+    tenovi = TenoviApi(
+        'livecare',
+        api_key=os.getenv('TENOVI_API_KEY'),
+        logger=logger
     )
-    device_df = fulfillment_db.read_sql(get_fulfillment_stmt)
-    device_df = standardize_devices(device_df)
+    res_data = tenovi.get_devices()
+    device_data = []
+    for device in res_data:
+        device_dict = {
+            'hwi_id': device['id'],
+            'name': device['device']['name'],
+            'hardware_uuid': device['device']['hardware_uuid'],
+            'status': device['status'],
+            'connected_datetime': device['connected_on'],
+            'unlinked_datetime': device['unlinked_on'],
+            'last_measurement_datetime': device['last_measurement'],
+            'created_datetime': device['device']['created']
+        }
+        device_data.append(device_dict)
+    device_df = pd.DataFrame(device_data)
 
     logger.debug(f'Writing Device DataFrame (rows: {device_df.shape[0]}, cols: {device_df.shape[1]})...')
     device_df.to_excel(Path.cwd() / 'data' / 'snaps' / 'snap_device_df.xlsx', 
@@ -174,6 +185,6 @@ if get_files_in_dir(snaps_dir):
 
 snap_user_data(logger=logger)
 snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
-snap_patient_note_data(logger=logger)
 snap_device_data(logger=logger)
+snap_patient_note_data(logger=logger)
 snap_reading_data(logger=logger)

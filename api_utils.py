@@ -160,3 +160,20 @@ class MSGraphApi:
         """
         endpoint = f'/groups/{group_id}/members'
         return self.rest.get(endpoint)
+
+
+class TenoviApi:
+    def __init__(
+            self,
+            client_domain: str,
+            api_key: str,
+            logger=logging.getLogger()
+    ):
+        headers = {'Authorization': f'Api-Key {api_key}'}
+        self.rest = RestAdapter(f'https://api2.tenovi.com/clients/{client_domain}',
+                                headers=headers,
+                                logger=logger)
+        self.logger = logger
+
+    def get_devices(self,) -> dict:
+        return self.rest.get('/hwi/hwi-devices')
