@@ -23,19 +23,24 @@ test_16_list AS (
 	OR COUNT(DISTINCT CAST(bpr.received_datetime AS DATE)) >= 16
 )
 
-SELECT p.first_name,
+SELECT p.patient_id,
+	p.first_name,
 	p.last_name,
 	p.date_of_birth,
 	p.sex,
 	p.phone_number,
+	pa.temp_state,
 	pin.medicare_beneficiary_id,
 	dca.dx_codes,
 	tsl.gr_count,
 	tsl.bpr_count
 FROM patient p
+JOIN patient_address pa
+ON p.patient_id = pa.patient_id
 JOIN patient_insurance pin
 ON p.patient_id = pin.patient_id
 JOIN dx_code_agg dca
 ON p.patient_id = dca.patient_id
 JOIN test_16_list tsl
 ON p.patient_id = tsl.patient_id
+ORDER BY p.patient_id
