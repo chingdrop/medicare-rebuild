@@ -13,7 +13,9 @@ from queries import update_patient_note_stmt, update_patient_status_stmt, update
 
 warnings.filterwarnings("ignore")
 load_dotenv()
-gps = DatabaseManager()
+logger = setup_logger('main', level='debug')
+
+gps = DatabaseManager(logger=logger)
 gps.create_engine(
     username=os.getenv('LCH_SQL_GPS_USERNAME'),
     password=os.getenv('LCH_SQL_GPS_PASSWORD'),
@@ -22,7 +24,6 @@ gps.create_engine(
 )
 gps.execute_query("EXEC reset_all_billing_tables")
 
-logger = setup_logger('main', level='debug')
 import_user_data(logger=logger)
 import_patient_data(Path.cwd() / 'data' / 'Patient_Export.csv', logger=logger)
 import_device_data(logger=logger)
