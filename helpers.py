@@ -1,15 +1,29 @@
 import calendar
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import List, Tuple
 
 
 def create_directory(path: Path | str) -> None:
+    """Create a directory from a string or a Path object.
+    
+    Args:
+        path (Path | str): Directory path
+    """
     if isinstance(path, str):
         path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
 
 
-def get_files_in_dir(path: Path | str):
+def get_files_in_dir(path: Path | str) -> List[Path]:
+    """Get all the files in a directory.
+
+    Args:
+        path (Path | str): Directory path
+
+    Returns:
+        List[Path]: List of path objects representing the files in the directory.
+    """
     if isinstance(path, str):
         path = Path(path)
     if path.is_dir():
@@ -17,6 +31,11 @@ def get_files_in_dir(path: Path | str):
 
 
 def delete_files_in_dir(path: Path | str) -> None:
+    """Delete all the files in a directory.
+    
+    Args:
+        path (Path | str): Directory path
+    """
     if isinstance(path, str):
         path = Path(path)
     if path.exists():
@@ -25,7 +44,12 @@ def delete_files_in_dir(path: Path | str) -> None:
                 file.unlink()
 
 
-def get_last_month_billing_cycle():
+def get_last_month_billing_cycle() -> Tuple[datetime, datetime]:
+    """Get the start and end of last month's billing cycle.
+    
+    Returns:
+        (datetime, datetime): datetime objects representing the first and last day of the billing cycle.
+    """
     today = datetime.today()
     first_day_current_month = datetime(today.year, today.month, 1)
     last_day_last_month = first_day_current_month - timedelta(days=1)
