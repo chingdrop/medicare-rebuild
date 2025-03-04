@@ -63,7 +63,7 @@ def import_patient_data(filename: Path, logger=setup_logger('import_patients')) 
         },
         parse_dates=['DOB', 'On-board Date']
     )
-    logger.debug(f"Sharepoint Online Patient Export (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
+    logger.debug(f"Reading patient export from SharePoint (rows: {export_df.shape[0]}, cols: {export_df.shape[1]})")
     
     export_df = standardize_patients(export_df)
     # failed_df = patient_check_failed_data(export_df)
