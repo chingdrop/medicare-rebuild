@@ -170,15 +170,16 @@ def snap_reading_data(logger=logging.getLogger()):
             metric='glucose',
             created_gte=start_date
         )
-        bg_readings_data = [
-            {
-                'hwi_id': data['hwi_device_id'],
-                'glucose_reading': data['value_1'],
-                'recorded_datetime': data['timestamp'],
-                'received_datetine': data['created']
-            } for data in bg_readings_data
-        ]
-        bg_total_readings.extend(bg_readings_data)
+        if bg_readings_data:
+            bg_readings_data = [
+                {
+                    'hwi_id': data['hwi_device_id'],
+                    'glucose_reading': data['value_1'],
+                    'recorded_datetime': data['timestamp'],
+                    'received_datetine': data['created']
+                } for data in bg_readings_data
+            ]
+            bg_total_readings.extend(bg_readings_data)
 
     bp_total_readings = []
     for bp_device_id in bp_device_ids:
@@ -187,16 +188,17 @@ def snap_reading_data(logger=logging.getLogger()):
             metric='blood_pressure',
             created_gte=start_date
         )
-        bp_readings_data = [
-            {
-                'hwi_id': data['hwi_device_id'],
-                'systolic_reading': data['value_1'],
-                'diastolic_reading': data['value_2'],
-                'recorded_datetime': data['timestamp'],
-                'received_datetine': data['created']
-            } for data in bp_readings_data
-        ]
-        bp_total_readings.extend(bp_readings_data)
+        if bp_readings_data:
+            bp_readings_data = [
+                {
+                    'hwi_id': data['hwi_device_id'],
+                    'systolic_reading': data['value_1'],
+                    'diastolic_reading': data['value_2'],
+                    'recorded_datetime': data['timestamp'],
+                    'received_datetine': data['created']
+                } for data in bp_readings_data
+            ]
+            bp_total_readings.extend(bp_readings_data)
 
     bg_readings_df = pd.DataFrame(bg_total_readings)
     bp_readings_df = pd.DataFrame(bp_total_readings)
@@ -219,6 +221,6 @@ if not snaps_dir.exists():
 
 # snap_user_data(logger=logger)
 # snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
-snap_device_data(logger=logger)
+# snap_device_data(logger=logger)
 # snap_patient_note_data(logger=logger)
 snap_reading_data(logger=logger)
