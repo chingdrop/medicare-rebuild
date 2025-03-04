@@ -33,6 +33,7 @@ gps.execute_query("EXEC batch_medcode_99457 :today_date", medcode_params)
 gps.execute_query("EXEC batch_medcode_99458 :today_date", medcode_params)
     
 start_date, end_date = get_last_month_billing_cycle()
-df = gps.read_sql("EXEC create_billing_report @start_date = ?, @end_date = ?", params=(start_date, end_date))
+df = gps.read_sql("EXEC create_billing_report @start_date = ?, @end_date = ?",
+                  params=(start_date, end_date))
 df.to_excel(Path.cwd() / 'data' / 'LCH_Billing_Report.xlsx', index=False, engine='openpyxl')
 gps.close()
