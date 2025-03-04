@@ -154,16 +154,25 @@ def snap_reading_data(logger=logging.getLogger()):
     )
     snaps_dir = Path.cwd() / 'data' / 'snaps'
     device_df = snaps_dir / 'snap_device_df.xlsx'
+    start_date, _ = get_last_month_billing_cycle()
+
     if device_df.exists():
         device_df = pd.read_excel(device_df, engine='openpyxl')
-        gluc_device_ids = device_df['hwi_id'].loc[device_df['name'].str.contains('Glucometer', na=False)].to_list()
-        bp_device_ids = device_df['hwi_id'].loc[device_df['name'].str.contains('BPM', na=False)].to_list()
+        gluc_mask = (device_df['name'].str.contains('Glucometer', na=False)) & (device_df['last_measurement_datetime'] > start_date)
+        gluc_device_ids = device_df['hwi_id'].loc[gluc_mask].to_list()
+        bp_mask = (device_df['name'].str.contains('BPM', na=False)) & (device_df['last_measurement_datetime'] > start_date)
+        bp_device_ids = device_df['hwi_id'].loc[bp_mask].to_list()
     else:
         res_data = tenovi.get_devices()
-        gluc_device_ids = [device['id'] for device in res_data if 'Glucometer' in device['device']['name']]
-        bp_device_ids = [device['id'] for device in res_data if 'BPM' in device['device']['name']]
+        gluc_device_ids = [
+            device['id'] for device in res_data
+            if 'Glucometer' in device['device']['name']
+        ]
+        bp_device_ids = [
+            device['id'] for device in res_data
+            if 'BPM' in device['device']['name']
+        ]
 
-    start_date, _ = get_last_month_billing_cycle()
     bg_total_readings = []
     for gluc_device_id in gluc_device_ids:
         bg_readings_data = tenovi.get_readings(

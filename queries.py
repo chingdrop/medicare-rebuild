@@ -16,8 +16,8 @@ SELECT device_id, hwi_id
 FROM device
 """
 
-get_device_name_stmt = """
-SELECT hwi_id, name
+get_device_info_stmt = """
+SELECT hwi_id, name, last_measurement_datetime
 FROM device
 """
 

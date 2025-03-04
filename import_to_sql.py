@@ -13,7 +13,7 @@ from db_utils import DatabaseManager
 from helpers import get_last_month_billing_cycle
 from logger import setup_logger
 from queries import get_patient_id_stmt, get_notes_log_stmt, get_time_log_stmt, \
-    get_vendor_id_stmt, get_device_id_stmt, get_device_name_stmt
+    get_vendor_id_stmt, get_device_id_stmt, get_device_info_stmt
 
 
 def import_user_data(logger=setup_logger('import_user_data')):
@@ -193,9 +193,13 @@ def import_patient_reading_data(logger=setup_logger('import_patient_readings')):
         host=os.getenv('LCH_SQL_GPS_HOST'),
         database=os.getenv('LCH_SQL_GPS_DB')
     )
-    device_name_df = gps.read_sql(get_device_name_stmt)
-    gluc_device_ids = device_name_df['hwi_id'].loc[device_name_df['name'].str.contains('Glucometer', na=False)].to_list()
-    bp_device_ids = device_name_df['hwi_id'].loc[device_name_df['name'].str.contains('BPM', na=False)].to_list()
+    device_info_df = gps.read_sql(get_device_info_stmt)
+
+    start_date, _ = get_last_month_billing_cycle()
+    gluc_mask = (device_info_df['name'].str.contains('Glucometer', na=False)) & (device_info_df['last_measurement_datetime'] >= start_date)
+    gluc_device_ids = device_info_df['hwi_id'].loc[gluc_mask].to_list()
+    bp_mask = (device_info_df['name'].str.contains('BPM', na=False)) & (device_info_df['last_measurement_datetime'] >= start_date)
+    bp_device_ids = device_info_df['hwi_id'].loc[bp_mask].to_list()
 
     tenovi = TenoviApi(
         'livecare',
@@ -203,7 +207,6 @@ def import_patient_reading_data(logger=setup_logger('import_patient_readings')):
         logger=logger
     )
 
-    start_date, _ = get_last_month_billing_cycle()
     bg_total_readings = []
     for gluc_device_id in gluc_device_ids:
         bg_readings_data = tenovi.get_readings(
