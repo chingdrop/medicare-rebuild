@@ -537,7 +537,7 @@ def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
 def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['is_manual'] = 0
     df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['received_datetine'] = pd.to_datetime(df['received_datetine'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['received_datetime'] = pd.to_datetime(df['received_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['systolic_reading'] = df['systolic_reading'].astype(float).round(2)
     df['diastolic_reading'] = df['diastolic_reading'].astype(float).round(2)
     return df
@@ -546,7 +546,7 @@ def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
 def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['is_manual'] = 0
     df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['received_datetine'] = pd.to_datetime(df['received_datetine'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['received_datetime'] = pd.to_datetime(df['received_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['glucose_reading'] = df['glucose_reading'].astype(float).round(2)
     return df
 

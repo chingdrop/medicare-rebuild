@@ -177,7 +177,7 @@ def snap_reading_data(logger=logging.getLogger()):
                     'hwi_id': data['hwi_device_id'],
                     'glucose_reading': data['value_1'],
                     'recorded_datetime': data['timestamp'],
-                    'received_datetine': data['created']
+                    'received_datetime': data['created']
                 } for data in bg_readings_data
             ]
             bg_total_readings.extend(bg_readings_data)
@@ -196,7 +196,7 @@ def snap_reading_data(logger=logging.getLogger()):
                     'systolic_reading': data['value_1'],
                     'diastolic_reading': data['value_2'],
                     'recorded_datetime': data['timestamp'],
-                    'received_datetine': data['created']
+                    'received_datetime': data['created']
                 } for data in bp_readings_data
             ]
             bp_total_readings.extend(bp_readings_data)
