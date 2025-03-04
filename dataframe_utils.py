@@ -525,19 +525,28 @@ def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
+    df['sharepoint_id'] = pd.to_numeric(df['sharepoint_id'], errors='coerce', downcast='integer')
+    df['connected_datetime'] = pd.to_datetime(df['connected_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['unlinked_datetime'] = pd.to_datetime(df['unlinked_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['last_measurement_datetime'] = pd.to_datetime(df['last_measurement_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['created_datetime'] = pd.to_datetime(df['created_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['vendor'] = df['name'].apply(standardize_vendor)
     return df
 
 
 def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['is_manual'] = 0
-    df['BP_Reading_Systolic'] = df['systolic_reading'].astype(float).round(2)
-    df['BP_Reading_Diastolic'] = df['diastolic_reading'].astype(float).round(2)
+    df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['received_datetine'] = pd.to_datetime(df['received_datetine'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['systolic_reading'] = df['systolic_reading'].astype(float).round(2)
+    df['diastolic_reading'] = df['diastolic_reading'].astype(float).round(2)
     return df
 
 
 def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['is_manual'] = 0
+    df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['received_datetine'] = pd.to_datetime(df['received_datetine'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['glucose_reading'] = df['glucose_reading'].astype(float).round(2)
     return df
 
@@ -572,6 +581,7 @@ def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
 def patient_check_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['social_security'].apply(lambda x: len(str(x)) <= 9)]
+    df = df[df['temp_state'].apply(lambda x: len(str(x)) <= 2)]
     df = df[df['zipcode'].apply(lambda x: len(str(x)) <= 5)]
     df = df[df['emergency_phone_number'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['emergency_phone_number2'].apply(lambda x: len(str(x)) <= 11)]
