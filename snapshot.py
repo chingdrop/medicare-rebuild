@@ -155,19 +155,55 @@ def snap_reading_data(logger=logging.getLogger()):
     device_df = snaps_dir / 'snap_device_df.xlsx'
     if device_df.exists():
         device_df = pd.read_excel(device_df, engine='openpyxl')
-        hwi_device_ids = device_df['hwi_id'].to_list()
+        gluc_device_ids = device_df['hwi_id'].loc[device_df['name'].str.contains('Glucometer', na=False)].to_list()
+        bp_device_ids = device_df['hwi_id'].loc[device_df['name'].str.contains('BPM', na=False)].to_list()
     else:
         res_data = tenovi.get_devices()
-        hwi_device_ids = [device['id'] for device in res_data]
+        gluc_device_ids = [device['id'] for device in res_data if 'Glucometer' in device['device']['name']]
+        bp_device_ids = [device['id'] for device in res_data if 'BPM' in device['device']['name']]
 
     start_date, _ = get_last_month_billing_cycle()
-    total_readings = []
-    for hwi_device_id in hwi_device_ids:
-        readings_data = tenovi.get_readings(hwi_device_id, created_gte=start_date)
-        total_readings.extend(readings_data)
-    readings_df = pd.DataFrame(total_readings)
-    logger.debug(f'Writing Glucose DataFrame (rows: {readings_df.shape[0]}, cols: {readings_df.shape[1]})...')
-    readings_df.to_excel(snaps_dir / 'snap_readings_df.xlsx', index=False, engine='openpyxl')
+    bg_total_readings = []
+    for gluc_device_id in gluc_device_ids:
+        bg_readings_data = tenovi.get_readings(
+            gluc_device_id,
+            metric='glucose',
+            created_gte=start_date
+        )
+        bg_readings_data = [
+            {
+                'hwi_id': data['hwi_device_id'],
+                'glucose_reading': data['value_1'],
+                'recorded_datetime': data['timestamp'],
+                'received_datetine': data['created']
+            } for data in bg_readings_data
+        ]
+        bg_total_readings.extend(bg_readings_data)
+
+    bp_total_readings = []
+    for bp_device_id in bp_device_ids:
+        bp_readings_data = tenovi.get_readings(
+            bp_device_id,
+            metric='blood_pressure',
+            created_gte=start_date
+        )
+        bp_readings_data = [
+            {
+                'hwi_id': data['hwi_device_id'],
+                'systolic_reading': data['value_1'],
+                'diastolic_reading': data['value_2'],
+                'recorded_datetime': data['timestamp'],
+                'received_datetine': data['created']
+            } for data in bp_readings_data
+        ]
+        bp_total_readings.extend(bp_readings_data)
+
+    bg_readings_df = pd.DataFrame(bg_total_readings)
+    bp_readings_df = pd.DataFrame(bp_total_readings)
+    logger.debug(f'Writing Glucose DataFrame (rows: {bg_readings_df.shape[0]}, cols: {bg_readings_df.shape[1]})...')
+    bg_readings_df.to_excel(snaps_dir / 'snap_bg_readings_df.xlsx', index=False, engine='openpyxl')
+    logger.debug(f'Writing Glucose DataFrame (rows: {bp_readings_df.shape[0]}, cols: {bp_readings_df.shape[1]})...')
+    bp_readings_df.to_excel(snaps_dir / 'snap_bp_readings_df.xlsx', index=False, engine='openpyxl')
 
 
 warnings.filterwarnings("ignore")
@@ -183,6 +219,6 @@ if not snaps_dir.exists():
 
 # snap_user_data(logger=logger)
 # snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
-# snap_device_data(logger=logger)
+snap_device_data(logger=logger)
 # snap_patient_note_data(logger=logger)
 snap_reading_data(logger=logger)
