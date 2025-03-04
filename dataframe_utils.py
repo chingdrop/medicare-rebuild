@@ -528,7 +528,15 @@ def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
     df['sharepoint_id'] = pd.to_numeric(df['sharepoint_id'], errors='coerce', downcast='integer')
     df['connected_datetime'] = pd.to_datetime(df['connected_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['unlinked_datetime'] = pd.to_datetime(df['unlinked_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['last_measurement_datetime'] = pd.to_datetime(df['last_measurement_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
+    df['last_measurement_datetime'] = pd.to_datetime(
+        df['last_measurement_datetime'],
+        format="%Y-%m-%dT%H:%M:%S.%fZ",
+        errors='coerce'
+    ).fillna(pd.to_datetime(
+        df['last_measurement_datetime'],
+        format="%Y-%m-%dT%H:%M:%SZ",
+        errors='coerce'
+    ))
     df['created_datetime'] = pd.to_datetime(df['created_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
     df['vendor'] = df['name'].apply(standardize_vendor)
     return df
