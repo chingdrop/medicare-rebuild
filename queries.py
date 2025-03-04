@@ -12,7 +12,12 @@ WHERE Time_Recorded >= ? AND Time_Recorded <= ?
 """
 
 get_device_id_stmt = """
-SELECT device_id, patient_id
+SELECT device_id, hwi_id
+FROM device
+"""
+
+get_device_name_stmt = """
+SELECT hwi_id, name
 FROM device
 """
 
