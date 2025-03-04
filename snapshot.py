@@ -217,11 +217,11 @@ data_dir = Path.cwd() / 'data'
 snaps_dir = data_dir / 'snaps'
 if not snaps_dir.exists():
     create_directory(snaps_dir)
-# if get_files_in_dir(snaps_dir):
-#     delete_files_in_dir(snaps_dir)
+if get_files_in_dir(snaps_dir):
+    delete_files_in_dir(snaps_dir)
 
-# snap_user_data(logger=logger)
-# snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
-# snap_device_data(logger=logger)
-# snap_patient_note_data(logger=logger)
+snap_user_data(logger=logger)
+snap_patient_data(data_dir / 'Patient_Export.csv', logger=logger)
+snap_device_data(logger=logger)
+snap_patient_note_data(logger=logger)
 snap_reading_data(logger=logger)
