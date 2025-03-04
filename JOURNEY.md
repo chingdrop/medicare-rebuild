@@ -2,7 +2,10 @@
 - Eventually, we will import all the data from SharePoint and the other databases.
 - Queries that have multiple statements must be a stored procedure due to SQLAlchemy.
 - I got more accurate results in the billing report when I only imported data from the last month.
-
+- It might be a good idea to combine the glucose readings and blood pressure readings table.
+	- It might prove difficult to manage multiple types of devices, but it works with two different kinds of devices.
+- Getting readings data from Tenovi takes a very long time.
+	- I could use Celery to distribute the workload of this task.
 ## To-Do List
 ### Infrastructure
 - [ ] Clean up the LCH-GPS database.
@@ -15,7 +18,6 @@
 - [ ] Add SSL certificate to Microsoft SQL Server.
 ### Code
 - [ ] Add Days Since calculation to Last Reading Date and Last Note Date.
-- [ ] Improve the Status Dropdown function on the MyQueue page.
 - [ ] Add Pydantic for JSON schema checking on API classes.
 - [ ] Add mechanism for importing readings directly from Tenovi into the DB.
 	- [ ] Add Tenovi API class. 
