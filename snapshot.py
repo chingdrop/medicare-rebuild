@@ -134,7 +134,8 @@ def snap_device_data(logger=logging.getLogger()):
             'connected_datetime': device['connected_on'],
             'unlinked_datetime': device['unlinked_on'],
             'last_measurement_datetime': device['last_measurement'],
-            'created_datetime': device['device']['created']
+            'created_datetime': device['device']['created'],
+            'sharepoint_id': device['patient_id']
         }
         device_data.append(device_dict)
     device_df = pd.DataFrame(device_data)
