@@ -234,21 +234,23 @@ def standardize_note_types(note_type: str) -> str:
     return str(note_type).split(',')[0]
 
 
-def standardize_vendor(name: str) -> str:
-    """Check if Tenovi or Omron are in the device name.
+def standardize_vendor(row: pd.Series) -> pd.Series:
+    """Original values had Vendor name in the Device name.
+    If Vendor name is a substring of Device name then return the Vendor name.
+    Else, if 'Tenvoi' or 'Omron' is in Device name then return 'Tenvoi' or 'Omron' respectively.
 
     Args:
-        name (str): Device name
+        row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        str: The name of the device's vendor.   
+        pandas.Series: The standardized row of Dataframe.    
     """
-    if 'Tenovi' in name:
-        return 'Tenovi'
-    elif 'Omron' in name:
-        return 'Omron'
-    else:
-        return np.nan
+    if not row['Vendor'] in row['Device_Name']:
+        if 'Tenovi' in row['Device_Name']:
+            return 'Tenovi'
+        else:
+            return 'Omron'
+    return row['Vendor']
 
 
 def standardize_emcontact_relationship(name: str) -> str:
@@ -525,37 +527,54 @@ def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
-    df['sharepoint_id'] = pd.to_numeric(df['sharepoint_id'], errors='coerce', downcast='integer')
-    df['connected_datetime'] = pd.to_datetime(df['connected_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['unlinked_datetime'] = pd.to_datetime(df['unlinked_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['last_measurement_datetime'] = pd.to_datetime(
-        df['last_measurement_datetime'],
-        format="%Y-%m-%dT%H:%M:%S.%fZ",
-        errors='coerce'
-    ).fillna(pd.to_datetime(
-        df['last_measurement_datetime'],
-        format="%Y-%m-%dT%H:%M:%SZ",
-        errors='coerce'
-    ))
-    df['created_datetime'] = pd.to_datetime(df['created_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['vendor'] = df['name'].apply(standardize_vendor)
+    df['Patient_ID'] = df['Patient_ID'].astype('Int64')
+    df['Device_ID'] = df['Device_ID'].str.replace('-', '')
+    df['Vendor'] = df.apply(standardize_vendor, axis=1)
+    df = df.rename(
+        columns={
+            'Device_ID': 'hardware_uuid',
+            'Device_Name': 'name',
+            'Patient_ID': 'sharepoint_id'
+        }
+    )
     return df
 
 
 def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
-    df['is_manual'] = 0
-    df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['received_datetime'] = pd.to_datetime(df['received_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['systolic_reading'] = df['systolic_reading'].astype(float).round(2)
-    df['diastolic_reading'] = df['diastolic_reading'].astype(float).round(2)
+    df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
+    df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
+    df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
+    df['BP_Reading_Systolic'] = df['BP_Reading_Systolic'].astype(float).round(2)
+    df['BP_Reading_Diastolic'] = df['BP_Reading_Diastolic'].astype(float).round(2)
+    df = df.rename(
+        columns={
+            'SharePoint_ID': 'sharepoint_id',
+            'Device_Model': 'temp_device',
+            'Time_Recorded': 'recorded_datetime',
+            'Time_Recieved': 'received_datetime',
+            'BP_Reading_Systolic': 'systolic_reading',
+            'BP_Reading_Diastolic': 'diastolic_reading',
+            'Manual_Reading': 'is_manual'
+        }
+    )
     return df
 
 
 def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
-    df['is_manual'] = 0
-    df['recorded_datetime'] = pd.to_datetime(df['recorded_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['received_datetime'] = pd.to_datetime(df['received_datetime'], format="%Y-%m-%dT%H:%M:%S.%fZ", errors='coerce')
-    df['glucose_reading'] = df['glucose_reading'].astype(float).round(2)
+    df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
+    df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
+    df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
+    df['BG_Reading'] = df['BG_Reading'].astype(float).round(2)
+    df = df.rename(
+        columns={
+            'SharePoint_ID': 'sharepoint_id',
+            'Device_Model': 'temp_device',
+            'Time_Recorded': 'recorded_datetime',
+            'Time_Recieved': 'received_datetime',
+            'BG_Reading': 'glucose_reading',
+            'Manual_Reading': 'is_manual'
+        }
+    )
     return df
 
 

@@ -12,12 +12,7 @@ WHERE Time_Recorded >= ? AND Time_Recorded <= ?
 """
 
 get_device_id_stmt = """
-SELECT device_id, hwi_id
-FROM device
-"""
-
-get_device_info_stmt = """
-SELECT hwi_id, name, last_measurement_datetime
+SELECT device_id, patient_id
 FROM device
 """
 
