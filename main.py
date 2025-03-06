@@ -209,7 +209,7 @@ class DataImporter:
             self.gps.close()
 
 
-def import_all_data(start_date, end_date, logger=logging.getLogger()):
+def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()):
     gps = DatabaseManager(logger=logger)
     gps.create_engine(username=os.getenv('LCH_SQL_GPS_USERNAME'),
                       password=os.getenv('LCH_SQL_GPS_PASSWORD'),
@@ -225,15 +225,15 @@ def import_all_data(start_date, end_date, logger=logging.getLogger()):
         delete_files_in_dir(snaps_dir)
 
     dim = DataImporter(start_date, end_date, logger=logger)
-    user_df = dim.get_user_data()
+    user_df = dim.get_user_data(snap=snap)
     dim.import_user_data(user_df)
-    patient_data = dim.get_patient_data(data_dir / 'Patient_Export.csv')
+    patient_data = dim.get_patient_data(data_dir / 'Patient_Export.csv', snap=snap)
     dim.import_patient_data(patient_data)
-    device_df = dim.get_device_data()
+    device_df = dim.get_device_data(snap=snap)
     dim.import_device_data(device_df)
-    gluc_df = dim.get_gluc_readings()
+    gluc_df = dim.get_gluc_readings(snap=snap)
     dim.import_gluc_readings_data(gluc_df)
-    bp_df = dim.get_bp_readings()
+    bp_df = dim.get_bp_readings(snap=snap)
     dim.import_bp_readings_data(bp_df)
     dim.close_db()
 
