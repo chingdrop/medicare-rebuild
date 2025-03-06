@@ -2,6 +2,8 @@ import logging
 import requests
 from typing import List
 from datetime import datetime
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class RestAdapter:
@@ -10,7 +12,7 @@ class RestAdapter:
             base_url: str='',
             headers: dict=None,
             auth=None,
-            logger=logging.getLogger()
+            logger=None
     ):
         """Initialize the RequestHandler instance.
 
@@ -19,12 +21,16 @@ class RestAdapter:
             headers (dict): Default headers (optional)
             auth: Authentication information (optional)
         """
+        self.logger = logger or logging.getLogger(__name__)
         self.base_url = base_url
         self.headers = headers if headers else {}
         self.auth = auth
-        self.logger = logger
 
         self.session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
         if self.auth:
             self.session.auth = self.auth
         if self.headers:
@@ -128,12 +134,12 @@ class MSGraphApi:
             tenant_id: str,
             client_id: str,
             client_secret: str,
-            logger=logging.getLogger()
+            logger=None
     ):
+        self.logger = logger or logging.getLogger(__name__)
         self.tenant_id = tenant_id
         self.client_id = client_id,
         self.client_secret = client_secret
-        self.logger = logger
 
     def request_access_token(self,) -> None:
         """Uses tenant ID, client ID and client secret to request for an access token with privileges outlined in the application object."""
@@ -169,13 +175,13 @@ class TenoviApi:
             self,
             client_domain: str,
             api_key: str,
-            logger=logging.getLogger()
+            logger=None
     ):
+        self.logger = logger or logging.getLogger(__name__)
         headers = {'Authorization': f'Api-Key {api_key}'}
         self.rest = RestAdapter(f'https://api2.tenovi.com/clients/{client_domain}',
                                 headers=headers,
-                                logger=logger)
-        self.logger = logger
+                                logger=self.logger)
 
     def get_devices(self,) -> List[dict]:
         return self.rest.get('/hwi/hwi-devices')
