@@ -7,16 +7,16 @@ from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict
 
-from api_utils import MSGraphApi
-from dataframe_utils import check_patient_db_constraints, add_id_col, \
+from utils.api_utils import MSGraphApi
+from utils.dataframe_utils import check_patient_db_constraints, add_id_col, \
     normalize_users, normalize_patients, normalize_patient_notes, normalize_devices, \
     normalize_bg_readings, normalize_bp_readings, \
     create_patient_df, create_patient_address_df, create_patient_insurance_df, create_med_necessity_df,\
     create_patient_status_df, create_emcontacts_df
-from db_utils import DatabaseManager
-from helpers import create_directory, get_files_in_dir, delete_files_in_dir
-from logger import setup_logger
-from queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt, get_patient_id_stmt, \
+from utils.db_utils import DatabaseManager
+from lch_tools.helpers import create_directory, get_files_in_dir, delete_files_in_dir
+from lch_tools.logger import setup_logger
+from lch_tools.queries import get_notes_log_stmt, get_time_log_stmt, get_fulfillment_stmt, get_patient_id_stmt, \
     get_device_id_stmt, get_vendor_id_stmt, get_bg_readings_stmt, get_bp_readings_stmt, \
     update_patient_note_stmt, update_patient_status_stmt, update_user_stmt, \
     update_user_note_stmt
