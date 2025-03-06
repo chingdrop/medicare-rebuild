@@ -7,10 +7,10 @@ from sqlalchemy.orm import sessionmaker, Session
 
 
 class DatabaseManager:
-    def __init__(self, logger=logging.getLogger()):
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
         self.engine = None
         self.session = None
-        self.logger = logger
 
     def create_engine(
             self,
