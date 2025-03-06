@@ -15,6 +15,12 @@ def create_directory(path: Path | str) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def create_file(path: Path | str) -> None:
+    if isinstance(path, str):
+        path = Path(path)
+    path.touch()
+
+
 def get_files_in_dir(path: Path | str) -> List[Path]:
     """Get all the files in a directory.
 
