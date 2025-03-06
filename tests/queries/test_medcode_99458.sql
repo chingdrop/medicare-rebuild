@@ -1,6 +1,6 @@
 ﻿DROP TABLE IF EXISTS #99458;
 
-DECLARE @today_date DATE = '2025-01-31';
+DECLARE @today_date DATE = '2025-02-28';
 DECLARE @numbers TABLE (n INT);
 
 -- Create and insert the numbers 1, 2, 3.

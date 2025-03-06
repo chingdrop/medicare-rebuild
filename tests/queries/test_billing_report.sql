@@ -1,5 +1,5 @@
-﻿DECLARE @start_date DATE = CAST('2025-01-01' AS DATE);
-DECLARE @end_date DATE = CAST('2025-01-31' AS DATE);
+﻿DECLARE @start_date DATE = CAST('2025-02-01' AS DATE);
+DECLARE @end_date DATE = GETDATE();
 
 WITH daily_patient_interactions AS (
 	SELECT mc.patient_id,
