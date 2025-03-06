@@ -323,9 +323,21 @@ def standardize_height(height: str) -> str:
         feet = int(match.group(1))
         inches = int(match.group(2)) if match.group(2) else 0
         return (feet * 12) + inches
+    
+
+def normalize_users(df: pd.DataFrame) -> pd.DataFrame:
+    df = df[['givenName', 'surname', 'displayName', 'mail', 'id']]
+    df = df.rename(columns={
+        'givenName': 'first_name',
+        'surname': 'last_name',
+        'displayName': 'display_name',
+        'mail': 'email',
+        'id': 'ms_entra_id'
+    })
+    return df
 
 
-def standardize_patients(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df['First Name'] = df['First Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     df['Last Name'] = df['Last Name'].apply(standardize_name, args=(r'[^a-zA-Z\s.-]',))
     df['Full Name'] = df['First Name'] + ' ' + df['Last Name']
@@ -493,7 +505,7 @@ def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
     return emcontacts_df
 
 
-def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
     df['Recording_Time'] = df['Recording_Time'].apply(standardize_call_time)
     df.loc[df['LCH_UPN'].isin(['Joycelynn Harris']), 'Recording_Time'] = 900
 
@@ -526,7 +538,7 @@ def standardize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_devices(df: pd.DataFrame) -> pd.DataFrame:
     df['Patient_ID'] = df['Patient_ID'].astype('Int64')
     df['Device_ID'] = df['Device_ID'].str.replace('-', '')
     df['Vendor'] = df.apply(standardize_vendor, axis=1)
@@ -540,7 +552,7 @@ def standardize_devices(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
     df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
     df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
@@ -560,7 +572,7 @@ def standardize_bp_readings(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
     df['SharePoint_ID'] = df['SharePoint_ID'].astype('Int64')
     df['Manual_Reading'] = df['Manual_Reading'].replace({True: 1, False: 0})
     df['Manual_Reading'] = df['Manual_Reading'].astype('Int64')
@@ -605,7 +617,7 @@ def standardize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
 #     return failed_df
 
 
-def patient_check_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
+def check_patient_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df['phone_number'].apply(lambda x: len(str(x)) <= 11)]
     df = df[df['social_security'].apply(lambda x: len(str(x)) <= 9)]
     df = df[df['temp_state'].apply(lambda x: len(str(x)) <= 2)]
