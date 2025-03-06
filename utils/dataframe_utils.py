@@ -3,7 +3,7 @@ import html
 import pandas as pd
 import numpy as np
 
-from enums import insurance_keywords, state_abbreviations, relationship_keywords, \
+from utils.enums import insurance_keywords, state_abbreviations, relationship_keywords, \
     race_keywords
 
 
