@@ -13,5 +13,5 @@ WHERE NOT EXISTS (
 	WHERE mc.patient_id = pn.patient_id
 )
 GROUP BY pn.patient_id
-HAVING FLOOR(SUM(pn.call_time_seconds)) / 60 >= 14
+HAVING FLOOR(SUM(pn.call_time_seconds)) / 60 >= 15
 	AND FLOOR(SUM(pn.call_time_seconds)) / 60 < 30;
