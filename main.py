@@ -374,8 +374,8 @@ def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()
     Imports all data within the specified date range.
 
     Args:
-        start_date (str or datetime): The start date for data import.
-        end_date (str or datetime): The end date for data import.
+        start_date (str, datetime): The start date for data import.
+        end_date (str, datetime): The end date for data import.
         snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
         logger (logging.Logger): Logger instance for logging. Defaults to logging.getLogger() (optional).
     """
@@ -420,8 +420,8 @@ def create_billing_report(start_date, end_date, logger=logging.getLogger()):
     Creates a billing report for the specified date range.
 
     Args:
-        start_date (str or datetime): The start date for the billing report.
-        end_date (str or datetime): The end date for the billing report.
+        start_date (str, datetime): The start date for the billing report.
+        end_date (str, datetime): The end date for the billing report.
         logger (logging.Logger): Logger instance for logging. Defaults to logging.getLogger() (optional).
     """
     if isinstance(start_date, str):
