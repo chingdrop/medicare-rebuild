@@ -49,6 +49,14 @@ from medicare_rebuild.queries import (
 
 class DataImporter:
     def __init__(self, start_date, end_date, logger=None):
+        """
+        Initializes the DataImporter with the given start and end dates.
+
+        Args:
+            start_date (str, datetime): The start date for data import.
+            end_date (str, datetime): The end date for data import.
+            logger (logging.Logger): Logger instance for logging. Defaults to None (optional).
+        """
         if isinstance(start_date, str):
             self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
         if isinstance(end_date, str):
@@ -66,9 +74,25 @@ class DataImporter:
 
     @staticmethod
     def snap_dataframe(df: pd.DataFrame, path: Path | str) -> None:
+        """
+        Saves a DataFrame to an Excel file.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to save.
+            path (Path, str): The path to save the Excel file.
+        """
         df.to_excel(path, index=False, engine="openpyxl")
 
     def get_user_data(self, snap: bool = False) -> pd.DataFrame:
+        """
+        Retrieves user data from Microsoft Graph API and normalizes it.
+
+        Args:
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            pd.DataFrame: The normalized user data.
+        """
         msg = MSGraphApi(
             tenant_id=os.getenv("AZURE_TENANT_ID"),
             client_id=os.getenv("AZURE_CLIENT_ID"),
@@ -86,6 +110,16 @@ class DataImporter:
     def get_patient_data(
         self, filename: Path | str, snap: bool = False
     ) -> Dict[str, pd.DataFrame]:
+        """
+        Retrieves and normalizes patient data from a CSV file.
+
+        Args:
+            filename (Path, str): The path to the CSV file.
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            Dict[str, pd.DataFrame]: A dictionary of normalized patient data DataFrames.
+        """
         df = pd.read_csv(
             filename,
             dtype={"Phone Number": "str", "Social Security": "str", "Zip code": "str"},
@@ -95,7 +129,6 @@ class DataImporter:
             f"Reading patient export from SharePoint (rows: {df.shape[0]}, cols: {df.shape[1]})"
         )
         df = normalize_patients(df)
-        # failed_df = patient_check_failed_data(export_df)
         df = check_patient_db_constraints(df)
         res = {
             "patient": create_patient_df(df),
@@ -107,10 +140,19 @@ class DataImporter:
         }
         if snap:
             for name, df in res.items():
-                self.snap_dataframe(df, self.snaps_dir / f"snap_{name}_df")
+                self.snap_dataframe(df, self.snaps_dir / f"snap_{name}_df.xlsx")
         return res
 
     def get_patient_note_data(self, snap: bool = False) -> pd.DataFrame:
+        """
+        Retrieves and normalizes patient note data from the database.
+
+        Args:
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            pd.DataFrame: The normalized patient note data.
+        """
         notes_db = DatabaseManager(logger=self.logger)
         notes_db.create_engine(
             username=os.getenv("LCH_SQL_USERNAME"),
@@ -151,7 +193,16 @@ class DataImporter:
         return df
 
     def get_device_data(self, snap: bool = False) -> pd.DataFrame:
-        fulfillment_db = DatabaseManager(logger=logger)
+        """
+        Retrieves and normalizes device data from the database.
+
+        Args:
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            pd.DataFrame: The normalized device data.
+        """
+        fulfillment_db = DatabaseManager(logger=self.logger)
         fulfillment_db.create_engine(
             username=os.getenv("LCH_SQL_USERNAME"),
             password=os.getenv("LCH_SQL_PASSWORD"),
@@ -165,7 +216,16 @@ class DataImporter:
         return df
 
     def get_gluc_readings(self, snap: bool = False) -> pd.DataFrame:
-        readings_db = DatabaseManager(logger=logger)
+        """
+        Retrieves and normalizes glucose readings from the database.
+
+        Args:
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            pd.DataFrame: The normalized glucose readings.
+        """
+        readings_db = DatabaseManager(logger=self.logger)
         readings_db.create_engine(
             username=os.getenv("LCH_SQL_USERNAME"),
             password=os.getenv("LCH_SQL_PASSWORD"),
@@ -183,7 +243,16 @@ class DataImporter:
         return df
 
     def get_bp_readings(self, snap: bool = False) -> pd.DataFrame:
-        readings_db = DatabaseManager(logger=logger)
+        """
+        Retrieves and normalizes blood pressure readings from the database.
+
+        Args:
+            snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+
+        Returns:
+            pd.DataFrame: The normalized blood pressure readings.
+        """
+        readings_db = DatabaseManager(logger=self.logger)
         readings_db.create_engine(
             username=os.getenv("LCH_SQL_USERNAME"),
             password=os.getenv("LCH_SQL_PASSWORD"),
@@ -201,9 +270,21 @@ class DataImporter:
         return df
 
     def import_user_data(self, df: pd.DataFrame) -> None:
+        """
+        Imports user data into the database.
+
+        Args:
+            df (pd.DataFrame): The user data DataFrame to import.
+        """
         self.gps.to_sql(df, "user", if_exists="append")
 
     def import_patient_data(self, patient_data: Dict[str, pd.DataFrame]) -> None:
+        """
+        Imports patient data into the database.
+
+        Args:
+            patient_data (Dict[str, pd.DataFrame]): A dictionary of patient data DataFrames to import.
+        """
         self.gps.to_sql(patient_data["patient"], "patient", if_exists="append")
         patient_id_df = self.gps.read_sql(get_patient_id_stmt)
 
@@ -230,11 +311,23 @@ class DataImporter:
         self.gps.to_sql(emcontacts_df, "emergency_contact", if_exists="append")
 
     def import_patient_note_data(self, df: pd.DataFrame) -> None:
+        """
+        Imports patient note data into the database.
+
+        Args:
+            df (pd.DataFrame): The patient note data DataFrame to import.
+        """
         patient_id_df = self.gps.read_sql(get_patient_id_stmt)
         df = add_id_col(df, id_df=patient_id_df, col="sharepoint_id")
         self.gps.to_sql(df, "patient_note", if_exists="append")
 
     def import_device_data(self, df: pd.DataFrame) -> None:
+        """
+        Imports device data into the database.
+
+        Args:
+            df (pd.DataFrame): The device data DataFrame to import.
+        """
         patient_id_df = self.gps.read_sql(get_patient_id_stmt)
         vendor_id_df = self.gps.read_sql(get_vendor_id_stmt)
         df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
@@ -243,6 +336,12 @@ class DataImporter:
         self.gps.to_sql(df, "device", if_exists="append")
 
     def import_gluc_readings_data(self, df: pd.DataFrame) -> None:
+        """
+        Imports glucose readings data into the database.
+
+        Args:
+            df (pd.DataFrame): The glucose readings data DataFrame to import.
+        """
         patient_id_df = self.gps.read_sql(get_patient_id_stmt)
         device_id_df = self.gps.read_sql(get_device_id_stmt)
         df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
@@ -250,20 +349,36 @@ class DataImporter:
         self.gps.to_sql(df, "glucose_reading", if_exists="append")
 
     def import_bp_readings_data(self, df: pd.DataFrame) -> None:
+        """
+        Imports blood pressure readings data into the database.
+
+        Args:
+            df (pd.DataFrame): The blood pressure readings data DataFrame to import.
+        """
         patient_id_df = self.gps.read_sql(get_patient_id_stmt)
         device_id_df = self.gps.read_sql(get_device_id_stmt)
         df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
         df = add_id_col(df=df, id_df=device_id_df, col="patient_id")
         self.gps.to_sql(df, "blood_pressure_reading", if_exists="append")
 
-    def close_db(
-        self,
-    ) -> None:
+    def close_db(self) -> None:
+        """
+        Closes the database connection.
+        """
         if self.gps:
             self.gps.close()
 
 
 def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()):
+    """
+    Imports all data within the specified date range.
+
+    Args:
+        start_date (str or datetime): The start date for data import.
+        end_date (str or datetime): The end date for data import.
+        snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
+        logger (logging.Logger): Logger instance for logging. Defaults to logging.getLogger() (optional).
+    """
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
         username=os.getenv("LCH_SQL_GPS_USERNAME"),
@@ -301,6 +416,14 @@ def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()
 
 
 def create_billing_report(start_date, end_date, logger=logging.getLogger()):
+    """
+    Creates a billing report for the specified date range.
+
+    Args:
+        start_date (str or datetime): The start date for the billing report.
+        end_date (str or datetime): The end date for the billing report.
+        logger (logging.Logger): Logger instance for logging. Defaults to logging.getLogger() (optional).
+    """
     if isinstance(start_date, str):
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
     if isinstance(end_date, str):
