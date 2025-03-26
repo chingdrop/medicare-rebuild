@@ -5,6 +5,7 @@
 data/
 logs/
 .vs/
+.vscode/
 .obsidian/
 
 ### Python ###
