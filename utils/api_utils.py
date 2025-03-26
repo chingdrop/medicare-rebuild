@@ -7,63 +7,83 @@ from urllib3.util.retry import Retry
 
 
 class RestAdapter:
-    def __init__(
-            self,
-            base_url: str='',
-            headers: dict=None,
-            auth=None,
-            logger=None
-    ):
-        """Initialize the RequestHandler instance.
+    """Rest adapter class uses persistent session and sets default cofiguration.
 
         Args:
             base_url (str): The base URL for the API
             headers (dict): Default headers (optional)
-            auth: Authentication information (optional)
-        """
-        self.logger = logger or logging.getLogger(__name__)
+            auth (Any): Authentication information (optional)
+            proxies (dict): Dictionary of proxy addresses for HTTP(s) (optional)
+            logger (Logger): Custom logger object (optional)
+    """
+
+    def __init__(
+            self,
+            base_url: str='',
+            headers: dict={},
+            auth=None,
+            proxies: dict={},
+            logger=None
+    ):
         self.base_url = base_url
-        self.headers = headers if headers else {}
-        self.auth = auth
+        self.logger = logger or logging.getLogger(__name__)
 
         self.session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
-        if self.auth:
-            self.session.auth = self.auth
-        if self.headers:
-            self.session.headers.update(self.headers)
+        if headers:
+            self.session.headers.update(headers)
+        if auth:
+            self.session.auth = auth
+        if proxies:
+            self.session.proxies.update(proxies)
 
     def _send_request(
             self,
             method: str,
             endpoint: str,
-            params: dict=None,
-            data: dict=None
+            data: dict={},
+            params: dict={},
+            cookies: dict={},
+            verify: bool | str=None,
+            timeout: int=None,
+            allow_redirects: bool=True
     ) -> dict:
         """Prepare the request to be sent. Send the prepared request and return the response.
-        
+
         Args:
             method (str): HTTP method ('GET', 'POST', etc.)
             endpoint (str): API endpoint (e.g., '/users', '/posts')
             params (dict): URL parameters (optional)
-            data (dict): Data to send in the request body. (optional)
-        
+            data (dict): Data to send in the request body (optional)
+            cookies (dict): Data to be used as the cookie in the request (optional)
+            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
+            timeout (int): Number of seconds to wait for a response (optional)
+            allow_redirects (bool): Allow HTTP redirects to different URLs
+
         Returns:
             dict: JSON serialized response body or None if an error occurs.
         """
         self.logger.debug(f'Request [{method}] - {self.base_url} {endpoint}')
-        url = f"{self.base_url}{endpoint}"
-        req = requests.Request(method, url, headers=self.session.headers, params=params, data=data)
+        url = self.base_url + endpoint
+        req = requests.Request(method,
+                               url,
+                               headers=self.session.headers,
+                               params=params,
+                               data=data,
+                               cookies=cookies)
         prep_req = self.session.prepare_request(req)
         try:
-            response = self.session.send(prep_req)
+            response = self.session.send(prep_req,
+                                         verify=verify,
+                                         timeout=timeout,
+                                         allow_redirects=allow_redirects)
             response.raise_for_status()
             self.logger.debug(f'Status [{response.status_code}] - {response.reason}')
             if response:
-                content_type = response.headers.get('Content-Type').lower()
+                content_type = response.headers.get('Content-Type', '').lower()
                 if 'application/json' in content_type:
                     return response.json()
                 elif 'text/html' in content_type:
@@ -79,53 +99,131 @@ class RestAdapter:
         except requests.exceptions.RequestException as err:
             self.logger.error(f"An Unexpected Error: {err}")
 
-    def get(self, endpoint: str, params: dict=None) -> dict:
+    def get(
+            self,
+            endpoint: str,
+            params: dict=None,
+            cookies: dict=None,
+            verify: bool | str=None,
+            timeout: int=None,
+            allow_redirects: bool=True
+    ) -> dict:
         """Make a GET request.
-        
+
         Args:
             endpoint (str): API endpoint
             params (dict): URL parameters (optional)
+            cookies (dict): Data to be used as the cookie in the request (optional)
+            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
+            timeout (int): Number of seconds to wait for a response (optional)
+            allow_redirects (bool): Allow HTTP redirects to different URLs
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
         """
-        return self._send_request('GET', endpoint, params=params)
+        return self._send_request('GET',
+                                  endpoint,
+                                  params=params,
+                                  cookies=cookies,
+                                  verify=verify,
+                                  timeout=timeout,
+                                  allow_redirects=allow_redirects)
 
-    def post(self, endpoint: str, data: dict=None) -> dict:
+    def post(
+            self,
+            endpoint: str,
+            data: dict=None,
+            params: dict=None,
+            cookies: dict=None,
+            verify: bool | str=None,
+            timeout: int=None,
+            allow_redirects: bool=True
+    ) -> dict:
         """Make a POST request.
 
         Args:
             endpoint (str): API endpoint
-            data (dict): Data to send in the request body.
+            data (dict): Data to send in the request body
+            params (dict): URL parameters (optional)
+            cookies (dict): Data to be used as the cookie in the request (optional)
+            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
+            timeout (int): Number of seconds to wait for a response (optional)
+            allow_redirects (bool): Allow HTTP redirects to different URLs
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
         """
-        return self._send_request('POST', endpoint, data=data)
+        return self._send_request('POST',
+                                  endpoint,
+                                  data=data,
+                                  params=params,
+                                  cookies=cookies,
+                                  verify=verify,
+                                  timeout=timeout,
+                                  allow_redirects=allow_redirects)
 
-    def put(self, endpoint: str, data: dict=None) -> dict:
+    def put(
+            self,
+            endpoint: str,
+            data: dict=None,
+            params: dict=None,
+            cookies: dict=None,
+            verify: bool | str=None,
+            timeout: int=None,
+            allow_redirects: bool=True
+    ) -> dict:
         """Make a PUT request.
 
         Args:
             endpoint (str): API endpoint
-            data (dict): Data to send in the request body.
+            data (dict): Data to send in the request body
+            params (dict): URL parameters (optional)
+            cookies (dict): Data to be used as the cookie in the request (optional)
+            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
+            timeout (int): Number of seconds to wait for a response (optional)
+            allow_redirects (bool): Allow HTTP redirects to different URLs
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
         """
-        return self._send_request('PUT', endpoint, data=data)
+        return self._send_request('PUT',
+                                  endpoint,
+                                  data=data,
+                                  params=params,
+                                  cookies=cookies,
+                                  verify=verify,
+                                  timeout=timeout,
+                                  allow_redirects=allow_redirects)
 
-    def delete(self, endpoint: str, params: dict=None) -> dict:
+    def delete(
+            self,
+            endpoint: str,
+            params: dict=None,
+            cookies: dict=None,
+            verify: bool | str=None,
+            timeout: int=None,
+            allow_redirects: bool=True
+    ) -> dict:
         """Make a DELETE request.
 
         Args:
             endpoint (str): API endpoint
             params (dict): URL parameters (optional)
+            cookies (dict): Data to be used as the cookie in the request (optional)
+            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
+            timeout (int): Number of seconds to wait for a response (optional)
+            allow_redirects (bool): Allow HTTP redirects to different URLs
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
         """
-        return self._send_request('DELETE', endpoint, params=params)
+        return self._send_request('DELETE',
+                                  endpoint,
+                                  params=params,
+                                  cookies=cookies,
+                                  verify=verify,
+                                  timeout=timeout,
+                                  allow_redirects=allow_redirects)
 
 
 class MSGraphApi:
