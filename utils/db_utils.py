@@ -19,7 +19,9 @@ class DatabaseManager:
         self.session = None
 
     @staticmethod
-    def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
+    def __receive_before_cursor_execute(
+        conn, cursor, statement, params, context, executemany
+    ):
         """
         Event listener to enable fast execution of multiple statements.
 
@@ -35,11 +37,7 @@ class DatabaseManager:
             cursor.fast_executemany = True
 
     def create_engine(
-            self,
-            username: str,
-            password: str,
-            host: str,
-            database: str
+        self, username: str, password: str, host: str, database: str
     ) -> None:
         """
         Creates a SQLAlchemy engine object with the provided credentials and sets up the session.
@@ -63,11 +61,15 @@ class DatabaseManager:
             },
         )
         engine = create_engine(connection_url)
-        event.listen(engine, 'before_cursor_execute', self.__receive_before_cursor_execute)
+        event.listen(
+            engine, "before_cursor_execute", self.__receive_before_cursor_execute
+        )
         self.engine = engine
         self.session = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
-    def get_session(self,) -> Session:
+    def get_session(
+        self,
+    ) -> Session:
         """
         Retrieves the current database session.
 
@@ -78,10 +80,12 @@ class DatabaseManager:
             Exception: If the database connection is not established.
         """
         if not self.session:
-            raise Exception("Database connection is not established. Call create_engine() first.")
+            raise Exception(
+                "Database connection is not established. Call create_engine() first."
+            )
         return self.session()
 
-    def execute_query(self, query: str, params: dict=None) -> List[Row]:
+    def execute_query(self, query: str, params: dict = None) -> List[Row]:
         """
         Executes a SQL query and returns the result.
 
@@ -104,11 +108,13 @@ class DatabaseManager:
                 return res.fetchall()
         except Exception as e:
             session.rollback()
-            self.logger.error(f'Error executing query: {e}')
+            self.logger.error(f"Error executing query: {e}")
         finally:
             session.close()
 
-    def read_sql(self, query: str, params: tuple=None, parse_dates: List[str]=None) -> pd.DataFrame:
+    def read_sql(
+        self, query: str, params: tuple = None, parse_dates: List[str] = None
+    ) -> pd.DataFrame:
         """
         Reads a SQL query and returns the result as a DataFrame.
 
@@ -122,15 +128,11 @@ class DatabaseManager:
         """
         df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
         self.logger.debug(f'Query: {query.replace("\n", " ")}')
-        self.logger.debug(f'Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...')
+        self.logger.debug(f"Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...")
         return df
 
     def to_sql(
-            self,
-            df: pd.DataFrame,
-            table: str,
-            if_exists: str='fail',
-            index: bool=False
+        self, df: pd.DataFrame, table: str, if_exists: str = "fail", index: bool = False
     ) -> None:
         """
         Saves a Pandas DataFrame to a SQL table.
@@ -141,10 +143,14 @@ class DatabaseManager:
             if_exists (str): Specifies what to do if the table already exists. Defaults to 'fail' (optional).
             index (bool): Whether to write the DataFrame's index as a column. Defaults to False (optional).
         """
-        self.logger.debug(f'Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...')
+        self.logger.debug(
+            f"Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}..."
+        )
         df.to_sql(table, self.engine, if_exists=if_exists, index=index)
 
-    def close(self,) -> None:
+    def close(
+        self,
+    ) -> None:
         """
         Closes the database connection.
         """
