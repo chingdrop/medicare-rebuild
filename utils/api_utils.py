@@ -7,14 +7,15 @@ from urllib3.util.retry import Retry
 
 
 class RestAdapter:
-    """Rest adapter class uses persistent session and sets default cofiguration.
+    """
+    Rest adapter class uses a persistent session and sets default configuration.
 
-        Args:
-            base_url (str): The base URL for the API
-            headers (dict): Default headers (optional)
-            auth (Any): Authentication information (optional)
-            proxies (dict): Dictionary of proxy addresses for HTTP(s) (optional)
-            logger (Logger): Custom logger object (optional)
+    Args:
+        base_url (str): The base URL for the API.
+        headers (dict): Default headers (optional).
+        auth (Any): Authentication information (optional).
+        proxies (dict): Dictionary of proxy addresses for HTTP(s) (optional).
+        logger (Logger): Custom logger object (optional).
     """
 
     def __init__(
@@ -44,27 +45,34 @@ class RestAdapter:
             self,
             method: str,
             endpoint: str,
-            data: dict={},
             params: dict={},
+            data: dict={},
             cookies: dict={},
             verify: bool | str=None,
             timeout: int=None,
             allow_redirects: bool=True
-    ) -> dict:
-        """Prepare the request to be sent. Send the prepared request and return the response.
+    ) -> dict | str:
+        """
+        Prepare the request to be sent. Send the prepared request and return the response.
 
         Args:
-            method (str): HTTP method ('GET', 'POST', etc.)
-            endpoint (str): API endpoint (e.g., '/users', '/posts')
-            params (dict): URL parameters (optional)
-            data (dict): Data to send in the request body (optional)
-            cookies (dict): Data to be used as the cookie in the request (optional)
-            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
-            timeout (int): Number of seconds to wait for a response (optional)
-            allow_redirects (bool): Allow HTTP redirects to different URLs (optional)
+            method (str): HTTP method ('GET', 'POST', etc.).
+            endpoint (str): API endpoint (e.g., '/users', '/posts').
+            params (dict): URL parameters, defaults to empty dictionary (optional).
+            data (dict): Data sent in the request body, defaults to empty dictionary (optional).
+            cookies (dict): Cookie data in the request, defaults to empty dictionary (optional).
+            verify (bool, str): Boolean whether to enforce SSL authentication, or supply a certificate to use. Defaults to None (optional).
+            timeout (int): Number of seconds to wait for a response. Defaults to None (optional).
+            allow_redirects (bool): Allow HTTP redirects to different URLs. Defaults to True (optional).
 
         Returns:
-            dict: JSON serialized response body or None if an error occurs.
+            (dict | str): JSON serialized response body or None if an error occurs.
+
+        Raises:
+            requests.exceptions.HTTPError: An HTTP error occurred.
+            requests.exceptions.ConnectionError: A connection error occurred.
+            requests.exceptions.Timeout: A timeout error occurred.
+            requests.exceptions.RequestException: An unexpected error occurred.
         """
         self.logger.debug(f'Request [{method}] - {self.base_url} {endpoint}')
         url = self.base_url + endpoint
@@ -108,15 +116,16 @@ class RestAdapter:
             timeout: int=None,
             allow_redirects: bool=True
     ) -> dict:
-        """Make a GET request.
+        """
+        Make a GET request.
 
         Args:
-            endpoint (str): API endpoint
-            params (dict): URL parameters (optional)
-            cookies (dict): Data to be used as the cookie in the request (optional)
-            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
-            timeout (int): Number of seconds to wait for a response (optional)
-            allow_redirects (bool): Allow HTTP redirects to different URLs (optional)
+            endpoint (str): API endpoint.
+            params (dict): URL parametersm, defaults to None (optional).
+            cookies (dict): Cookie data in the request, defaults to None (optional).
+            verify (bool, str): Boolean whether to enforce SSL authentication, or supply a certificate to use. Defaults to None (optional).
+            timeout (int): Number of seconds to wait for a response. Defaults to None (optional).
+            allow_redirects (bool): Allow HTTP redirects to different URLs. Defaults to True (optional).
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
@@ -139,16 +148,17 @@ class RestAdapter:
             timeout: int=None,
             allow_redirects: bool=True
     ) -> dict:
-        """Make a POST request.
+        """
+        Make a POST request.
 
         Args:
-            endpoint (str): API endpoint
-            data (dict): Data to send in the request body
-            params (dict): URL parameters (optional)
-            cookies (dict): Data to be used as the cookie in the request (optional)
-            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
-            timeout (int): Number of seconds to wait for a response (optional)
-            allow_redirects (bool): Allow HTTP redirects to different URLs (optional)
+            endpoint (str): API endpoint.
+            data (dict): Data sent in the request body, defaults to None (optional).
+            params (dict): URL parametersm, defaults to None (optional).
+            cookies (dict): Cookie data in the request, defaults to None (optional).
+            verify (bool, str): Boolean whether to enforce SSL authentication, or supply a certificate to use. Defaults to None (optional).
+            timeout (int): Number of seconds to wait for a response. Defaults to None (optional).
+            allow_redirects (bool): Allow HTTP redirects to different URLs. Defaults to True (optional).
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
@@ -172,16 +182,17 @@ class RestAdapter:
             timeout: int=None,
             allow_redirects: bool=True
     ) -> dict:
-        """Make a PUT request.
+        """
+        Make a PUT request.
 
         Args:
-            endpoint (str): API endpoint
-            data (dict): Data to send in the request body
-            params (dict): URL parameters (optional)
-            cookies (dict): Data to be used as the cookie in the request (optional)
-            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
-            timeout (int): Number of seconds to wait for a response (optional)
-            allow_redirects (bool): Allow HTTP redirects to different URLs (optional)
+            endpoint (str): API endpoint.
+            data (dict): Data sent in the request body, defaults to None (optional).
+            params (dict): URL parametersm, defaults to None (optional).
+            cookies (dict): Cookie data in the request, defaults to None (optional).
+            verify (bool, str): Boolean whether to enforce SSL authentication, or supply a certificate to use. Defaults to None (optional).
+            timeout (int): Number of seconds to wait for a response. Defaults to None (optional).
+            allow_redirects (bool): Allow HTTP redirects to different URLs. Defaults to True (optional).
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
@@ -204,15 +215,16 @@ class RestAdapter:
             timeout: int=None,
             allow_redirects: bool=True
     ) -> dict:
-        """Make a DELETE request.
+        """
+        Make a DELETE request.
 
         Args:
-            endpoint (str): API endpoint
-            params (dict): URL parameters (optional)
-            cookies (dict): Data to be used as the cookie in the request (optional)
-            verify (bool | str): Boolean whether to enforce SSL authentication, or supply a certificate to use (optional)
-            timeout (int): Number of seconds to wait for a response (optional)
-            allow_redirects (bool): Allow HTTP redirects to different URLs (optional)
+            endpoint (str): API endpoint.
+            params (dict): URL parametersm, defaults to None (optional).
+            cookies (dict): Cookie data in the request, defaults to None (optional).
+            verify (bool, str): Boolean whether to enforce SSL authentication, or supply a certificate to use. Defaults to None (optional).
+            timeout (int): Number of seconds to wait for a response. Defaults to None (optional).
+            allow_redirects (bool): Allow HTTP redirects to different URLs. Defaults to True (optional).
 
         Returns:
             dict: JSON serialized response body or None if an error occurs.
@@ -227,6 +239,16 @@ class RestAdapter:
 
 
 class MSGraphApi:
+    """
+    Class to interact with Microsoft Graph API.
+
+    Args:
+        tenant_id (str): The tenant ID for the Azure AD application.
+        client_id (str): The client ID for the Azure AD application.
+        client_secret (str): The client secret for the Azure AD application.
+        logger (Logger, optional): Custom logger object (optional).
+    """
+
     def __init__(
             self,
             tenant_id: str,
@@ -240,7 +262,9 @@ class MSGraphApi:
         self.client_secret = client_secret
 
     def request_access_token(self,) -> None:
-        """Uses tenant ID, client ID and client secret to request for an access token with privileges outlined in the application object."""
+        """
+        Uses tenant ID, client ID, and client secret to request an access token with privileges outlined in the application object.
+        """
         rest = RestAdapter('https://login.microsoftonline.com', logger=self.logger)
         data = {
             'grant_type': 'client_credentials',
@@ -256,7 +280,8 @@ class MSGraphApi:
                                 logger=self.logger)
 
     def get_group_members(self, group_id: str) -> dict:
-        """Get all members that belong to a specific group.
+        """
+        Get all members that belong to a specific group.
 
         Args:
             group_id (str): GUID of the desired group.
@@ -269,6 +294,15 @@ class MSGraphApi:
 
 
 class TenoviApi:
+    """
+    Class to interact with Tenovi API.
+
+    Args:
+        client_domain (str): The client domain for the Tenovi API.
+        api_key (str): The API key for authentication.
+        logger (Logger): Custom logger object (optional).
+    """
+
     def __init__(
             self,
             client_domain: str,
@@ -282,6 +316,12 @@ class TenoviApi:
                                 logger=self.logger)
 
     def get_devices(self,) -> List[dict]:
+        """
+        Get a list of devices.
+
+        Returns:
+            List[dict]: List of devices.
+        """
         return self.rest.get('/hwi/hwi-devices')
     
     def get_readings(
@@ -290,6 +330,17 @@ class TenoviApi:
             metric: str="",
             created_gte: datetime | str=None
     ) -> List[dict]:
+        """
+        Get readings for a specific device.
+
+        Args:
+            hwi_device_id (str): The hardware ID of the device.
+            metric (str, optional): The name of the metric data to filter by (optional).
+            created_gte (datetime | str, optional): The earliest creation date to filter by (optional).
+
+        Returns:
+            List[dict]: List of readings.
+        """
         params = {}
         if metric:
             params['metric__name'] = metric
