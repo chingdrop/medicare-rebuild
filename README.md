@@ -16,6 +16,7 @@ Below are the main Medicare CPT codes developed for this project:
 - **99454** - Repeated device usage (after 16 distinct days of device testing).
 - **99457** - The initial 20 minutes of patient interaction.
 - **99458** - Repeated patient interaction, billed in increments of 20 minutes (can be applied up to 3 times).
+Path - `/sql/stored_procedures/batch_medcode_99XXX.sql`
 
 ## Process
 ### Extraction
@@ -30,6 +31,7 @@ Data transformation is handled using a set of organized functions in Python:
 Additional functions included:
 - Enforce database value constraints.
 - Assign identity values to specific fields in the new database schema.
+Path - `/utils/dataframe_utils.py`
 ### Load
 Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services. The following entities are defined in the database:
 - **Patient Information** - [[patient_erd.png]]
@@ -37,10 +39,12 @@ Once transformed, the data is loaded into a new Microsoft SQL Server database. T
 - **Patient Time** - [[patient_time_erd.png]]
 - **Patient Billing** - [[patient_billing_erd.png]]
 - **Patient Fulfillment** - [[patient_fulfillment_erd.png]]
+Path - `/docs/erd/*_erd.png`
 
 **Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
 ### Report
 - Create a billing report that groups the patients by the count of recorded medical codes and the date of service.
+Path - `/sql/stored_procedures/create_billing_report.sql`
 
 ## Materials
 ### Credentials
