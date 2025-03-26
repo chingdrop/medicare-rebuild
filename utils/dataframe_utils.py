@@ -68,7 +68,8 @@ def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False) 
 
 
 # --- Standardize Functions ---
-"""Standardize functions are methods used to transform and clean data within a Pandas DataFrame.
+"""
+Standardize functions are methods used to transform and clean data within a Pandas DataFrame.
 These functions take an initial input value, apply a transformation, and return a standardized output.
 The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as Series, enabling efficient data preprocessing and consistency.
 """
@@ -344,7 +345,8 @@ def standardize_height(height: str) -> str:
 
 
 # --- Create Functions ---
-"""Create functions are methods designed to separate and structure data imported from a SharePoint list.
+"""
+Create functions are methods designed to separate and structure data imported from a SharePoint list.
 These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of information within the SharePoint list.
 
 The data is organized into six distinct DataFrames:
@@ -449,8 +451,9 @@ def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
     return emcontacts_df
 
 
-# --- Normalize functions ---
-"""Normalize functions are methods that apply standardization transformations to the fields of a DataFrame.
+# --- Normalize Functions ---
+"""
+Normalize functions are methods that apply standardization transformations to the fields of a DataFrame.
 These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and return a cleaned and normalized DataFrame.
 The end result is a Pandas DataFrame that matches the schema and value constraints of the new database.
 """
