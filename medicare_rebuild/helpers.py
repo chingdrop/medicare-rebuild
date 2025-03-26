@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 def create_directory(path: Path | str) -> None:
     """Create a directory from a string or a Path object.
-    
+
     Args:
         path (Path | str): Directory path
     """
@@ -38,21 +38,21 @@ def get_files_in_dir(path: Path | str) -> List[Path]:
 
 def delete_files_in_dir(path: Path | str) -> None:
     """Delete all the files in a directory.
-    
+
     Args:
         path (Path | str): Directory path
     """
     if isinstance(path, str):
         path = Path(path)
     if path.exists():
-        for file in path.glob('*'):
+        for file in path.glob("*"):
             if file.is_file():
                 file.unlink()
 
 
 def get_last_month_billing_cycle() -> Tuple[datetime, datetime]:
     """Get the start and end of last month's billing cycle.
-    
+
     Returns:
         (datetime, datetime): datetime objects representing the first and last day of the billing cycle.
     """
@@ -64,5 +64,5 @@ def get_last_month_billing_cycle() -> Tuple[datetime, datetime]:
     month = last_day_last_month.month
     first_day = datetime(year, month, 1)
     last_day = datetime(year, month, calendar.monthrange(year, month)[1])
-    
+
     return first_day, last_day
