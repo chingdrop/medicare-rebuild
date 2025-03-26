@@ -60,6 +60,11 @@ def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False) 
     return value if keep_original else np.nan
 
 
+# --- Standardize Functions ---
+"""Standardize functions are methods used to transform and clean data within a Pandas DataFrame.
+These functions take an initial input value, apply a transformation, and return a standardized output.
+The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as Series, enabling efficient data preprocessing and consistency.
+"""
 def standardize_name(name: str, pattern: str) -> str:
     """Standardizes strings from name-like texts.
     Trims whitespace and titles the text. Flattens remaining whitespace to one space.
@@ -325,6 +330,103 @@ def standardize_height(height: str) -> str:
         return (feet * 12) + inches
     
 
+# --- Create Functions ---
+"""Create functions are methods designed to separate and structure data imported from a SharePoint list.
+These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of information within the SharePoint list.
+
+The data is organized into six distinct DataFrames:
+- Patient
+- Patient Address
+- Patient Insurance
+- Medical Necessity
+- Patient Status
+- Emergency Contacts
+"""
+def create_patient_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[[
+        'first_name',
+        'last_name',
+        'middle_name',
+        'name_suffix',
+        'full_name',
+        'nick_name',
+        'date_of_birth',
+        'sex',
+        'email',
+        'phone_number',
+        'social_security',
+        'temp_race',
+        'temp_marital_status',
+        'preferred_language',
+        'weight_lbs',
+        'height_in',
+        'sharepoint_id',
+        'temp_user'
+    ]]
+
+
+def create_patient_address_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
+
+
+def create_patient_insurance_df(df: pd.DataFrame) -> pd.DataFrame:
+    return df[[
+        'medicare_beneficiary_id',
+        'primary_payer_id',
+        'primary_payer_name',
+        'secondary_payer_id',
+        'secondary_payer_name',
+        'sharepoint_id'
+    ]]
+
+
+def create_med_necessity_df(df: pd.DataFrame) -> pd.DataFrame:
+    med_nec_df = df[['evaluation_datetime', 'temp_dx_code', 'sharepoint_id']]
+    med_nec_df.loc[:, 'temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
+    med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
+    return med_nec_df
+
+
+def create_patient_status_df(df: pd.DataFrame) -> pd.DataFrame:
+    patient_status_df = df[['temp_status_type', 'sharepoint_id']]
+    patient_status_df['modified_date'] = pd.Timestamp.now()
+    patient_status_df['temp_user'] = 'ITHelp'
+    return patient_status_df
+
+
+def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
+    emcontacts_df1 = df[[
+        'emergency_full_name',
+        'emergency_phone_number',
+        'emergency_relationship',
+        'sharepoint_id'
+    ]]
+    emcontacts_df1 = emcontacts_df1.rename(columns={
+        'emergency_full_name': 'full_name',
+        'emergency_phone_number': 'phone_number',
+        'emergency_relationship': 'relationship'
+    })
+    emcontacts_df2 = df[[
+        'emergency_full_name2',
+        'emergency_phone_number2',
+        'emergency_relationship2',
+        'sharepoint_id'
+    ]]
+    emcontacts_df2 = emcontacts_df2.rename(columns={
+        'emergency_full_name2': 'full_name',
+        'emergency_phone_number2': 'phone_number',
+        'emergency_relationship2': 'relationship'
+    })
+    emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
+    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number'])
+    return emcontacts_df
+    
+
+# --- Normalize functions ---
+"""Normalize functions are methods that apply standardization transformations to the fields of a DataFrame.
+These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and return a cleaned and normalized DataFrame.
+The end result is a Pandas DataFrame that matches the schema and value constraints of the new database.
+"""
 def normalize_users(df: pd.DataFrame) -> pd.DataFrame:
     df = df[['givenName', 'surname', 'displayName', 'mail', 'id']]
     df = df.rename(columns={
@@ -423,86 +525,6 @@ def normalize_patients(df: pd.DataFrame) -> pd.DataFrame:
     # Convert string Nan back to Null value.
     df.replace(r'(?i)^nan$', None, regex=True, inplace=True)
     return df
-
-
-def create_patient_df(df: pd.DataFrame) -> pd.DataFrame:
-    return df[[
-        'first_name',
-        'last_name',
-        'middle_name',
-        'name_suffix',
-        'full_name',
-        'nick_name',
-        'date_of_birth',
-        'sex',
-        'email',
-        'phone_number',
-        'social_security',
-        'temp_race',
-        'temp_marital_status',
-        'preferred_language',
-        'weight_lbs',
-        'height_in',
-        'sharepoint_id',
-        'temp_user'
-    ]]
-
-
-def create_patient_address_df(df: pd.DataFrame) -> pd.DataFrame:
-    return df[['street_address', 'city', 'temp_state', 'zipcode', 'sharepoint_id']]
-
-
-def create_patient_insurance_df(df: pd.DataFrame) -> pd.DataFrame:
-    return df[[
-        'medicare_beneficiary_id',
-        'primary_payer_id',
-        'primary_payer_name',
-        'secondary_payer_id',
-        'secondary_payer_name',
-        'sharepoint_id'
-    ]]
-
-
-def create_med_necessity_df(df: pd.DataFrame) -> pd.DataFrame:
-    med_nec_df = df[['evaluation_datetime', 'temp_dx_code', 'sharepoint_id']]
-    med_nec_df.loc[:, 'temp_dx_code'] = med_nec_df['temp_dx_code'].str.split(',')
-    med_nec_df = med_nec_df.explode('temp_dx_code', ignore_index=True)
-    return med_nec_df
-
-
-def create_patient_status_df(df: pd.DataFrame) -> pd.DataFrame:
-    patient_status_df = df[['temp_status_type', 'sharepoint_id']]
-    patient_status_df['modified_date'] = pd.Timestamp.now()
-    patient_status_df['temp_user'] = 'ITHelp'
-    return patient_status_df
-
-
-def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
-    emcontacts_df1 = df[[
-        'emergency_full_name',
-        'emergency_phone_number',
-        'emergency_relationship',
-        'sharepoint_id'
-    ]]
-    emcontacts_df1 = emcontacts_df1.rename(columns={
-        'emergency_full_name': 'full_name',
-        'emergency_phone_number': 'phone_number',
-        'emergency_relationship': 'relationship'
-    })
-    emcontacts_df2 = df[[
-        'emergency_full_name2',
-        'emergency_phone_number2',
-        'emergency_relationship2',
-        'sharepoint_id'
-    ]]
-    emcontacts_df2 = emcontacts_df2.rename(columns={
-        'emergency_full_name2': 'full_name',
-        'emergency_phone_number2': 'phone_number',
-        'emergency_relationship2': 'relationship'
-    })
-    emcontacts_df = pd.concat([emcontacts_df1, emcontacts_df2])
-    emcontacts_df = emcontacts_df.dropna(subset=['full_name', 'phone_number'])
-    return emcontacts_df
 
 
 def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
