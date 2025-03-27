@@ -258,7 +258,7 @@ class MSGraphApi:
         tenant_id (str): The tenant ID for the Azure AD application.
         client_id (str): The client ID for the Azure AD application.
         client_secret (str): The client secret for the Azure AD application.
-        logger (Logger, optional): Custom logger object (optional).
+        logger (Logger): Custom logger object (optional).
     """
 
     def __init__(self, tenant_id: str, client_id: str, client_secret: str, logger=None):
@@ -339,8 +339,8 @@ class TenoviApi:
 
         Args:
             hwi_device_id (str): The hardware ID of the device.
-            metric (str, optional): The name of the metric data to filter by (optional).
-            created_gte (datetime | str, optional): The earliest creation date to filter by (optional).
+            metric (str): The name of the metric data to filter by (optional).
+            created_gte (datetime, str): The earliest creation date to filter by (optional).
 
         Returns:
             List[dict]: List of readings.
