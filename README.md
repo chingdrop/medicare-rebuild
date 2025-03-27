@@ -34,11 +34,11 @@ Additional functions included:
 Path - `/utils/dataframe_utils.py`
 ### Load
 Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services. The following entities are defined in the database:
-- **Patient Information** - [[patient_erd.png]]
-- **Patient Health** - [[patient_health_erd.png]]
-- **Patient Time** - [[patient_time_erd.png]]
-- **Patient Billing** - [[patient_billing_erd.png]]
-- **Patient Fulfillment** - [[patient_fulfillment_erd.png]]
+- **Patient Information** - [[1_patient_erd.png]]
+- **Patient Health** - [[2_patient_health_erd.png]]
+- **Patient Time** - [[3_patient_time_erd.png]]
+- **Patient Billing** - [[4_patient_billing_erd.png]]
+- **Patient Fulfillment** - [[5_patient_fulfillment_erd.png]]
 Path - `/docs/erd/*_erd.png`
 
 **Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
