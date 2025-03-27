@@ -585,24 +585,24 @@ def normalize_patients(df: pd.DataFrame) -> pd.DataFrame:
 
 def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
     df["Recording_Time"] = df["Recording_Time"].apply(standardize_call_time)
-    df.loc[df["LCH_UPN"].isin(["Joycelynn Harris"]), "Recording_Time"] = 900
+    df.loc[df["LCH_UPN"].isin(["NursePractitioner"]), "Recording_Time"] = 900
 
     df["Notes"] = df["Notes"].apply(html.unescape)
     df["Notes"] = df["Notes"].str.replace(r"<.*?>", "", regex=True)
 
     df["Time_Note"] = df["Time_Note"].apply(standardize_note_types)
     df.loc[
-        df["LCH_UPN"].isin(["Joycelynn Harris", "Melanie Coffey", "Krista Lewin"]),
+        df["LCH_UPN"].isin(["NursePractitioner", "RegisteredNurse1", "RegisteredNurse2"]),
         "Time_Note",
     ] = "Initial Evaluation"
     df.loc[
         df["LCH_UPN"].isin(
             [
-                "Christylyn Diosma",
-                "Maria Albingco",
-                "Mary Cortes",
-                "Richel Rodriguez",
-                "Rigel Sagayno",
+                "AlertTeamMember1",
+                "AlertTeamMember2",
+                "AlertTeamMember3",
+                "AlertTeamMember4",
+                "AlertTeamMember5",
             ]
         ),
         "Time_Note",
