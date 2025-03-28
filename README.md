@@ -9,8 +9,8 @@ The project covers the following:
 - **Transformation** - Data is transformed by standardizing patient billing information and instrument readings.
 - **Loading** - The transformed data is loaded into a new SQL database that enforces entity relationships and accurately records the 'date of service' for billable services.
 
-The client medical company focused mainly on remote physician monitoring for *diabetes* and *hypertension*. Path - `/sql/stored_procedures/batch_medcode_99XXX.sql`
-Below are the main Medicare CPT codes developed for this project:
+The client medical company focused mainly on remote physician monitoring for *diabetes* and *hypertension*.
+Below are the main Medicare CPT codes developed for this project - `/sql/stored_procedures/batch_medcode_99XXX.sql`
 - **99202** - The initial telehealth visit from the nurse practitioner.
 - **99453** - Initial device setup for vital monitoring instrument (after 16 distinct days of device testing).
 - **99454** - Repeated device usage (after 16 distinct days of device testing).
@@ -22,8 +22,7 @@ Below are the main Medicare CPT codes developed for this project:
 - **SharePoint Data**: Data is extracted by creating a view in SharePoint and filtering for the relevant fields. The data is then downloaded as a CSV file.
 - **SQL Data**: Data is retrieved from various SQL databases by executing the necessary queries to fill the final database schema.
 ### Transformation
-Path - `/utils/dataframe_utils.py`
-Data transformation is handled using a set of organized functions in Python:
+Data transformation is handled using a set of organized functions in Python - `/utils/dataframe_utils.py`
 - **Standardize Functions**: These methods clean and transform data within a Pandas DataFrame.
 - **Create Functions**: Methods designed to structure and separate patient data from the SharePoint list.
 - **Normalize Functions**: Apply standardization functions to specific fields in the DataFrame.
@@ -32,8 +31,8 @@ Additional functions included:
 - Enforce database value constraints.
 - Assign identity values to specific fields in the new database schema.
 ### Load
-Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services. Path - `/docs/erd/*_erd.png`
-The following entities are defined in the database:
+Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
+The following entities are defined in the database - `/docs/erd/*_erd.png`
 - **Patient Information** - [[1_patient_erd.png]]
 - **Patient Health** - [[2_patient_health_erd.png]]
 - **Patient Time** - [[3_patient_time_erd.png]]
