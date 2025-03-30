@@ -48,7 +48,7 @@ from medicare_rebuild.queries import (
 
 
 class DataImporter:
-    def __init__(self, start_date, end_date, logger=None):
+    def __init__(self, start_date: str, end_date: str, logger=None):
         """
         Initializes the DataImporter with the given start and end dates.
 
@@ -57,10 +57,8 @@ class DataImporter:
             end_date (str, datetime): The end date for data import.
             logger (logging.Logger): Logger instance for logging. Defaults to None (optional).
         """
-        if isinstance(start_date, str):
-            self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        if isinstance(end_date, str):
-            self.end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        self.start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        self.end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
         self.logger = logger or logging.getLogger(__name__)
         self.gps = DatabaseManager(logger=self.logger)
