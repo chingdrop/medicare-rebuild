@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict
 
-from utils.api_utils import MSGraphApi
-from utils.dataframe_utils import (
+from medicare_rebuild.utils.api_utils import MSGraphApi
+from medicare_rebuild.utils.dataframe_utils import (
     check_patient_db_constraints,
     add_id_col,
     normalize_users,
@@ -24,7 +24,7 @@ from utils.dataframe_utils import (
     create_patient_status_df,
     create_emcontacts_df,
 )
-from utils.db_utils import DatabaseManager
+from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.helpers import (
     create_directory,
     get_files_in_dir,
