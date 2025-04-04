@@ -1,5 +1,7 @@
 # Medicare-Rebuild
 
+Repository: [medicare-rebuild - GitHub](https://github.com/chingdrop/medicare-rebuild)
+
 The Medicare-Rebuild project is a Python-based solution designed to rebuild the data architecture for a medical company specializing in remote physician monitoring. The goal of this rebuild is to accurately record the 'date of service' for services provided, with a focus on Medicare billing for telehealth and remote monitoring.
 
 This project was completed within a 3-month timeframe and involves the extraction, transformation, and loading (ETL) of data for approximately 22,000 Medicare-eligible patients.
@@ -78,10 +80,9 @@ Path - `/sql/stored_procedures/create_billing_report.sql`
 
 ### Requirements
 
-- **Microsoft SQL Server**: The database server hosting the final database.
-  - *ODBC Driver 18* is required for interfacing with Microsoft SQL Server.
-- **SQLAlchemy**: A micro ORM framework for SQL execution.
-  - *pyodbc* library is used for ODBC connection.
-- **Pandas**: A powerful library for structured data manipulation.
-  - *openpyxl* engine is used by Pandas for Excel operations.
-- **Requests**: A library for handling HTTP requests.
+- **ODBC Driver 18**: Required for connecting to Microsoft SQL Server.
+- **SQLAlchemy**: A micro ORM for SQL execution.
+  - **pyodbc**: Used for ODBC connections.
+- **Pandas**: A library for data manipulation and analysis.
+  - **openpyxl**: Used by Pandas for Excel file operations.
+- **Requests**: A library for making HTTP requests.
