@@ -265,7 +265,7 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
     Returns:
         pandas.Series: The standardized row of Dataframe.
     """
-    if not row["Vendor"] in row["Device_Name"]:
+    if row["Vendor"] not in row["Device_Name"]:
         if "Tenovi" in row["Device_Name"]:
             return "Tenovi"
         else:
@@ -594,7 +594,9 @@ def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
 
     df["Time_Note"] = df["Time_Note"].apply(standardize_note_types)
     df.loc[
-        df["LCH_UPN"].isin(["NursePractitioner", "RegisteredNurse1", "RegisteredNurse2"]),
+        df["LCH_UPN"].isin(
+            ["NursePractitioner", "RegisteredNurse1", "RegisteredNurse2"]
+        ),
         "Time_Note",
     ] = "Initial Evaluation"
     df.loc[
