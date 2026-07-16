@@ -85,7 +85,7 @@ class DatabaseManager:
             )
         return self.session()
 
-    def execute_query(self, query: str, params: dict = None) -> List[Row]:
+    def execute_query(self, query: str, params: dict | None = None) -> List[Row] | None:
         """
         Executes a SQL query and returns the result.
 
@@ -105,16 +105,20 @@ class DatabaseManager:
             self.logger.debug(f"Query: {single_line_query}")
             res = session.execute(text(query), params)
             session.commit()
-            if res.returns_rows:
-                return res.fetchall()
+            if res.returns_rows:  # type: ignore[attr-defined]
+                return list(res.fetchall())
         except Exception as e:
             session.rollback()
             self.logger.error(f"Error executing query: {e}")
         finally:
             session.close()
+        return None
 
     def read_sql(
-        self, query: str, params: tuple = None, parse_dates: List[str] = None
+        self,
+        query: str,
+        params: tuple | None = None,
+        parse_dates: List[str] | None = None,
     ) -> pd.DataFrame:
         """
         Reads a SQL query and returns the result as a DataFrame.

@@ -1,6 +1,5 @@
 import logging
 import requests
-from typing import List
 from datetime import datetime
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -45,13 +44,13 @@ class RestAdapter:
         self,
         method: str,
         endpoint: str,
-        params: dict = {},
-        data: dict = {},
-        cookies: dict = {},
-        verify: bool | str = None,
-        timeout: int = None,
+        params: dict | None = None,
+        data: dict | None = None,
+        cookies: dict | None = None,
+        verify: bool | str | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = True,
-    ) -> dict | str:
+    ) -> dict | list | str | bytes | None:
         """
         Prepare the request to be sent. Send the prepared request and return the response.
 
@@ -110,16 +109,17 @@ class RestAdapter:
             self.logger.error(f"Timeout Error: {errt}")
         except requests.exceptions.RequestException as err:
             self.logger.error(f"An Unexpected Error: {err}")
+        return None
 
     def get(
         self,
         endpoint: str,
-        params: dict = None,
-        cookies: dict = None,
-        verify: bool | str = None,
-        timeout: int = None,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        verify: bool | str | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = True,
-    ) -> dict:
+    ) -> dict | list | str | bytes | None:
         """
         Make a GET request.
 
@@ -147,13 +147,13 @@ class RestAdapter:
     def post(
         self,
         endpoint: str,
-        data: dict = None,
-        params: dict = None,
-        cookies: dict = None,
-        verify: bool | str = None,
-        timeout: int = None,
+        data: dict | None = None,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        verify: bool | str | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = True,
-    ) -> dict:
+    ) -> dict | list | str | bytes | None:
         """
         Make a POST request.
 
@@ -183,13 +183,13 @@ class RestAdapter:
     def put(
         self,
         endpoint: str,
-        data: dict = None,
-        params: dict = None,
-        cookies: dict = None,
-        verify: bool | str = None,
-        timeout: int = None,
+        data: dict | None = None,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        verify: bool | str | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = True,
-    ) -> dict:
+    ) -> dict | list | str | bytes | None:
         """
         Make a PUT request.
 
@@ -219,12 +219,12 @@ class RestAdapter:
     def delete(
         self,
         endpoint: str,
-        params: dict = None,
-        cookies: dict = None,
-        verify: bool | str = None,
-        timeout: int = None,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        verify: bool | str | None = None,
+        timeout: int | None = None,
         allow_redirects: bool = True,
-    ) -> dict:
+    ) -> dict | list | str | bytes | None:
         """
         Make a DELETE request.
 
@@ -281,13 +281,14 @@ class MSGraphApi:
             "scope": "https://graph.microsoft.com/.default",
         }
         res = rest.post(f"/{self.tenant_id}/oauth2/v2.0/token", data=data)
+        assert isinstance(res, dict), "Expected a JSON object from the token endpoint"
         access_token = res.get("access_token")
         headers = {"Authorization": f"Bearer {access_token}"}
         self.rest = RestAdapter(
             "https://graph.microsoft.com/v1.0", headers=headers, logger=self.logger
         )
 
-    def get_group_members(self, group_id: str) -> dict:
+    def get_group_members(self, group_id: str) -> dict | list | str | bytes | None:
         """
         Get all members that belong to a specific group.
 
@@ -322,7 +323,7 @@ class TenoviApi:
 
     def get_devices(
         self,
-    ) -> List[dict]:
+    ) -> dict | list | str | bytes | None:
         """
         Get a list of devices.
 
@@ -332,8 +333,11 @@ class TenoviApi:
         return self.rest.get("/hwi/hwi-devices")
 
     def get_readings(
-        self, hwi_device_id: str, metric: str = "", created_gte: datetime | str = None
-    ) -> List[dict]:
+        self,
+        hwi_device_id: str,
+        metric: str = "",
+        created_gte: datetime | str | None = None,
+    ) -> dict | list | str | bytes | None:
         """
         Get readings for a specific device.
 

@@ -11,7 +11,7 @@ from medicare_rebuild.utils.enums import (
 )
 
 
-def keyword_search(value: str, keywords: dict, keep_original=False) -> str:
+def keyword_search(value: str, keywords: dict, keep_original=False) -> str | float:
     """Searches for a keyword being present in the value.
 
     Args:
@@ -28,7 +28,7 @@ def keyword_search(value: str, keywords: dict, keep_original=False) -> str:
     return value if keep_original else np.nan
 
 
-def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str:
+def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str | float:
     """Searches for a keyword being present in the value. Keywords are stored in lists of lists.
     All keywords must be present in the value to be considered True.
 
@@ -50,7 +50,9 @@ def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str:
     return value if keep_original else np.nan
 
 
-def extract_regex_pattern(value: str, pattern: re.Pattern, keep_original=False) -> str:
+def extract_regex_pattern(
+    value: str, pattern: str | re.Pattern, keep_original=False
+) -> str | float:
     """Searches the value for a matching regex pattern.
 
     Args:
@@ -93,7 +95,7 @@ def standardize_name(name: str, pattern: str) -> str:
     return name
 
 
-def standardize_email(email: str) -> str:
+def standardize_email(email: str) -> str | float:
     """Standardizes email address strings.
     Trims whitespace and lowers the text. Regex matching attempts to find an email address and extracts it.
 
@@ -119,10 +121,11 @@ def standardize_state(state: str) -> str:
         str: The standardized US state abbreviation.
     """
     state = str(state).strip().title()
-    return keyword_search(state, state_abbreviations, keep_original=True).upper()
+    result = keyword_search(state, state_abbreviations, keep_original=True)
+    return str(result).upper()
 
 
-def standardize_mbi(mbi: str) -> str:
+def standardize_mbi(mbi: str) -> str | float:
     """Standardizes medicare beneficiary ID strings. Trims whitespace and lowers the text.
     Regex matching attempts to find a medicare beneficiary ID and extracts it.
 
@@ -151,11 +154,11 @@ def standardize_dx_code(dx_code: str) -> str:
     """
     dx_code = str(dx_code).strip().upper()
     matches = re.finditer(r"[E|I|R]\d+(\.\d+)?", dx_code)
-    matches = [match.group(0).replace(".", "") for match in matches]
-    return ",".join(matches)
+    dx_codes = [match.group(0).replace(".", "") for match in matches]
+    return ",".join(dx_codes)
 
 
-def standardize_insurance_name(name: str) -> str:
+def standardize_insurance_name(name: str) -> str | float:
     """Standardizes insurance name strings. Trims whitespace and titles the text.
     Searches the insurance name for keywords and correlates that with a list of standard insurance names.
 
@@ -169,7 +172,7 @@ def standardize_insurance_name(name: str) -> str:
     return keyword_list_search(name, insurance_keywords, keep_original=True)
 
 
-def standardize_insurance_id(ins_id: str) -> str:
+def standardize_insurance_id(ins_id: str) -> str | float:
     """Standardizes insurance ID strings. Trims whitespace and uppers the text.
     Any non-alphanumeric character is replaced with empty string.
     Regex matching attempts to find insurance IDs and extracts them.
@@ -273,7 +276,7 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
     return row["Vendor"]
 
 
-def standardize_emcontact_relationship(name: str) -> str:
+def standardize_emcontact_relationship(name: str) -> str | float:
     """Standardizes emergency contact relationships.
     Trims whitespace and titles the text.
     Searches the emergency contact name for keywords and correlates that with a list of standard relationship names.
@@ -288,7 +291,7 @@ def standardize_emcontact_relationship(name: str) -> str:
     return keyword_search(name, relationship_keywords)
 
 
-def standardize_race(race: str) -> str:
+def standardize_race(race: str) -> str | float:
     """Standardizes patient race strings.
     Trims whitespace and titles the text.
     Searches the race for keywords and correlates that with a list of standard races.
@@ -304,7 +307,7 @@ def standardize_race(race: str) -> str:
     return keyword_list_search(race, race_keywords, keep_original=True)
 
 
-def standardize_weight(weight: str) -> str:
+def standardize_weight(weight: str) -> int | float:
     """Standardizes patient weight strings. Search values for common characters indicating height and remove them.
     Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to only 3 characers.
 
@@ -324,7 +327,7 @@ def standardize_weight(weight: str) -> str:
     return int(weight) if weight else 0
 
 
-def standardize_height(height: str) -> str:
+def standardize_height(height: str) -> int | float:
     """Standardizes patient height strings. Search values for common characters indicating weight and remove them.
     Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to inches.
 

@@ -63,10 +63,10 @@ class DataImporter:
         self.logger = logger or logging.getLogger(__name__)
         self.gps = DatabaseManager(logger=self.logger)
         self.gps.create_engine(
-            username=os.getenv("LCH_SQL_GPS_USERNAME"),
-            password=os.getenv("LCH_SQL_GPS_PASSWORD"),
-            host=os.getenv("LCH_SQL_GPS_HOST"),
-            database=os.getenv("LCH_SQL_GPS_DB"),
+            username=os.environ["LCH_SQL_GPS_USERNAME"],
+            password=os.environ["LCH_SQL_GPS_PASSWORD"],
+            host=os.environ["LCH_SQL_GPS_HOST"],
+            database=os.environ["LCH_SQL_GPS_DB"],
         )
         self.snaps_dir = Path.cwd() / "data" / "snaps"
 
@@ -92,13 +92,16 @@ class DataImporter:
             pd.DataFrame: The normalized user data.
         """
         msg = MSGraphApi(
-            tenant_id=os.getenv("AZURE_TENANT_ID"),
-            client_id=os.getenv("AZURE_CLIENT_ID"),
-            client_secret=os.getenv("AZURE_CLIENT_SECRET"),
+            tenant_id=os.environ["AZURE_TENANT_ID"],
+            client_id=os.environ["AZURE_CLIENT_ID"],
+            client_secret=os.environ["AZURE_CLIENT_SECRET"],
             logger=self.logger,
         )
         msg.request_access_token()
         data = msg.get_group_members("4bbe3379-1250-4522-92e6-017f77517470")
+        assert isinstance(data, dict), (
+            "Expected a JSON object from the members endpoint"
+        )
         df = pd.DataFrame(data["value"])
         df = normalize_users(df)
         if snap:
@@ -153,17 +156,17 @@ class DataImporter:
         """
         notes_db = DatabaseManager(logger=self.logger)
         notes_db.create_engine(
-            username=os.getenv("LCH_SQL_USERNAME"),
-            password=os.getenv("LCH_SQL_PASSWORD"),
-            host=os.getenv("LCH_SQL_HOST"),
-            database=os.getenv("LCH_SQL_SP_NOTES"),
+            username=os.environ["LCH_SQL_USERNAME"],
+            password=os.environ["LCH_SQL_PASSWORD"],
+            host=os.environ["LCH_SQL_HOST"],
+            database=os.environ["LCH_SQL_SP_NOTES"],
         )
         time_db = DatabaseManager(logger=self.logger)
         time_db.create_engine(
-            username=os.getenv("LCH_SQL_USERNAME"),
-            password=os.getenv("LCH_SQL_PASSWORD"),
-            host=os.getenv("LCH_SQL_HOST"),
-            database=os.getenv("LCH_SQL_SP_TIME"),
+            username=os.environ["LCH_SQL_USERNAME"],
+            password=os.environ["LCH_SQL_PASSWORD"],
+            host=os.environ["LCH_SQL_HOST"],
+            database=os.environ["LCH_SQL_SP_TIME"],
         )
         notes_df = notes_db.read_sql(
             get_notes_log_stmt,
@@ -202,10 +205,10 @@ class DataImporter:
         """
         fulfillment_db = DatabaseManager(logger=self.logger)
         fulfillment_db.create_engine(
-            username=os.getenv("LCH_SQL_USERNAME"),
-            password=os.getenv("LCH_SQL_PASSWORD"),
-            host=os.getenv("LCH_SQL_HOST"),
-            database=os.getenv("LCH_SQL_SP_FULFILLMENT"),
+            username=os.environ["LCH_SQL_USERNAME"],
+            password=os.environ["LCH_SQL_PASSWORD"],
+            host=os.environ["LCH_SQL_HOST"],
+            database=os.environ["LCH_SQL_SP_FULFILLMENT"],
         )
         df = fulfillment_db.read_sql(get_fulfillment_stmt)
         df = normalize_devices(df)
@@ -225,10 +228,10 @@ class DataImporter:
         """
         readings_db = DatabaseManager(logger=self.logger)
         readings_db.create_engine(
-            username=os.getenv("LCH_SQL_USERNAME"),
-            password=os.getenv("LCH_SQL_PASSWORD"),
-            host=os.getenv("LCH_SQL_HOST"),
-            database=os.getenv("LCH_SQL_SP_READINGS"),
+            username=os.environ["LCH_SQL_USERNAME"],
+            password=os.environ["LCH_SQL_PASSWORD"],
+            host=os.environ["LCH_SQL_HOST"],
+            database=os.environ["LCH_SQL_SP_READINGS"],
         )
         df = readings_db.read_sql(
             get_bg_readings_stmt,
@@ -252,10 +255,10 @@ class DataImporter:
         """
         readings_db = DatabaseManager(logger=self.logger)
         readings_db.create_engine(
-            username=os.getenv("LCH_SQL_USERNAME"),
-            password=os.getenv("LCH_SQL_PASSWORD"),
-            host=os.getenv("LCH_SQL_HOST"),
-            database=os.getenv("LCH_SQL_SP_READINGS"),
+            username=os.environ["LCH_SQL_USERNAME"],
+            password=os.environ["LCH_SQL_PASSWORD"],
+            host=os.environ["LCH_SQL_HOST"],
+            database=os.environ["LCH_SQL_SP_READINGS"],
         )
         df = readings_db.read_sql(
             get_bp_readings_stmt,
@@ -379,10 +382,10 @@ def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()
     """
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
-        username=os.getenv("LCH_SQL_GPS_USERNAME"),
-        password=os.getenv("LCH_SQL_GPS_PASSWORD"),
-        host=os.getenv("LCH_SQL_GPS_HOST"),
-        database=os.getenv("LCH_SQL_GPS_DB"),
+        username=os.environ["LCH_SQL_GPS_USERNAME"],
+        password=os.environ["LCH_SQL_GPS_PASSWORD"],
+        host=os.environ["LCH_SQL_GPS_HOST"],
+        database=os.environ["LCH_SQL_GPS_DB"],
     )
     gps.execute_query("EXEC reset_all_billing_tables")
 
@@ -428,10 +431,10 @@ def create_billing_report(start_date, end_date, logger=logging.getLogger()):
         end_date = datetime.strptime(end_date, "%Y-%m-%d")
     gps = DatabaseManager(logger=logger)
     gps.create_engine(
-        username=os.getenv("LCH_SQL_GPS_USERNAME"),
-        password=os.getenv("LCH_SQL_GPS_PASSWORD"),
-        host=os.getenv("LCH_SQL_GPS_HOST"),
-        database=os.getenv("LCH_SQL_GPS_DB"),
+        username=os.environ["LCH_SQL_GPS_USERNAME"],
+        password=os.environ["LCH_SQL_GPS_PASSWORD"],
+        host=os.environ["LCH_SQL_GPS_HOST"],
+        database=os.environ["LCH_SQL_GPS_DB"],
     )
     medcode_params = {"today_date": end_date}
 

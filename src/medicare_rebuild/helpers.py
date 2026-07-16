@@ -21,7 +21,7 @@ def create_file(path: Path | str) -> None:
     path.touch()
 
 
-def get_files_in_dir(path: Path | str) -> List[Path]:
+def get_files_in_dir(path: Path | str) -> List[Path] | None:
     """Get all the files in a directory.
 
     Args:
@@ -34,6 +34,7 @@ def get_files_in_dir(path: Path | str) -> List[Path]:
         path = Path(path)
     if path.is_dir():
         return [item for item in path.iterdir() if item.is_file()]
+    return None
 
 
 def delete_files_in_dir(path: Path | str) -> None:
