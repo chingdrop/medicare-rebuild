@@ -25,6 +25,7 @@ from medicare_rebuild.utils.dataframe_utils import (
     create_emcontacts_df,
 )
 from shared_tools.atomic_io import ensure_dir
+from shared_tools.tabular_io import write_structured_file
 
 from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.helpers import (
@@ -80,7 +81,7 @@ class DataImporter:
             df (pd.DataFrame): The DataFrame to save.
             path (Path, str): The path to save the Excel file.
         """
-        df.to_excel(path, index=False, engine="openpyxl")
+        write_structured_file(df, path, file_type="xlsx", index=False)
 
     def get_user_data(self, snap: bool = False) -> pd.DataFrame:
         """
@@ -451,8 +452,8 @@ def create_billing_report(start_date, end_date, logger=logging.getLogger()):
         "EXEC create_billing_report @start_date = ?, @end_date = ?",
         params=(start_date, end_date),
     )
-    df.to_excel(
-        Path.cwd() / "data" / "LCH_Billing_Report.xlsx", index=False, engine="openpyxl"
+    write_structured_file(
+        df, Path.cwd() / "data" / "LCH_Billing_Report.xlsx", index=False
     )
     gps.close()
 

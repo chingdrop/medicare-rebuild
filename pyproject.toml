@@ -46,7 +46,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-py-shared-tools = { git = "https://github.com/chingdrop/py-shared-tools", rev = "v1.2.0" }
+py-shared-tools = { git = "https://github.com/chingdrop/py-shared-tools", rev = "v1.3.1" }
 
 [tool.pytest.ini_options]
 markers = [
@@ -62,5 +62,6 @@ python_version = "3.12"
 files = ["src"]
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "shared_tools.*"]
+# py-shared-tools ships py.typed as of v1.2.2 -- no longer needs an override.
+module = ["pandas.*"]
 ignore_missing_imports = true
