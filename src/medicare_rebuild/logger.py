@@ -2,7 +2,9 @@ import logging
 import colorlog
 from pathlib import Path
 
-from medicare_rebuild.helpers import create_directory, create_file
+from shared_tools.atomic_io import ensure_dir
+
+from medicare_rebuild.helpers import create_file
 
 
 def setup_logger(name: str, level: str = "warning") -> logging.Logger:
@@ -21,8 +23,7 @@ def setup_logger(name: str, level: str = "warning") -> logging.Logger:
 
     logs_dir = Path.cwd() / "logs"
     logs_file = logs_dir / f"{name}_logfile.log"
-    if not logs_dir.exists():
-        create_directory(logs_dir)
+    ensure_dir(logs_dir)
     if not logs_file.exists():
         create_file(logs_file)
     file_handler = logging.FileHandler(logs_file)

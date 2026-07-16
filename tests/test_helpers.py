@@ -2,31 +2,11 @@ from datetime import datetime
 from pathlib import Path
 
 from medicare_rebuild.helpers import (
-    create_directory,
     create_file,
     get_files_in_dir,
     delete_files_in_dir,
     get_last_month_billing_cycle,
 )
-
-
-def test_create_directory_from_str(tmp_path):
-    target = str(tmp_path / "new_dir")
-    create_directory(target)
-    assert Path(target).is_dir()
-
-
-def test_create_directory_from_path_is_idempotent(tmp_path):
-    target = tmp_path / "new_dir"
-    create_directory(target)
-    create_directory(target)
-    assert target.is_dir()
-
-
-def test_create_directory_creates_parents(tmp_path):
-    target = tmp_path / "a" / "b" / "c"
-    create_directory(target)
-    assert target.is_dir()
 
 
 def test_create_file_from_str(tmp_path):
