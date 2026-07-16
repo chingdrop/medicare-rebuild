@@ -3,7 +3,7 @@ import html
 import pandas as pd
 import numpy as np
 
-from utils.enums import (
+from medicare_rebuild.utils.enums import (
     insurance_keywords,
     state_abbreviations,
     relationship_keywords,
@@ -23,7 +23,7 @@ def keyword_search(value: str, keywords: dict, keep_original=False) -> str:
         str: The standardized name, found as the key in the keyword list.
     """
     for standard_name, keyword in keywords.items():
-        if re.search(r"\b" + re.escape(keyword) + r"\b", value.lower()):
+        if re.search(r"\b" + re.escape(keyword.lower()) + r"\b", value.lower()):
             return standard_name
     return value if keep_original else np.nan
 
@@ -43,7 +43,7 @@ def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str:
     for standard_name, keyword_sets in keywords.items():
         for keyword_set in keyword_sets:
             if all(
-                re.search(r"\b" + re.escape(keyword) + r"\b", value.lower())
+                re.search(r"\b" + re.escape(keyword.lower()) + r"\b", value.lower())
                 for keyword in keyword_set
             ):
                 return standard_name
@@ -133,6 +133,7 @@ def standardize_mbi(mbi: str) -> str:
         str: The standardized medicare beneficiary ID.
     """
     mbi = str(mbi).strip().upper()
+    mbi = re.sub(r"[^A-Z0-9]", "", mbi)
     mbi_pattern = r"([A-Z0-9]{11})"
     return extract_regex_pattern(mbi, mbi_pattern, keep_original=True)
 
@@ -342,6 +343,7 @@ def standardize_height(height: str) -> str:
         feet = int(match.group(1))
         inches = int(match.group(2)) if match.group(2) else 0
         return (feet * 12) + inches
+    return np.nan
 
 
 # --- Create Functions ---
