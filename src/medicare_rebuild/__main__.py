@@ -454,10 +454,14 @@ def create_billing_report(start_date, end_date, logger=logging.getLogger()):
     gps.close()
 
 
-if __name__ == "__main__":
+def main() -> None:
     warnings.filterwarnings("ignore")
     load_dotenv()
     logger = setup_logger("main", level="debug")
 
     import_all_data("2025-01-01", "2025-02-28", logger=logger)
     create_billing_report("2025-02-01", "2025-02-28", logger=logger)
+
+
+if __name__ == "__main__":
+    main()
