@@ -2,7 +2,7 @@ import re
 import pandas as pd
 import numpy as np
 
-from utils.dataframe_utils import (
+from medicare_rebuild.utils.dataframe_utils import (
     keyword_search,
     keyword_list_search,
     extract_regex_pattern,
@@ -75,7 +75,7 @@ def test_standardize_state():
 
 def test_standardize_mbi():
     assert standardize_mbi(" 1EG4-TE5-MK73 ") == "1EG4TE5MK73"
-    assert standardize_mbi("invalid-mbi") == "INVALID-MBI"
+    assert standardize_mbi("invalid-mbi") == "INVALIDMBI"
 
 
 def test_standardize_dx_code():
@@ -84,16 +84,13 @@ def test_standardize_dx_code():
 
 
 def test_standardize_insurance_name():
-    keywords = {"Medicare": [["medicare"]], "Medicaid": [["medicaid"]]}
-    assert standardize_insurance_name("medicare advantage", keywords) == "Medicare"
-    assert (
-        standardize_insurance_name("unknown insurance", keywords) == "Unknown Insurance"
-    )
+    assert standardize_insurance_name("kaiser health plan") == "Kaiser"
+    assert standardize_insurance_name("unknown insurance co") == "Unknown Insurance Co"
 
 
 def test_standardize_insurance_id():
     assert standardize_insurance_id(" abc-123-xyz ") == "ABC123XYZ"
-    assert standardize_insurance_id("invalid-id") == "INVALID-ID"
+    assert standardize_insurance_id("invalid-id") == "INVALIDID"
 
 
 def test_fill_primary_payer():
@@ -119,7 +116,7 @@ def test_fill_primary_payer_id():
 
 
 def test_standardize_call_time():
-    assert standardize_call_time("1 days 02:30:00") == 93600
+    assert standardize_call_time("1 days 02:30:00") == 95400
     assert standardize_call_time(None) == 0
 
 
@@ -136,15 +133,13 @@ def test_standardize_vendor():
 
 
 def test_standardize_emcontact_relationship():
-    keywords = {"Spouse": "spouse", "Child": "child"}
-    assert standardize_emcontact_relationship("spouse", keywords) == "Spouse"
-    assert standardize_emcontact_relationship("unknown", keywords) is np.nan
+    assert standardize_emcontact_relationship("wife") == "Wife"
+    assert standardize_emcontact_relationship("unknown") is np.nan
 
 
 def test_standardize_race():
-    keywords = {"White": [["white"]], "Black": [["black"]]}
-    assert standardize_race("white", keywords) == "White"
-    assert standardize_race("unknown", keywords) == "Unknown"
+    assert standardize_race("white") == "White"
+    assert standardize_race("unknown") == "Unknown"
 
 
 def test_standardize_weight():
@@ -282,13 +277,13 @@ def test_normalize_patients():
             "Zip code": ["12345"],
             "EmergencyName": ["Jane Doe"],
             "EmergencyNumber": ["123-456-7890"],
-            "EmergencyRelationship": ["Spouse"],
             "EmergencyName2": ["John Smith"],
             "EmergencyNumber2": ["098-765-4321"],
-            "EmergencyRelationship2": ["Friend"],
             "Medicare ID number": ["1EG4-TE5-MK73"],
             "DX_Code": ["E11.9,I10"],
             "Insurance ID:": ["abc-123-xyz"],
+            "Insurance Name:": ["Kaiser"],
+            "InsuranceID2": ["def-456-uvw"],
             "InsuranceName2": ["Medicaid"],
             "On-board Date": ["2023-01-01"],
             "Member_Status": ["Active"],
@@ -297,7 +292,10 @@ def test_normalize_patients():
         }
     )
     result = normalize_patients(df)
-    assert result.shape == (1, 40)
+    assert result.shape == (1, 33)
+    assert result["temp_state"].iloc[0] == "CA"
+    assert result["medicare_beneficiary_id"].iloc[0] == "1EG4TE5MK73"
+    assert pd.isna(result["emergency_relationship"].iloc[0])
 
 
 def test_normalize_patient_notes():
@@ -314,7 +312,7 @@ def test_normalize_patient_notes():
         }
     )
     result = normalize_patient_notes(df)
-    assert result.shape == (1, 10)
+    assert result.shape == (1, 8)
 
 
 def test_normalize_devices():
@@ -327,7 +325,7 @@ def test_normalize_devices():
         }
     )
     result = normalize_devices(df)
-    assert result.shape == (1, 3)
+    assert result.shape == (1, 4)
 
 
 def test_normalize_bp_readings():
@@ -358,7 +356,7 @@ def test_normalize_bg_readings():
         }
     )
     result = normalize_bg_readings(df)
-    assert result.shape == (1, 7)
+    assert result.shape == (1, 6)
 
 
 def test_check_patient_db_constraints():
@@ -383,5 +381,5 @@ def test_add_id_col():
     df = pd.DataFrame({"name": ["John Doe"], "age": [30]})
     id_df = pd.DataFrame({"name": ["John Doe"], "id": [1]})
     result = add_id_col(df, id_df, "name")
-    assert result.shape == (1, 3)
+    assert result.shape == (1, 2)
     assert "name" not in result.columns
