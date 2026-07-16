@@ -101,7 +101,8 @@ class DatabaseManager:
         """
         session = self.get_session()
         try:
-            self.logger.debug(f'Query: {query.replace("\n", " ")}')
+            single_line_query = query.replace("\n", " ")
+            self.logger.debug(f"Query: {single_line_query}")
             res = session.execute(text(query), params)
             session.commit()
             if res.returns_rows:
@@ -127,7 +128,8 @@ class DatabaseManager:
             pd.DataFrame: The query results as a DataFrame.
         """
         df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
-        self.logger.debug(f'Query: {query.replace("\n", " ")}')
+        single_line_query = query.replace("\n", " ")
+        self.logger.debug(f"Query: {single_line_query}")
         self.logger.debug(f"Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...")
         return df
 
