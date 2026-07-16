@@ -24,9 +24,10 @@ from medicare_rebuild.utils.dataframe_utils import (
     create_patient_status_df,
     create_emcontacts_df,
 )
+from shared_tools.atomic_io import ensure_dir
+
 from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.helpers import (
-    create_directory,
     get_files_in_dir,
     delete_files_in_dir,
 )
@@ -391,8 +392,7 @@ def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()
 
     data_dir = Path.cwd() / "data"
     snaps_dir = data_dir / "snaps"
-    if not snaps_dir.exists():
-        create_directory(snaps_dir)
+    ensure_dir(snaps_dir)
     if get_files_in_dir(snaps_dir):
         delete_files_in_dir(snaps_dir)
 
