@@ -15,7 +15,7 @@ def setup_logger(name: str, level: str = "warning") -> logging.Logger:
         "debug": logging.DEBUG,
     }
     logger = logging.getLogger(name)
-    if logger.hasHandlers():
+    if logger.handlers:
         return logger
     logger.setLevel(log_level[level])
 
