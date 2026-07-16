@@ -86,3 +86,29 @@ Path - `/sql/stored_procedures/create_billing_report.sql`
 - **Pandas**: A library for data manipulation and analysis.
   - **openpyxl**: Used by Pandas for Excel file operations.
 - **Requests**: A library for making HTTP requests.
+
+## Testing
+
+Install dependencies with `uv sync`, then:
+
+```sh
+uv run pytest              # unit tests only (default)
+uv run pytest -m integration   # integration tests only
+```
+
+Unit tests mock all external systems and need nothing else installed.
+
+Integration tests exercise `DatabaseManager` and `DataImporter` against a real
+SQL Server instance (MS Graph/Tenovi calls are still mocked). To run them
+locally:
+
+1. `docker compose up -d` to start a disposable SQL Server container.
+2. Install the ODBC Driver 18 for SQL Server (e.g. `brew install
+   microsoft/mssql-release/msodbcsql18 microsoft/mssql-release/mssql-tools18`
+   on macOS, or see [Microsoft's Linux install docs](https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server)).
+3. `uv run pytest -m integration`
+
+Connection details default to the `docker-compose.yml` values and can be
+overridden with `INTEGRATION_DB_HOST`, `INTEGRATION_DB_PORT`,
+`INTEGRATION_DB_USER`, and `INTEGRATION_DB_PASSWORD`. Tests skip automatically
+if no server is reachable. CI runs both suites on every push and pull request.
