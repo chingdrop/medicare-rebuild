@@ -35,7 +35,7 @@ Below are the main Medicare CPT codes developed for this project:
 
 ### Transformation
 
-Path - `/utils/dataframe_utils.py`
+Path - `src/medicare_rebuild/utils/dataframe_utils.py`
 
 Data transformation is handled using a set of organized functions in Python.
 
