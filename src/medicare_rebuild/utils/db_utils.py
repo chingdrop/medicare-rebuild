@@ -104,9 +104,9 @@ class DatabaseManager:
             single_line_query = query.replace("\n", " ")
             self.logger.debug(f"Query: {single_line_query}")
             res = session.execute(text(query), params)
+            rows = list(res.fetchall()) if res.returns_rows else None  # type: ignore[attr-defined]
             session.commit()
-            if res.returns_rows:  # type: ignore[attr-defined]
-                return list(res.fetchall())
+            return rows
         except Exception as e:
             session.rollback()
             self.logger.error(f"Error executing query: {e}")
