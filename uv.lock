@@ -291,7 +291,6 @@ dependencies = [
     { name = "numpy" },
     { name = "openpyxl" },
     { name = "pandas" },
-    { name = "pandas-stubs" },
     { name = "py-shared-tools" },
     { name = "pyodbc" },
     { name = "python-dotenv" },
@@ -302,6 +301,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
+    { name = "pandas-stubs" },
     { name = "pytest" },
     { name = "requests-mock" },
     { name = "ruff" },
@@ -313,7 +313,6 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.24.3,<2.0.0" },
     { name = "openpyxl", specifier = ">=3.1.2,<4.0.0" },
     { name = "pandas", specifier = ">=2.0.3,<3.0.0" },
-    { name = "pandas-stubs", specifier = "~=2.3.3" },
     { name = "py-shared-tools", git = "https://github.com/chingdrop/py-shared-tools?rev=v1.3.1" },
     { name = "pyodbc", specifier = ">=5.1.0,<6.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2.0.0" },
@@ -324,6 +323,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=2.3.0" },
+    { name = "pandas-stubs", specifier = "~=2.3.3" },
     { name = "pytest", specifier = ">=8.3.5,<9.0.0" },
     { name = "requests-mock", specifier = ">=1.12.1" },
     { name = "ruff", specifier = ">=0.15.21" },
