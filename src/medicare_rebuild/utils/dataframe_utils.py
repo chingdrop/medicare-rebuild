@@ -189,7 +189,7 @@ def standardize_insurance_id(ins_id: str) -> str | float:
     return extract_regex_pattern(ins_id, id_pattern, keep_original=True)
 
 
-def fill_primary_payer(row: pd.Series) -> pd.Series:
+def fill_primary_payer(row: pd.Series) -> str | float:
     """Fills primary payer name with 'Medicare Part B'.
     If insurance name and insurance ID is null; and medicare beneficiary ID is not null.
     Then the primary payer name gets filled with 'Medicare Part B'.
@@ -198,7 +198,7 @@ def fill_primary_payer(row: pd.Series) -> pd.Series:
         row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        pandas.Series: The standardized row of Dataframe.
+        str | float: The standardized primary payer name.
     """
     row.replace(r"(?i)^nan$", np.nan, regex=True, inplace=True)
     if (
@@ -210,7 +210,7 @@ def fill_primary_payer(row: pd.Series) -> pd.Series:
     return row["Insurance Name:"]
 
 
-def fill_primary_payer_id(row: pd.Series) -> pd.Series:
+def fill_primary_payer_id(row: pd.Series) -> str | float:
     """Fills primary payer ID with medicare beneficiary ID.
     If insurance name is 'Medicare Part B' and insurance ID is null.
     Then the primary payer ID gets filled with the medicare beneficiary ID.
@@ -219,7 +219,7 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
         row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        pandas.Series: The standardized row of Dataframe.
+        str | float: The standardized primary payer ID.
     """
     row.replace(r"(?i)^nan$", np.nan, regex=True, inplace=True)
     if row["Insurance Name:"] == "Medicare Part B" and pd.isnull(row["Insurance ID:"]):
@@ -227,7 +227,7 @@ def fill_primary_payer_id(row: pd.Series) -> pd.Series:
     return row["Insurance ID:"]
 
 
-def standardize_call_time(call_time) -> int:
+def standardize_call_time(call_time) -> int | float:
     """Standardizes call time in seconds.
     Converts value to a timedelta object and then calculates total seconds.
 
@@ -257,7 +257,7 @@ def standardize_note_types(note_type: str) -> str:
     return str(note_type).split(",")[0]
 
 
-def standardize_vendor(row: pd.Series) -> pd.Series:
+def standardize_vendor(row: pd.Series) -> str:
     """Original values had Vendor name in the Device name.
     If Vendor name is a substring of Device name then return the Vendor name.
     Else, if 'Tenvoi' or 'Omron' is in Device name then return 'Tenvoi' or 'Omron' respectively.
@@ -266,7 +266,7 @@ def standardize_vendor(row: pd.Series) -> pd.Series:
         row (pandas.Series): Row of Dataframe to be standardized.
 
     Returns:
-        pandas.Series: The standardized row of Dataframe.
+        str: The standardized vendor name.
     """
     if row["Vendor"] not in row["Device_Name"]:
         if "Tenovi" in row["Device_Name"]:

@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from typing import List
+from typing import List, Literal
 from sqlalchemy import create_engine, event, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker, Session
@@ -138,7 +138,11 @@ class DatabaseManager:
         return df
 
     def to_sql(
-        self, df: pd.DataFrame, table: str, if_exists: str = "fail", index: bool = False
+        self,
+        df: pd.DataFrame,
+        table: str,
+        if_exists: Literal["fail", "replace", "append", "delete_rows"] = "fail",
+        index: bool = False,
     ) -> None:
         """
         Saves a Pandas DataFrame to a SQL table.
