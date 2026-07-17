@@ -44,6 +44,7 @@ dev = [
     "requests-mock>=1.12.1",
     "ruff>=0.15.21",
     "pandas-stubs~=2.3.3",
+    "pre-commit>=4.6.0",
 ]
 
 [tool.uv.sources]
