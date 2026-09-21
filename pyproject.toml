@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "medicare-rebuild"
-description = "Python-based solution designed to rebuild the data architecture for a medical company specializing in remote physician monitoring."
+description = "Python-based solution designed to rebuild the data architecture for a healthcare provider's remote patient monitoring program billed to Medicare."
 authors = [{ name = "Craig Hurley", email = "chingdorp@pm.me" }]
 version = "3.3.0"
 readme = "README.md"
