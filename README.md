@@ -2,19 +2,27 @@
 
 Repository: [medicare-rebuild - GitHub](https://github.com/chingdrop/medicare-rebuild)
 
-The Medicare-Rebuild project is a Python-based solution designed to rebuild the data architecture for a medical company specializing in remote physician monitoring. The goal of this rebuild is to accurately record the 'date of service' for services provided, with a focus on Medicare billing for telehealth and remote monitoring.
+The Medicare-Rebuild project is a Python-based solution designed to rebuild the data architecture for a healthcare provider running a remote patient monitoring program billed to Medicare. The goal of this rebuild is to accurately record the 'date of service' for services provided, with a focus on Medicare billing for telehealth and remote monitoring.
 
 This project was completed within a 3-month timeframe and involves the extraction, transformation, and loading (ETL) of data for approximately 22,000 Medicare-eligible patients.
+
+## About this project
+
+- **What it does:** an ETL pipeline for remote-patient-monitoring billing. It reads patient, device, reading and note data from legacy SQL Server databases, a SharePoint list export and a Microsoft Graph user directory, standardizes it with pandas, and loads it into a new SQL Server schema that records a date of service for each billable event. Stored procedures then assign the Medicare CPT codes 99202, 99453, 99454, 99457 and 99458 and produce a billing report.
+- **Context:** the work was motivated by a healthcare provider running a remote patient monitoring program billed to Medicare. This repository is a cleaned-up version of the pipeline built for that program, published as a portfolio project with client-specific material removed.
+- **Data:** all data in this repository is synthetic. Test fixtures use fictional names, `example.com` emails and placeholder IDs, and the SQL files contain schema and queries only, no data.
+- **Boundary:** no real patient data, credentials, tenant identifiers, or client configuration appear in the code or in the commit history of this repository's branches.
+- **More:** see [docs/provenance-and-data-boundary.md](docs/provenance-and-data-boundary.md) for provenance, the data boundary, and how to contribute test data safely.
 
 ## Scope
 
 The project covers the following:
 
-- **Extraction** - Data is extracted from various sources including SharePoint Lists and unorganized SQL databases.
+- **Extraction** - Data is extracted from various sources including SharePoint Lists and legacy SQL databases.
 - **Transformation** - Data is transformed by standardizing patient billing information and instrument readings.
 - **Loading** - The transformed data is loaded into a new SQL database that enforces entity relationships and accurately records the 'date of service' for billable services.
 
-The client medical company focused mainly on remote physician monitoring for *diabetes* and *hypertension*.
+The monitoring program focused mainly on *diabetes* and *hypertension*.
 
 Path - `/sql/stored_procedures/batch_medcode_99XXX.sql`
 
