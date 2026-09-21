@@ -1,0 +1,30 @@
+# 0002. Implement billing rules as SQL Server stored procedures
+
+Status: Accepted (2025-01-23, `387726d`; report moved into a procedure 2025-02-03, `086f222`)
+
+## Context
+
+After loading, each patient's readings and notes must become billing codes (99202, 99453, 99454, 99457, 99458) stamped with a date, and a report must be produced.
+
+## Decision
+
+Each code has a T-SQL procedure (`batch_medcode_*`) that reads the loaded tables and inserts rows into `medical_code`. Python only calls the procedures in a fixed order from `create_billing_report()` and writes the result to Excel.
+
+## Alternatives considered
+
+None recorded. History shows logic moving into SQL over time: the table resets (`e35ee05`, `b3bec50`), the report query (`086f222`) and the 99458 calculation, which was folded into one query (`970aeb6`, 2025-02-03) and split into CTEs again on 2025-02-13 (`007c8ec`, "to fix grouping anomaly").
+
+<!-- TODO(craig): why SQL rather than pandas for the rules. -->
+
+## Consequences
+
+- Rules run next to the data. Their windows are measured back from the report end date.
+- Codes are recomputed from scratch on every run (`reset_medical_code_tables`).
+- The rules cannot be exercised without a SQL Server. They are covered by the synthetic-demo scenarios, not by dedicated unit tests.
+- Changing a rule means editing a procedure file. See [docs/billing-rules.md](../billing-rules.md) for the exact behaviour.
+
+## Evidence
+
+- [`sql/stored_procedures/`](../../sql/stored_procedures/) (`batch_medcode_*.sql`)
+- [`create_billing_report()`](../../src/medicare_rebuild/__main__.py)
+- [`test_every_named_scenario_behaves_as_designed`](../../tests/integration/test_demo_integration.py)

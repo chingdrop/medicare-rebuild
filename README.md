@@ -136,6 +136,10 @@ The pipeline extracts patients from a SharePoint CSV export, notes, devices and 
 
 Running against real sources needs service accounts for the old and new SQL Servers, Azure AD application credentials, and a set of `GPS_SQL_*`, `LEGACY_SQL_*` and `AZURE_*` environment variables. The demo needs none of these. See [docs/configuration.md](docs/configuration.md).
 
+## Design decisions
+
+Why the pipeline is built the way it is - staged ETL, billing rules in stored procedures, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md).
+
 ## Tech stack
 
 Versions come from [`pyproject.toml`](pyproject.toml).
