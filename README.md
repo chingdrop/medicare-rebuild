@@ -20,7 +20,7 @@ An ETL pipeline that rebuilds the data architecture for a healthcare provider's 
 - **Sources in:** the patient export (a SharePoint list downloaded as `Patient_Export.csv`), five legacy SQL Server tables (`Medical_Notes`, `Time_Log`, `Fulfillment_All`, `Glucose_Readings`, `Blood_Pressure_Readings`), and the user directory from Microsoft Graph.
 - **Transformation:** pandas `standardize_*`, `create_*` and `normalize_*` functions in `dataframe_utils.py`, then `check_patient_db_constraints` drops rows that would violate the target column limits.
 - **Load:** `DataImporter.import_*_data` writes into the new GPS SQL Server database, swapping legacy `SharePoint_ID` and vendor names for identity keys (`add_id_col`).
-- **Billing rules:** the `batch_medcode_*` stored procedures apply CPT codes 99202, 99453, 99454, 99457 and 99458 (see [Scope](#scope)).
+- **Billing rules:** the `batch_medcode_*` stored procedures apply CPT codes 99202, 99453, 99454, 99457 and 99458 (see [docs/billing-rules.md](docs/billing-rules.md)).
 - **Report out:** `create_billing_report` produces `data/Billing_Report.xlsx`, one row per patient per date of service with a count for each code.
 
 ```mermaid
@@ -124,15 +124,9 @@ The project covers the following:
 
 The monitoring program focused mainly on *diabetes* and *hypertension*.
 
-Path - [`sql/stored_procedures/batch_medcode_99XXX.sql`](sql/stored_procedures/)
+### Billing rules
 
-Below are the main Medicare CPT codes developed for this project:
-
-- **99202** - The initial telehealth visit from the nurse practitioner.
-- **99453** - Initial device setup for vital monitoring instrument (after 16 distinct days of device testing).
-- **99454** - Repeated device usage (after 16 distinct days of device testing).
-- **99457** - The initial 20 minutes of patient interaction.
-- **99458** - Repeated patient interaction, billed in increments of 20 minutes (can be applied up to 3 times).
+Stored procedures in [`sql/stored_procedures/`](sql/stored_procedures/) assign five CPT codes from the loaded data. 99453 and 99454 come from at least 16 distinct days of device readings (for 99454, within a rolling 30 days). 99457 and 99458 come from 20-minute blocks of note call time in a rolling month, with up to three 99458. 99202 comes from Initial Evaluation notes totalling 15 to under 30 minutes. Exact conditions, windows, interactions, worked examples and known gaps are in [docs/billing-rules.md](docs/billing-rules.md).
 
 ## Process
 
