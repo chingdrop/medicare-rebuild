@@ -46,6 +46,7 @@ dev = [
     "pandas-stubs~=2.3.3",
     "pre-commit>=4.6.0",
     "faker>=40.39.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [tool.uv.sources]
@@ -60,6 +61,41 @@ addopts = "-m 'not integration'"
 [tool.ruff]
 target-version = "py312"
 
+[tool.ruff.lint]
+# E/F: pycodestyle and pyflakes. I: import order. B: bugbear. UP: pyupgrade.
+# S: flake8-bandit security checks.
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = [
+    # Line length is left to `ruff format`, which does not wrap docstrings, comments,
+    # SQL or other string literals. 80 such lines exist and are not worth rewrapping.
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",  # pytest tests use plain assert
+    "S105",  # fixtures hold fake tokens and mocked endpoint URLs
+    "S106",  # fake client secret passed to the API client under test
+]
+"tools/**" = [
+    "S101",  # assert used for internal invariants in demo tooling
+    "S311",  # seeded `random` for reproducible synthetic data; not security-sensitive
+]
+
 [tool.mypy]
 python_version = "3.12"
 files = ["src"]
+# Lenient baseline: passes today. Stricter settings would flag (as of 2026-09):
+#   --strict                 42 errors in src: 12 type-arg, 11 no-untyped-def,
+#                            10 no-untyped-call, 7 no-any-return, 2 arg-type
+#   --check-untyped-defs     2 errors (arg-type) in one file
+#   --disallow-untyped-defs  11 errors in 4 files
+#   --warn-return-any        7 errors in 2 files
+# tools/ and tests/ are not type-checked (`mypy src tools` reports 8 errors in tools/).
+
+[tool.coverage.run]
+source = ["src/medicare_rebuild", "tools"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
