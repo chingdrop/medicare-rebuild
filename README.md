@@ -25,7 +25,7 @@ The project covers the following:
 
 The monitoring program focused mainly on *diabetes* and *hypertension*.
 
-Path - `/sql/stored_procedures/batch_medcode_99XXX.sql`
+Path - [`sql/stored_procedures/batch_medcode_99XXX.sql`](sql/stored_procedures/)
 
 Below are the main Medicare CPT codes developed for this project:
 
@@ -39,12 +39,13 @@ Below are the main Medicare CPT codes developed for this project:
 
 ### Extraction
 
-- **SharePoint Data**: Data is extracted by creating a view in SharePoint and filtering for the relevant fields. The data is then downloaded as a CSV file.
-- **SQL Data**: Data is retrieved from various SQL databases by executing the necessary queries to fill the final database schema.
+- **SharePoint Data** (patients): Data is extracted by creating a view in SharePoint and filtering for the relevant fields. The data is then downloaded as a CSV file (`data/Patient_Export.csv`).
+- **SQL Data** (notes, time log, devices, readings): Data is retrieved from the legacy SQL databases by executing the necessary queries to fill the final database schema.
+- **Microsoft Graph** (users): Members of an Azure AD group are read through the Graph API and loaded into the `user` table.
 
 ### Transformation
 
-Path - `src/medicare_rebuild/utils/dataframe_utils.py`
+Path - [`src/medicare_rebuild/utils/dataframe_utils.py`](src/medicare_rebuild/utils/dataframe_utils.py)
 
 Data transformation is handled using a set of organized functions in Python.
 
@@ -61,21 +62,37 @@ Additional functions included:
 
 Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
 
-Path - `/docs/erd/*_erd.png`
+Path - [`docs/erd/`](docs/erd/)
 
-The following entities are defined in the database:
+The following entities are defined in the schema design:
 
-- **Patient Information** - [[1_patient_erd.png]]
-- **Patient Health** - [[2_patient_health_erd.png]]
-- **Patient Time** - [[3_patient_time_erd.png]]
-- **Patient Billing** - [[4_patient_billing_erd.png]]
-- **Patient Fulfillment** - [[5_patient_fulfillment_erd.png]]
+These diagrams show the schema design. The pipeline populates the patient, device, reading, note and medical-code tables; the fulfillment entities (orders, resupply) are part of the design but are not loaded by this pipeline.
+
+**Patient Information**
+
+![Patient ERD](docs/erd/1_patient_erd.png)
+
+**Patient Health**
+
+![Patient Health ERD](docs/erd/2_patient_health_erd.png)
+
+**Patient Time** (notes)
+
+![Patient Note ERD](docs/erd/3_patient_time_erd.png)
+
+**Patient Billing**
+
+![Patient Billing ERD](docs/erd/4_patient_billing_erd.png)
+
+**Patient Fulfillment**
+
+![Patient Fulfillment ERD](docs/erd/5_patient_fulfillment_erd.png)
 
 **Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
 
 ### Report
 
-Path - `/sql/stored_procedures/create_billing_report.sql`
+Path - [`sql/stored_procedures/create_billing_report.sql`](sql/stored_procedures/create_billing_report.sql)
 
 - Create a billing report that groups the patients by the count of recorded medical codes and the date of service.
 
@@ -89,12 +106,19 @@ Path - `/sql/stored_procedures/create_billing_report.sql`
 
 ### Requirements
 
+Versions come from [`pyproject.toml`](pyproject.toml).
+
+- **Python** 3.12 or newer.
 - **ODBC Driver 18**: Required for connecting to Microsoft SQL Server.
-- **SQLAlchemy**: A micro ORM for SQL execution.
+- **SQLAlchemy**: SQL toolkit and ORM. Used here for engines, sessions and raw SQL execution, not ORM models.
   - **pyodbc**: Used for ODBC connections.
 - **Pandas**: A library for data manipulation and analysis.
+  - **NumPy**: Numeric support for Pandas.
   - **openpyxl**: Used by Pandas for Excel file operations.
 - **Requests**: A library for making HTTP requests.
+- **python-dotenv**: Loads environment variables from a `.env` file.
+- **colorlog**: Colored console logging.
+- **py-shared-tools**: Shared HTTP, filesystem and spreadsheet-output helpers (git dependency).
 
 ## Testing
 
@@ -108,7 +132,7 @@ uv run pytest -m integration   # integration tests only
 Unit tests mock all external systems and need nothing else installed.
 
 Integration tests exercise `DatabaseManager` and `DataImporter` against a real
-SQL Server instance (MS Graph/Tenovi calls are still mocked). To run them
+SQL Server instance (MS Graph calls are still mocked). To run them
 locally:
 
 1. `docker compose up -d` to start a disposable SQL Server container.
