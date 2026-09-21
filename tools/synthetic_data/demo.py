@@ -41,6 +41,7 @@ import pyodbc
 
 from tools.synthetic_data import config as cfg
 from tools.synthetic_data import schema
+from tools.synthetic_data.faults import apply_faults
 from tools.synthetic_data.generator import FILES
 
 # Dev-only defaults; identical to docker-compose.yml and tests/integration/conftest.py.
@@ -575,6 +576,11 @@ def render_summary(manifest: dict, a: Actual, checks: list[Check]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _requested_faults(data_dir: Path) -> list[str]:
+    path = data_dir / "faults.json"
+    return json.loads(path.read_text())["faults"] if path.exists() else []
+
+
 def run_demo(data_dir: Path, output_dir: Path) -> DemoResult:
     started = time.monotonic()
     # The pipeline resolves its paths against the working directory, which run_pipeline
@@ -595,6 +601,14 @@ def run_demo(data_dir: Path, output_dir: Path) -> DemoResult:
     actual = collect_actual(data_dir, report, errors)
     checks, scenarios = compare(manifest, actual)
     summary = render_summary(manifest, actual, checks)
+    faults = _requested_faults(data_dir)
+    if faults:
+        # Applied only after the checks above, so this summary still describes the
+        # clean run; `python -m tools.reconcile` is what must catch the fault.
+        apply_faults(faults, report)
+        summary += (
+            f"\nInjected fault(s) applied after these checks: {', '.join(faults)}\n"
+        )
     (output_dir / "summary.txt").write_text(summary)
     (output_dir / "checks.json").write_text(
         json.dumps([c.__dict__ for c in checks], indent=2) + "\n"

@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from tools.synthetic_data import config as cfg
+from tools.synthetic_data.faults import FAULTS
 from tools.synthetic_data.generator import generate, minimum_patients
 from tools.synthetic_data.safety import scan_dir
 
@@ -26,9 +27,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--out", type=Path, default=Path("demo_data"), help="output directory"
     )
+    parser.add_argument(
+        "--inject-fault",
+        action="append",
+        choices=sorted(FAULTS),
+        help="apply a named fault after the demo run, to prove reconcile catches it "
+        "(default: none)",
+    )
     args = parser.parse_args(argv)
 
-    manifest = generate(args.seed, args.patients, args.out)
+    manifest = generate(args.seed, args.patients, args.out, args.inject_fault)
     problems = scan_dir(args.out)
     if problems:
         for name, line, kind in problems:

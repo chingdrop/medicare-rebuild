@@ -3,7 +3,8 @@
 
 SEED ?=
 PATIENTS ?=
-GEN_ARGS = $(if $(SEED),--seed $(SEED)) $(if $(PATIENTS),--patients $(PATIENTS))
+FAULT ?=
+GEN_ARGS = $(if $(SEED),--seed $(SEED)) $(if $(PATIENTS),--patients $(PATIENTS)) $(if $(FAULT),--inject-fault $(FAULT))
 
 .PHONY: demo reconcile demo-down
 

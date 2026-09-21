@@ -28,6 +28,7 @@ FILES = {
     "readme": "README_SYNTHETIC.txt",
 }
 FIRST_NOTE_ID = 500001
+FAULTS_FILE = "faults.json"
 ORPHAN_KEY = "orphan_source_rows"
 
 README_TEXT = f"""{cfg.SYNTHETIC_MARKER} DATA
@@ -374,7 +375,12 @@ def _manifest(plans: list[Plan], seed: int, requested: int) -> dict:
 # -- output -------------------------------------------------------------------
 
 
-def generate(seed: int, patients: int, out_dir: Path | str) -> dict:
+def generate(
+    seed: int,
+    patients: int,
+    out_dir: Path | str,
+    faults: list[str] | None = None,
+) -> dict:
     """Write the synthetic source files and manifest to `out_dir`; return the manifest."""
     out = Path(out_dir)
     plans = build_plans(seed, patients)
@@ -388,4 +394,19 @@ def generate(seed: int, patients: int, out_dir: Path | str) -> dict:
     (out / FILES["users"]).write_text(json.dumps(users, indent=2) + "\n")
     (out / FILES["manifest"]).write_text(json.dumps(manifest, indent=2) + "\n")
     (out / FILES["readme"]).write_text(README_TEXT)
+    _write_faults(out, faults)
     return manifest
+
+
+def _write_faults(out: Path, faults: list[str] | None) -> None:
+    """Record faults for the demo runner to apply after the run (default: none)."""
+    from tools.synthetic_data.faults import FAULTS
+
+    path = out / FAULTS_FILE
+    if not faults:
+        path.unlink(missing_ok=True)  # no stale faults from an earlier run
+        return
+    unknown = sorted(set(faults) - set(FAULTS))
+    if unknown:
+        raise ValueError(f"unknown fault(s) {unknown}; choose from {sorted(FAULTS)}")
+    path.write_text(json.dumps({"faults": sorted(set(faults))}, indent=2) + "\n")
