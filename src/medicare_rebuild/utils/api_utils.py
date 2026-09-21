@@ -38,7 +38,8 @@ class MSGraphApi:
             "scope": "https://graph.microsoft.com/.default",
         }
         res = rest.post(f"{self.tenant_id}/oauth2/v2.0/token", data=data)
-        assert isinstance(res, dict), "Expected a JSON object from the token endpoint"
+        # Narrows the type for mypy; the pipeline is not run with `python -O`.
+        assert isinstance(res, dict), "Expected a JSON object from the token endpoint"  # noqa: S101
         access_token = res.get("access_token")
         headers = {"Authorization": f"Bearer {access_token}"}
         self.rest = RestAdapter(

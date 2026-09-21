@@ -149,5 +149,6 @@ def seed_statements() -> list[str]:
     out = []
     for table, names in LOOKUP_SEEDS.items():
         values = ", ".join(f"('{n}')" for n in names)
-        out.append(f"INSERT INTO {table} (name) VALUES {values}")
+        # Table and value names come from constants in config.py, not from input.
+        out.append(f"INSERT INTO {table} (name) VALUES {values}")  # noqa: S608
     return out

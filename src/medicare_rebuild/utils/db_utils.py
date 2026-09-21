@@ -1,9 +1,10 @@
 import logging
+from typing import Literal
+
 import pandas as pd
-from typing import List, Literal
-from sqlalchemy import create_engine, event, text, Row
+from sqlalchemy import Row, create_engine, event, text
 from sqlalchemy.engine import URL
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class DatabaseManager:
@@ -85,7 +86,7 @@ class DatabaseManager:
             )
         return self.session()
 
-    def execute_query(self, query: str, params: dict | None = None) -> List[Row] | None:
+    def execute_query(self, query: str, params: dict | None = None) -> list[Row] | None:
         """
         Executes a SQL query and returns the result.
 
@@ -118,7 +119,7 @@ class DatabaseManager:
         self,
         query: str,
         params: tuple | None = None,
-        parse_dates: List[str] | None = None,
+        parse_dates: list[str] | None = None,
     ) -> pd.DataFrame:
         """
         Reads a SQL query and returns the result as a DataFrame.

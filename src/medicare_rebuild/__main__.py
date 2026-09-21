@@ -1,52 +1,51 @@
-import os
 import logging
+import os
 import warnings
-import pandas as pd
-from pathlib import Path
-from dotenv import load_dotenv
 from datetime import datetime
-from typing import Dict
+from pathlib import Path
 
-from medicare_rebuild.utils.api_utils import MSGraphApi
-from medicare_rebuild.utils.dataframe_utils import (
-    check_patient_db_constraints,
-    add_id_col,
-    normalize_users,
-    normalize_patients,
-    normalize_patient_notes,
-    normalize_devices,
-    normalize_bg_readings,
-    normalize_bp_readings,
-    create_patient_df,
-    create_patient_address_df,
-    create_patient_insurance_df,
-    create_med_necessity_df,
-    create_patient_status_df,
-    create_emcontacts_df,
-)
+import pandas as pd
+from dotenv import load_dotenv
 from shared_tools.atomic_io import ensure_dir
 from shared_tools.tabular_io import write_structured_file
 
-from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.helpers import (
-    get_files_in_dir,
     delete_files_in_dir,
+    get_files_in_dir,
 )
 from medicare_rebuild.logger import setup_logger
 from medicare_rebuild.queries import (
-    get_notes_log_stmt,
-    get_time_log_stmt,
-    get_fulfillment_stmt,
-    get_patient_id_stmt,
-    get_device_id_stmt,
-    get_vendor_id_stmt,
     get_bg_readings_stmt,
     get_bp_readings_stmt,
+    get_device_id_stmt,
+    get_fulfillment_stmt,
+    get_notes_log_stmt,
+    get_patient_id_stmt,
+    get_time_log_stmt,
+    get_vendor_id_stmt,
     update_patient_note_stmt,
     update_patient_status_stmt,
-    update_user_stmt,
     update_user_note_stmt,
+    update_user_stmt,
 )
+from medicare_rebuild.utils.api_utils import MSGraphApi
+from medicare_rebuild.utils.dataframe_utils import (
+    add_id_col,
+    check_patient_db_constraints,
+    create_emcontacts_df,
+    create_med_necessity_df,
+    create_patient_address_df,
+    create_patient_df,
+    create_patient_insurance_df,
+    create_patient_status_df,
+    normalize_bg_readings,
+    normalize_bp_readings,
+    normalize_devices,
+    normalize_patient_notes,
+    normalize_patients,
+    normalize_users,
+)
+from medicare_rebuild.utils.db_utils import DatabaseManager
 
 
 class DataImporter:
@@ -101,7 +100,8 @@ class DataImporter:
         )
         msg.request_access_token()
         data = msg.get_group_members(os.environ["AZURE_GROUP_ID"])
-        assert isinstance(data, dict), (
+        # Narrows the type for mypy; the pipeline is not run with `python -O`.
+        assert isinstance(data, dict), (  # noqa: S101
             "Expected a JSON object from the members endpoint"
         )
         df = pd.DataFrame(data["value"])
@@ -112,7 +112,7 @@ class DataImporter:
 
     def get_patient_data(
         self, filename: Path | str, snap: bool = False
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """
         Retrieves and normalizes patient data from a CSV file.
 
@@ -281,7 +281,7 @@ class DataImporter:
         """
         self.gps.to_sql(df, "user", if_exists="append")
 
-    def import_patient_data(self, patient_data: Dict[str, pd.DataFrame]) -> None:
+    def import_patient_data(self, patient_data: dict[str, pd.DataFrame]) -> None:
         """
         Imports patient data into the database.
 
@@ -372,7 +372,13 @@ class DataImporter:
             self.gps.close()
 
 
-def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()):
+# The default logger is the root logger; a single shared default is intended.
+def import_all_data(
+    start_date,
+    end_date,
+    snap=False,
+    logger=logging.getLogger(),  # noqa: B008
+):
     """
     Imports all data within the specified date range.
 
@@ -417,7 +423,12 @@ def import_all_data(start_date, end_date, snap=False, logger=logging.getLogger()
     gps.close()
 
 
-def create_billing_report(start_date, end_date, logger=logging.getLogger()):
+# The default logger is the root logger; a single shared default is intended.
+def create_billing_report(
+    start_date,
+    end_date,
+    logger=logging.getLogger(),  # noqa: B008
+):
     """
     Creates a billing report for the specified date range.
 

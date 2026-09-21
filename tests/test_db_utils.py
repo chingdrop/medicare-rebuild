@@ -1,7 +1,8 @@
 import logging
-import pytest
-from sqlalchemy.orm import sessionmaker, Session
 from unittest.mock import MagicMock, patch
+
+import pytest
+from sqlalchemy.orm import Session, sessionmaker
 
 from medicare_rebuild.utils.db_utils import DatabaseManager
 

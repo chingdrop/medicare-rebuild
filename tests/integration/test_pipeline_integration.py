@@ -3,14 +3,14 @@ import pandas as pd
 import pytest
 
 from medicare_rebuild.utils.dataframe_utils import (
-    normalize_patients,
     check_patient_db_constraints,
-    create_patient_df,
-    create_patient_address_df,
-    create_patient_insurance_df,
-    create_med_necessity_df,
-    create_patient_status_df,
     create_emcontacts_df,
+    create_med_necessity_df,
+    create_patient_address_df,
+    create_patient_df,
+    create_patient_insurance_df,
+    create_patient_status_df,
+    normalize_patients,
 )
 
 pytestmark = pytest.mark.integration

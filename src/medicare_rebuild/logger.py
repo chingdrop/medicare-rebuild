@@ -1,7 +1,7 @@
 import logging
-import colorlog
 from pathlib import Path
 
+import colorlog
 from shared_tools.atomic_io import ensure_dir
 
 from medicare_rebuild.helpers import create_file

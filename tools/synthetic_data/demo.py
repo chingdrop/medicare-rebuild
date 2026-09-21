@@ -265,7 +265,9 @@ def _read(sql: str, database: str) -> pd.DataFrame:
 
 
 def _count(table: str, database: str) -> int:
-    return int(_read(f"SELECT COUNT(*) AS n FROM [{table}]", database)["n"].iloc[0])
+    # `table` is always a constant from this module, never user input.
+    query = f"SELECT COUNT(*) AS n FROM [{table}]"  # noqa: S608
+    return int(_read(query, database)["n"].iloc[0])
 
 
 def collect_actual(data_dir: Path, report_path: Path, errors: list[str]) -> Actual:

@@ -1,13 +1,14 @@
-import re
 import html
-import pandas as pd
+import re
+
 import numpy as np
+import pandas as pd
 
 from medicare_rebuild.utils.enums import (
     insurance_keywords,
-    state_abbreviations,
-    relationship_keywords,
     race_keywords,
+    relationship_keywords,
+    state_abbreviations,
 )
 
 

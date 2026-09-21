@@ -8,9 +8,9 @@ sql/stored_procedures/*.sql and the repo's tests; see docs/demo.md.
 """
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Callable
 
 from tools.synthetic_data import config as cfg
 from tools.synthetic_data.factory import Factory, day, days_between
@@ -96,7 +96,13 @@ def _time_codes(
 # -- remote monitoring (99453 / 99454) ----------------------------------------
 
 
-def _rpm(key_days: int, kind: str = "bg", first: date = day(2, 3), per_day: int = 1):
+# `day()` returns an immutable date, so sharing the default is safe.
+def _rpm(
+    key_days: int,
+    kind: str = "bg",
+    first: date = day(2, 3),  # noqa: B008
+    per_day: int = 1,
+):
     def build(f: Factory, sid: int) -> Plan:
         p = _plan(f, sid, "")
         p.devices = [f.device(kind, sid)]

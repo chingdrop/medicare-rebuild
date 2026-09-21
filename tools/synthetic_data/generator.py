@@ -1,9 +1,9 @@
 """Assembles scenario plans into source files and an expected-results manifest."""
 
 import json
+import random
 import uuid
 from collections import Counter, defaultdict
-import random
 from datetime import datetime, timedelta
 from pathlib import Path
 

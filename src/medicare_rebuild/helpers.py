@@ -1,7 +1,6 @@
 import calendar
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Tuple
 
 
 def create_file(path: Path | str) -> None:
@@ -10,7 +9,7 @@ def create_file(path: Path | str) -> None:
     path.touch()
 
 
-def get_files_in_dir(path: Path | str) -> List[Path] | None:
+def get_files_in_dir(path: Path | str) -> list[Path] | None:
     """Get all the files in a directory.
 
     Args:
@@ -40,7 +39,7 @@ def delete_files_in_dir(path: Path | str) -> None:
                 file.unlink()
 
 
-def get_last_month_billing_cycle() -> Tuple[datetime, datetime]:
+def get_last_month_billing_cycle() -> tuple[datetime, datetime]:
     """Get the start and end of last month's billing cycle.
 
     Returns:
