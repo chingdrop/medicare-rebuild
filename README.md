@@ -136,50 +136,13 @@ Below are the main Medicare CPT codes developed for this project:
 
 ## Process
 
-### Extraction
+The pipeline extracts patients from a SharePoint CSV export, notes, devices and readings from legacy SQL databases, and users from Microsoft Graph. Pandas functions standardize and normalize the data, then it is loaded into a new SQL Server schema; stored procedures assign the billing codes and build the report. Stage-by-stage detail is in [docs/architecture.md](docs/architecture.md).
 
-- **SharePoint Data** (patients): Data is extracted by creating a view in SharePoint and filtering for the relevant fields. The data is then downloaded as a CSV file (`data/Patient_Export.csv`).
-- **SQL Data** (notes, time log, devices, readings): Data is retrieved from the legacy SQL databases by executing the necessary queries to fill the final database schema.
-- **Microsoft Graph** (users): Members of an Azure AD group are read through the Graph API and loaded into the `user` table.
+## Configuration
 
-### Transformation
+Running against real sources needs service accounts for the old and new SQL Servers, Azure AD application credentials, and a set of `GPS_SQL_*`, `LEGACY_SQL_*` and `AZURE_*` environment variables. The demo needs none of these. See [docs/configuration.md](docs/configuration.md).
 
-Path - [`src/medicare_rebuild/utils/dataframe_utils.py`](src/medicare_rebuild/utils/dataframe_utils.py)
-
-Data transformation is handled using a set of organized functions in Python.
-
-- **Standardize Functions**: These methods clean and transform data within a Pandas DataFrame.
-- **Create Functions**: Methods designed to structure and separate patient data from the SharePoint list.
-- **Normalize Functions**: Apply standardization functions to specific fields in the DataFrame.
-
-Additional functions included:
-
-- Enforce database value constraints.
-- Assign identity values to specific fields in the new database schema.
-
-### Load
-
-Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
-
-The schema design is shown in the [Data model](#data-model) section above (diagrams in [`docs/erd/`](docs/erd/)).
-
-**Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
-
-### Report
-
-Path - [`sql/stored_procedures/create_billing_report.sql`](sql/stored_procedures/create_billing_report.sql)
-
-- Create a billing report that groups the patients by the count of recorded medical codes and the date of service.
-
-## Materials
-
-### Credentials
-
-- Service Account on the Microsoft SQL Server hosting the new database.
-- Service Account on the Microsoft SQL Servers hosting the old databases.
-- Azure Active Directory (AD) application credentials.
-
-### Requirements
+## Tech stack
 
 Versions come from [`pyproject.toml`](pyproject.toml).
 
