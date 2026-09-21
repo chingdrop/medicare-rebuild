@@ -50,6 +50,7 @@ holding synthetic data and nothing else. Do not reuse it anywhere real.
 |---------|--------------|
 | `make demo` | Starts the container, generates data into `demo_data/`, builds the two demo databases, runs the pipeline, writes the report to `demo_output/`, prints the summary, exits non-zero on FAIL. |
 | `make demo-down` | Stops and removes the container and deletes `demo_data/` and `demo_output/`. |
+| `make reconcile` | After `make demo`: checks the run is complete and consistent (row conservation, key integrity, billing lineage, report totals) and exits non-zero on any failure. See [reconciliation.md](reconciliation.md). |
 
 `demo_data/` and `demo_output/` are git-ignored. Generated CSV/XLSX files are never committed.
 

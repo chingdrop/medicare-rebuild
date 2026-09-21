@@ -83,7 +83,7 @@ RESULT: PASS (27/27 checks)
 Report: demo_output/Billing_Report.xlsx
 ```
 
-Full output, how the demo works, and how to reset it (`make demo-down`): [docs/demo.md](docs/demo.md).
+Full output, how the demo works, and how to reset it (`make demo-down`): [docs/demo.md](docs/demo.md). To check that a run is complete and consistent: [docs/reconciliation.md](docs/reconciliation.md).
 
 ## Results
 
