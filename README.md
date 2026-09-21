@@ -140,6 +140,10 @@ Running against real sources needs service accounts for the old and new SQL Serv
 
 Why the pipeline is built the way it is - staged ETL, billing rules in stored procedures, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md).
 
+## Security and data handling
+
+The repository holds synthetic data only. How credentials, connections, logging and data-file guards work (and what a real deployment would still need) is in [docs/data-handling.md](docs/data-handling.md); to report a vulnerability, see [SECURITY.md](SECURITY.md).
+
 ## Tech stack
 
 Versions come from [`pyproject.toml`](pyproject.toml).
