@@ -4,16 +4,26 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Weekly, Mondays 05:17 UTC. Only the security job runs on a schedule.
+    - cron: "17 5 * * 1"
+
+# Least privilege by default; no job below needs more than read access.
+permissions:
+  contents: read
 
 jobs:
-  test:
+  lint:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
@@ -26,19 +36,56 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check .
 
+  typecheck:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
       - name: mypy
         run: uv run mypy
 
-      - name: pytest
-        run: uv run pytest
+  test:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      # Floor is the measured baseline (69.76% on 2026-09-21) minus 2 points.
+      - name: pytest with coverage
+        run: uv run pytest --cov --cov-fail-under=68
 
   integration-test:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     services:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: "Y"
+          # Documented throwaway: protects only this disposable CI container.
           MSSQL_SA_PASSWORD: IntegrationTest_Passw0rd!
         ports:
           - 1433:1433
@@ -50,10 +97,12 @@ jobs:
           --health-start-period 20s
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.3.2
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           enable-cache: true
 
@@ -72,5 +121,53 @@ jobs:
           INTEGRATION_DB_HOST: localhost
           INTEGRATION_DB_PORT: "1433"
           INTEGRATION_DB_USER: sa
-          INTEGRATION_DB_PASSWORD: IntegrationTest_Passw0rd!
+          INTEGRATION_DB_PASSWORD: IntegrationTest_Passw0rd!  # same throwaway as above
         run: uv run pytest -m integration
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # full history for the secret scan
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+
+      # py-shared-tools is a git dependency that is not published on PyPI, so it
+      # cannot be audited here and is left out of the exported requirements.
+      - name: Audit locked dependencies (pip-audit)
+        run: |
+          uv export --locked --no-emit-project --no-emit-package py-shared-tools \
+            -o "$RUNNER_TEMP/requirements-audit.txt"
+          uvx --from pip-audit==2.10.1 pip-audit \
+            --requirement "$RUNNER_TEMP/requirements-audit.txt" --no-deps --disable-pip
+
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          # linux_x64 tarball checksum from the release's gitleaks_8.30.1_checksums.txt
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check
+          tar -xzf gitleaks.tar.gz gitleaks
+
+      - name: Secret scan (gitleaks, full history)
+        run: ./gitleaks git --redact -v --no-banner .
+
+      # Keep the extension list in sync with the no-data-files hook in
+      # .pre-commit-config.yaml. No files are allowlisted: the repository tracks none.
+      - name: No data files
+        run: |
+          bad=$(git ls-files | grep -iE '\.(csv|xlsx|xls|bak|bacpac|mdf|ldf|parquet|db|sqlite)$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Data or database files are tracked (this repo is synthetic-only):"
+            echo "$bad"
+            exit 1
+          fi
