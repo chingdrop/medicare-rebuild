@@ -452,9 +452,7 @@ def create_billing_report(start_date, end_date, logger=logging.getLogger()):
         "EXEC create_billing_report @start_date = ?, @end_date = ?",
         params=(start_date, end_date),
     )
-    write_structured_file(
-        df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False
-    )
+    write_structured_file(df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False)
     gps.close()
 
 
