@@ -304,7 +304,7 @@ def test_normalize_patient_notes():
             "Recording_Time": ["1 days 02:30:00"],
             "Notes": ["<p>Note content</p>"],
             "Time_Note": ["Initial Evaluation with APRN"],
-            "AZURE_UPN": ["Joycelynn Harris"],
+            "AZURE_UPN": ["Coach Alpha"],
             "SharePoint_ID": ["1"],
             "Auto_Time": [True],
             "Start_Time": ["2023-01-01 00:00:00"],
