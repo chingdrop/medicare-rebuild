@@ -1,12 +1,13 @@
+# Run `pre-commit autoupdate` periodically to refresh the pinned revs below.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.21
     hooks:
       - id: ruff-check
         args: [--fix]
-        files: ^(src|tests)/
+        files: ^(src|tests|tools)/
       - id: ruff-format
-        files: ^(src|tests)/
+        files: ^(src|tests|tools)/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.3.0
@@ -15,3 +16,32 @@ repos:
         additional_dependencies:
           - pandas-stubs
         files: ^src/
+
+  # Secret scanning on staged changes. CI scans the full history as well.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: local
+    hooks:
+      # Keep the extension list in sync with the "No data files" step in
+      # .github/workflows/ci.yml. No files are allowlisted: the repo tracks none.
+      - id: no-data-files
+        name: block data and database backup files
+        language: fail
+        files: '(?i)\.(csv|xlsx|xls|bak|bacpac|mdf|ldf|parquet|db|sqlite)$'
+        entry: >-
+          Data and database files must not be committed. This repository is
+          synthetic-only: real patient data must never enter it, and generated
+          demo data lives in the git-ignored demo_data/ and demo_output/
+          directories (see docs/demo.md). If this is a genuinely synthetic
+          fixture, add a narrow exception here and in the CI "No data files"
+          step, and say why in the pull request.
