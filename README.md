@@ -12,6 +12,7 @@ This project was completed within a 3-month timeframe and involves the extractio
 - **Context:** the work was motivated by a healthcare provider running a remote patient monitoring program billed to Medicare. This repository is a cleaned-up version of the pipeline built for that program, published as a portfolio project with client-specific material removed.
 - **Data:** all data in this repository is synthetic. Test fixtures use fictional names, `example.com` emails and placeholder IDs, and the SQL files contain schema and queries only, no data.
 - **Boundary:** no real patient data, credentials, tenant identifiers, or client configuration appear in the code or in the commit history of this repository's branches.
+- **Try it:** run the whole pipeline on generated synthetic data with `make demo` - see [docs/demo.md](docs/demo.md).
 - **More:** see [docs/provenance-and-data-boundary.md](docs/provenance-and-data-boundary.md) for provenance, the data boundary, and how to contribute test data safely.
 
 ## Scope
