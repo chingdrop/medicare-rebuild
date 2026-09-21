@@ -1,10 +1,10 @@
 # Medicare-Rebuild
 
-Repository: [medicare-rebuild - GitHub](https://github.com/chingdrop/medicare-rebuild)
+An ETL pipeline that rebuilds the data architecture for a healthcare provider's remote patient monitoring program billed to Medicare, recording an accurate 'date of service' for each billable event.
 
-The Medicare-Rebuild project is a Python-based solution designed to rebuild the data architecture for a healthcare provider running a remote patient monitoring program billed to Medicare. The goal of this rebuild is to accurately record the 'date of service' for services provided, with a focus on Medicare billing for telehealth and remote monitoring.
-
-This project was completed within a 3-month timeframe and involves the extraction, transformation, and loading (ETL) of data for approximately 22,000 Medicare-eligible patients.
+[![CI](https://github.com/chingdrop/medicare-rebuild/actions/workflows/ci.yml/badge.svg)](https://github.com/chingdrop/medicare-rebuild/actions/workflows/ci.yml)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ## About this project
 
@@ -14,6 +14,105 @@ This project was completed within a 3-month timeframe and involves the extractio
 - **Boundary:** no real patient data, credentials, tenant identifiers, or client configuration appear in the code or in the commit history of this repository's branches.
 - **Try it:** run the whole pipeline on generated synthetic data with `make demo` - see [docs/demo.md](docs/demo.md).
 - **More:** see [docs/provenance-and-data-boundary.md](docs/provenance-and-data-boundary.md) for provenance, the data boundary, and how to contribute test data safely.
+
+## What it does
+
+- **Sources in:** the patient export (a SharePoint list downloaded as `Patient_Export.csv`), five legacy SQL Server tables (`Medical_Notes`, `Time_Log`, `Fulfillment_All`, `Glucose_Readings`, `Blood_Pressure_Readings`), and the user directory from Microsoft Graph.
+- **Transformation:** pandas `standardize_*`, `create_*` and `normalize_*` functions in `dataframe_utils.py`, then `check_patient_db_constraints` drops rows that would violate the target column limits.
+- **Load:** `DataImporter.import_*_data` writes into the new GPS SQL Server database, swapping legacy `SharePoint_ID` and vendor names for identity keys (`add_id_col`).
+- **Billing rules:** the `batch_medcode_*` stored procedures apply CPT codes 99202, 99453, 99454, 99457 and 99458 (see [Scope](#scope)).
+- **Report out:** `create_billing_report` produces `data/Billing_Report.xlsx`, one row per patient per date of service with a count for each code.
+
+```mermaid
+flowchart LR
+    subgraph src["Sources"]
+        SP["SharePoint export<br/>data/Patient_Export.csv"]
+        LG["Legacy SQL Server<br/>Medical_Notes, Time_Log,<br/>Fulfillment_All, Glucose_Readings,<br/>Blood_Pressure_Readings"]
+        MG["Microsoft Graph<br/>Azure AD group members"]
+    end
+    subgraph py["Python: src/medicare_rebuild"]
+        EX["Extract<br/>DataImporter.get_*_data"]
+        TR["Transform<br/>utils/dataframe_utils.py<br/>standardize, create, normalize,<br/>check_patient_db_constraints"]
+        LD["Load<br/>DataImporter.import_*_data<br/>add_id_col, DatabaseManager.to_sql"]
+    end
+    subgraph gps["GPS database (SQL Server)"]
+        DB[("patient, device, reading,<br/>note and user tables")]
+        BP["Billing procedures<br/>sql/stored_procedures/batch_medcode_*"]
+        RP["create_billing_report"]
+    end
+    OUT["data/Billing_Report.xlsx"]
+    SP --> EX
+    LG --> EX
+    MG --> EX
+    EX --> TR --> LD --> DB --> BP --> RP --> OUT
+```
+
+## Try it in 60 seconds
+
+Runs the whole pipeline on generated synthetic data: no credentials, no real data, no network during the run.
+
+You need Docker (running), [uv](https://docs.astral.sh/uv/), `make`, and the ODBC Driver 18 for SQL Server (macOS: `brew install microsoft/mssql-release/msodbcsql18 microsoft/mssql-release/mssql-tools18`).
+
+```sh
+git clone https://github.com/chingdrop/medicare-rebuild.git
+cd medicare-rebuild
+uv sync
+make demo
+```
+
+Expected output (trimmed; a first run also downloads the SQL Server image and Python dependencies):
+
+```text
+Synthetic demo - seed 20250228, 200 patients, 46 named scenarios
+Rows: source -> loaded
+  users                         8 ->     8
+  patients                    200 ->   196
+  devices                     109 ->   103
+  glucose readings            904 ->   823
+  blood pressure readings     507 ->   523
+  patient notes               158 ->   153
+...
+Billing codes        applied   in report
+  99202                  13         13
+  99453                  46         44
+  99454                  44         43
+  99457                  34         34
+  99458                  18         18
+...
+RESULT: PASS (27/27 checks)
+Report: demo_output/Billing_Report.xlsx
+```
+
+Full output, how the demo works, and how to reset it (`make demo-down`): [docs/demo.md](docs/demo.md).
+
+## Results
+
+- **Demo run** (synthetic data, default seed): 196 of 200 patients loaded (4 rejected by the pipeline's constraint checks), 89 billing-report rows, and codes applied 99202 x13, 99453 x46, 99454 x44, 99457 x34, 99458 x18, with all 27 checks against the expected-results manifest passing.
+- **Original scale:** approximately 22,000 Medicare-eligible patients, completed within a 3-month timeframe.
+
+## Data model
+
+Schema design (the pipeline populates the patient, device, reading, note and medical-code tables).
+
+![Patient ERD](docs/erd/1_patient_erd.png)
+
+*Patient, address, emergency contacts, status history, user and lookup tables.*
+
+![Patient Health ERD](docs/erd/2_patient_health_erd.png)
+
+*Devices, glucose and blood pressure readings, and medical necessity (diagnosis codes).*
+
+![Patient Note ERD](docs/erd/3_patient_time_erd.png)
+
+*Patient notes and comments, by user and note type.*
+
+![Patient Billing ERD](docs/erd/4_patient_billing_erd.png)
+
+*Insurance, medical codes by type, and the link between codes and devices.*
+
+![Patient Fulfillment ERD](docs/erd/5_patient_fulfillment_erd.png)
+
+*Orders and resupply, with vendors and devices. Not loaded by this pipeline.*
 
 ## Scope
 
@@ -62,31 +161,7 @@ Additional functions included:
 
 Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
 
-Path - [`docs/erd/`](docs/erd/)
-
-The following entities are defined in the schema design:
-
-These diagrams show the schema design. The pipeline populates the patient, device, reading, note and medical-code tables; the fulfillment entities (orders, resupply) are part of the design but are not loaded by this pipeline.
-
-**Patient Information**
-
-![Patient ERD](docs/erd/1_patient_erd.png)
-
-**Patient Health**
-
-![Patient Health ERD](docs/erd/2_patient_health_erd.png)
-
-**Patient Time** (notes)
-
-![Patient Note ERD](docs/erd/3_patient_time_erd.png)
-
-**Patient Billing**
-
-![Patient Billing ERD](docs/erd/4_patient_billing_erd.png)
-
-**Patient Fulfillment**
-
-![Patient Fulfillment ERD](docs/erd/5_patient_fulfillment_erd.png)
+The schema design is shown in the [Data model](#data-model) section above (diagrams in [`docs/erd/`](docs/erd/)).
 
 **Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
 
