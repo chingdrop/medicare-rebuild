@@ -29,7 +29,7 @@ The transform functions in [`dataframe_utils.py`](../src/medicare_rebuild/utils/
 
 - SQL text without bound values, table names and row and column counts (`db_utils.py`, `__main__.py`); no row contents, and no `print`, `head()`, `to_string()` or `to_csv()` to the console.
 - Exception messages from failed queries (`db_utils.py`), which no longer include bound values.
-- **Credential exposure, open:** the shared REST adapter (an external package, `py-shared-tools`) logs request parameters and bodies at debug level. The Microsoft token request body contains the Azure AD client secret, and `main()` runs at debug level and passes its logger to the API client. <!-- TODO(craig): decide on a fix, for example passing the adapter a logger set above debug level. -->
+- The shared REST adapter (an external package, `py-shared-tools`) logs request parameters and bodies at debug level, and the Microsoft token request body contains the Azure AD client secret. `api_utils.py` therefore gives the adapter a child logger held at INFO (`_http_logger`), so those request lines are not emitted even though `main()` runs at debug level. Adapter records at INFO and above still reach the pipeline's handlers.
 - The pipeline writes row-level files to git-ignored locations: `data/Billing_Report.xlsx`, and per-stage snapshots in `data/snaps/` when `snap=True` (off by default). Nothing in the code encrypts, rotates or deletes them.
 
 ### Guards against committing data

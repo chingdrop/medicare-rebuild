@@ -4,6 +4,18 @@ from datetime import datetime
 from shared_tools.rest_adapter import RestAdapter, RestAdapterConfig
 
 
+def _http_logger(logger: logging.Logger) -> logging.Logger:
+    """Logger for the shared REST adapter, held at INFO or above.
+
+    At DEBUG the adapter logs request parameters and bodies, which for the token
+    request include the Azure AD client secret. Records still reach the parent
+    logger's handlers.
+    """
+    http_logger = logging.getLogger(f"{logger.name}.http")
+    http_logger.setLevel(logging.INFO)
+    return http_logger
+
+
 class MSGraphApi:
     """
     Class to interact with Microsoft Graph API.
@@ -29,7 +41,7 @@ class MSGraphApi:
         """
         rest = RestAdapter(
             RestAdapterConfig(base_url="https://login.microsoftonline.com/"),
-            logger=self.logger,
+            logger=_http_logger(self.logger),
         )
         data = {
             "grant_type": "client_credentials",
@@ -46,7 +58,7 @@ class MSGraphApi:
             RestAdapterConfig(
                 base_url="https://graph.microsoft.com/v1.0/", headers=headers
             ),
-            logger=self.logger,
+            logger=_http_logger(self.logger),
         )
 
     def get_group_members(self, group_id: str) -> dict | list | str | bytes:
@@ -81,7 +93,7 @@ class TenoviApi:
                 base_url=f"https://api2.tenovi.com/clients/{client_domain}/",
                 headers=headers,
             ),
-            logger=self.logger,
+            logger=_http_logger(self.logger),
         )
 
     def get_devices(

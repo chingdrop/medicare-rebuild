@@ -61,7 +61,9 @@ class DatabaseManager:
                 "TrustServerCertificate": "yes",
             },
         )
-        engine = create_engine(connection_url)
+        # hide_parameters keeps bound values (patient row data) out of the text of
+        # SQLAlchemy errors, which are logged and can reach tracebacks.
+        engine = create_engine(connection_url, hide_parameters=True)
         event.listen(
             engine, "before_cursor_execute", self.__receive_before_cursor_execute
         )

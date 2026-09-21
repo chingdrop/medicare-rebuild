@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 import requests
 
@@ -23,6 +25,21 @@ def test_request_access_token(ms_graph_api, requests_mock):
     )
     ms_graph_api.request_access_token()
     assert ms_graph_api.rest.session.headers["Authorization"] == "Bearer test_token"
+
+
+def test_token_request_does_not_log_the_client_secret(
+    ms_graph_api, requests_mock, caplog
+):
+    requests_mock.post(
+        "https://login.microsoftonline.com/tenant_id/oauth2/v2.0/token",
+        json={"access_token": "test_token"},
+        headers=JSON_HEADERS,
+        status_code=200,
+    )
+    with caplog.at_level(logging.DEBUG):
+        ms_graph_api.request_access_token()
+    assert "client_secret" not in caplog.text
+    assert "test_token" not in caplog.text
 
 
 def test_get_group_members(ms_graph_api, requests_mock):

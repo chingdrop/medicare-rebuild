@@ -27,6 +27,8 @@ def test_create_engine(mock_create_engine, mock_listen, db_manager):
     assert db_manager.engine == mock_engine
     assert isinstance(db_manager.session, sessionmaker)
     mock_listen.assert_called_once()
+    # Error messages must not carry bound values (patient row data).
+    assert mock_create_engine.call_args.kwargs["hide_parameters"] is True
 
 
 def test_get_session_without_engine_raises(db_manager):
