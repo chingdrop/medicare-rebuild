@@ -182,3 +182,22 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+### Data, database and export files (never commit) ###
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.xlsm
+*.parquet
+*.pdf
+*.zip
+*.bak
+*.bacpac
+*.mdf
+*.ldf
+*.ndf
+.env.*
+!.env.example
+output/
+snapshots/
