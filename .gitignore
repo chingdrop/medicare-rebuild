@@ -201,3 +201,7 @@ pyrightconfig.json
 !.env.example
 output/
 snapshots/
+
+### Synthetic demo (generated, never committed) ###
+demo_data/
+demo_output/
