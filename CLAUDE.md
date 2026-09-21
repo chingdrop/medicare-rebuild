@@ -68,7 +68,7 @@ Used for: `RestAdapter`/`RestAdapterConfig` (HTTP), `atomic_io.ensure_dir` (idem
 
 GPS target DB: `GPS_SQL_USERNAME`, `GPS_SQL_PASSWORD`, `GPS_SQL_HOST`, `GPS_SQL_DB`.
 Legacy source DBs (shared username/password, separate DB names): `LEGACY_SQL_USERNAME`, `LEGACY_SQL_PASSWORD`, `LEGACY_SQL_HOST`, `LEGACY_SQL_SP_NOTES`, `LEGACY_SQL_SP_TIME`, `LEGACY_SQL_SP_FULFILLMENT`, `LEGACY_SQL_SP_READINGS`.
-Azure AD (MS Graph): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`.
+Azure AD (MS Graph): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, plus `AZURE_GROUP_ID` (the group whose members are imported into the `user` table).
 All are read via `os.environ[...]` (not `.get()`), so a missing var fails fast with a `KeyError` naming it rather than silently passing `None` into `pyodbc`.
 
 `main()` (`__main__.py`) currently hardcodes its billing period date ranges (`import_all_data("2025-01-01", "2025-02-28", ...)`) rather than deriving them — `helpers.get_last_month_billing_cycle()` exists but isn't wired into `main()` yet.

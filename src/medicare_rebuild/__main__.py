@@ -100,7 +100,7 @@ class DataImporter:
             logger=self.logger,
         )
         msg.request_access_token()
-        data = msg.get_group_members("00000000-0000-0000-0000-000000000000")
+        data = msg.get_group_members(os.environ["AZURE_GROUP_ID"])
         assert isinstance(data, dict), (
             "Expected a JSON object from the members endpoint"
         )

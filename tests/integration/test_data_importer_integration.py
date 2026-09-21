@@ -126,6 +126,7 @@ def data_importer(monkeypatch, gps_schema):
     monkeypatch.setenv("AZURE_TENANT_ID", "test-tenant-id")
     monkeypatch.setenv("AZURE_CLIENT_ID", "test-client-id")
     monkeypatch.setenv("AZURE_CLIENT_SECRET", "test-client-secret")
+    monkeypatch.setenv("AZURE_GROUP_ID", GROUP_ID)
 
     from medicare_rebuild.__main__ import DataImporter
 
