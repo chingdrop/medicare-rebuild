@@ -73,12 +73,12 @@ GPS_TABLES = [
     """CREATE TABLE glucose_reading (
         glucose_reading_id INT IDENTITY(1,1) PRIMARY KEY,
         temp_device VARCHAR(100), recorded_datetime DATETIME2, received_datetime DATETIME2,
-        glucose_reading FLOAT, is_manual BIT, patient_id INT, device_id INT)""",
+        glucose_reading FLOAT, is_manual BIT, device_id INT)""",
     """CREATE TABLE blood_pressure_reading (
         blood_pressure_reading_id INT IDENTITY(1,1) PRIMARY KEY,
         temp_device VARCHAR(100), recorded_datetime DATETIME2, received_datetime DATETIME2,
         systolic_reading FLOAT, diastolic_reading FLOAT, is_manual BIT,
-        patient_id INT, device_id INT)""",
+        device_id INT)""",
     """CREATE TABLE note_type (
         note_type_id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(100))""",
     """CREATE TABLE patient_note (
