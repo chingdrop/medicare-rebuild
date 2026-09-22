@@ -19,7 +19,8 @@ dependencies = [
     "python-dotenv >=1.0.1, <2.0.0",
     "requests >=2.31.0, <3.0.0",
     "openpyxl >=3.1.2, <4.0.0",
-    "py-shared-tools",
+    "certifi >=2024.7.4",
+    "urllib3 >=2.0, <3.0.0",
 ]
 
 [project.urls]
@@ -48,9 +49,6 @@ dev = [
     "faker>=40.39.0",
     "pytest-cov>=7.1.0",
 ]
-
-[tool.uv.sources]
-py-shared-tools = { git = "https://github.com/chingdrop/py-shared-tools", rev = "v1.3.1" }
 
 [tool.pytest.ini_options]
 markers = [

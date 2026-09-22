@@ -138,11 +138,9 @@ jobs:
         with:
           enable-cache: true
 
-      # py-shared-tools is a git dependency that is not published on PyPI, so it
-      # cannot be audited here and is left out of the exported requirements.
       - name: Audit locked dependencies (pip-audit)
         run: |
-          uv export --locked --no-emit-project --no-emit-package py-shared-tools \
+          uv export --locked --no-emit-project \
             -o "$RUNNER_TEMP/requirements-audit.txt"
           uvx --from pip-audit==2.10.1 pip-audit \
             --requirement "$RUNNER_TEMP/requirements-audit.txt" --no-deps --disable-pip
