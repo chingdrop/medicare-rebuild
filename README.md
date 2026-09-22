@@ -8,7 +8,7 @@ An ETL pipeline that rebuilds the data architecture for a healthcare provider's 
 
 ## About this project
 
-- **What it does:** an ETL pipeline for remote-patient-monitoring billing. It reads patient, device, reading and note data from legacy SQL Server databases, a SharePoint list export and a Microsoft Graph user directory, standardizes it with pandas, and loads it into a new SQL Server schema that records a date of service for each billable event. Stored procedures then assign the Medicare CPT codes 99202, 99453, 99454, 99457 and 99458 and produce a billing report.
+- **What it does:** an ETL pipeline for remote-patient-monitoring billing. It reads patient, device, reading and note data from legacy SQL Server databases, a SharePoint list export and a Microsoft Graph user directory, standardizes it with pandas, and loads it into a new SQL Server schema that records a date of service for each billable event. Pandas rules then assign the Medicare CPT codes 99202, 99453, 99454, 99457 and 99458 and produce a billing report.
 - **Context:** the work was motivated by a healthcare provider running a remote patient monitoring program billed to Medicare. This repository is a cleaned-up version of the pipeline built for that program, published as a portfolio project with client-specific material removed.
 - **Data:** all data in this repository is synthetic. Test fixtures use fictional names, `example.com` emails and placeholder IDs, and the SQL files contain schema and queries only, no data.
 - **Boundary:** no real patient data, credentials, tenant identifiers, or client configuration appear in the code or in the commit history of this repository's branches.
@@ -19,8 +19,8 @@ An ETL pipeline that rebuilds the data architecture for a healthcare provider's 
 
 - **Sources in:** the patient export (a SharePoint list downloaded as `Patient_Export.csv`), five legacy SQL Server tables (`Medical_Notes`, `Time_Log`, `Fulfillment_All`, `Glucose_Readings`, `Blood_Pressure_Readings`), and the user directory from Microsoft Graph.
 - **Transformation:** pandas `standardize_*`, `create_*` and `normalize_*` functions in `dataframe_utils.py`, then `check_patient_db_constraints` drops rows that would violate the target column limits.
-- **Load:** `DataImporter.import_*_data` writes into the new GPS SQL Server database, swapping legacy `SharePoint_ID` and vendor names for identity keys (`add_id_col`).
-- **Billing rules:** the `batch_medcode_*` stored procedures apply CPT codes 99202, 99453, 99454, 99457 and 99458 (see [docs/billing-rules.md](docs/billing-rules.md)).
+- **Load:** `DataImporter.import_*_data` inserts through the SQLAlchemy ORM (`models.py`), resolving legacy `SharePoint_ID` and vendor names to identity keys via `session.flush()`.
+- **Billing rules:** `src/medicare_rebuild/billing.py` applies CPT codes 99202, 99453, 99454, 99457 and 99458 in pandas, a faithful port of the original `batch_medcode_*` stored procedures (see [docs/billing-rules.md](docs/billing-rules.md)).
 - **Report out:** `create_billing_report` produces `data/Billing_Report.xlsx`, one row per patient per date of service with a count for each code.
 
 ```mermaid
@@ -37,8 +37,8 @@ flowchart LR
     end
     subgraph gps["GPS database (SQL Server)"]
         DB[("patient, device, reading,<br/>note and user tables")]
-        BP["Billing procedures<br/>sql/stored_procedures/batch_medcode_*"]
-        RP["create_billing_report"]
+        BP["Billing rules<br/>billing.py run_billing"]
+        RP["billing.py build_billing_report"]
     end
     OUT["data/Billing_Report.xlsx"]
     SP --> EX
@@ -126,11 +126,11 @@ The monitoring program focused mainly on *diabetes* and *hypertension*.
 
 ### Billing rules
 
-Stored procedures in [`sql/stored_procedures/`](sql/stored_procedures/) assign five CPT codes from the loaded data. 99453 and 99454 come from at least 16 distinct days of device readings (for 99454, within a rolling 30 days). 99457 and 99458 come from 20-minute blocks of note call time in a rolling month, with up to three 99458. 99202 comes from Initial Evaluation notes totalling 15 to under 30 minutes. Exact conditions, windows, interactions, worked examples and known gaps are in [docs/billing-rules.md](docs/billing-rules.md).
+[`src/medicare_rebuild/billing.py`](src/medicare_rebuild/billing.py) assigns five CPT codes from the loaded data in pandas, a faithful port of the original stored procedures in [`sql/stored_procedures/`](sql/stored_procedures/) (kept for reference; see [decision 0014](docs/decisions/0014-pandas-billing-rules.md)). 99453 and 99454 come from at least 16 distinct days of device readings (for 99454, within a rolling 30 days). 99457 and 99458 come from 20-minute blocks of note call time in a rolling month, with up to three 99458. 99202 comes from Initial Evaluation notes totalling 15 to under 30 minutes. Exact conditions, windows, interactions, worked examples and known gaps are in [docs/billing-rules.md](docs/billing-rules.md).
 
 ## Process
 
-The pipeline extracts patients from a SharePoint CSV export, notes, devices and readings from legacy SQL databases, and users from Microsoft Graph. Pandas functions standardize and normalize the data, then it is loaded into a new SQL Server schema; stored procedures assign the billing codes and build the report. Stage-by-stage detail is in [docs/architecture.md](docs/architecture.md).
+The pipeline extracts patients from a SharePoint CSV export, notes, devices and readings from legacy SQL databases, and users from Microsoft Graph. Pandas functions standardize and normalize the data, then it is loaded into a new SQL Server schema; pandas rules assign the billing codes and build the report. Stage-by-stage detail is in [docs/architecture.md](docs/architecture.md).
 
 ## Configuration
 
@@ -138,7 +138,7 @@ Running against real sources needs service accounts for the old and new SQL Serv
 
 ## Design decisions
 
-Why the pipeline is built the way it is - staged ETL, billing rules in stored procedures, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md). For a first-person account of building it - what broke, and what I'd change now - see [docs/narrative.md](docs/narrative.md).
+Why the pipeline is built the way it is - staged ETL, a full SQLAlchemy ORM schema, billing rules in pandas, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md). For a first-person account of building it - what broke, and what I'd change now - see [docs/narrative.md](docs/narrative.md).
 
 ## Security and data handling
 
@@ -154,7 +154,7 @@ Versions come from [`pyproject.toml`](pyproject.toml).
 
 - **Python** 3.12 or newer.
 - **ODBC Driver 18**: Required for connecting to Microsoft SQL Server.
-- **SQLAlchemy**: SQL toolkit and ORM. Declarative models (`src/medicare_rebuild/models.py`) are the schema of record and drive the load path; the billing stored procedures are still called through raw SQL (see [Design decisions](#design-decisions)).
+- **SQLAlchemy**: SQL toolkit and ORM. Declarative models (`src/medicare_rebuild/models.py`) are the schema of record and drive the load path; billing computation also runs through the ORM (`billing.py`), not raw SQL (see [Design decisions](#design-decisions)).
   - **pyodbc**: Used for ODBC connections.
 - **Pandas**: A library for data manipulation and analysis.
   - **NumPy**: Numeric support for Pandas.

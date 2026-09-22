@@ -33,10 +33,10 @@ Once transformed, the data is loaded into a new Microsoft SQL Server database vi
 
 The schema design is shown in the [Data model](../README.md#data-model) section of the README (diagrams in [`docs/erd/`](erd/)); the generated DDL is [`sql/schema.sql`](../sql/schema.sql).
 
-**Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
+**Billing** (`src/medicare_rebuild/billing.py`) computes the Medicare codes and queries and inserts entries into the medical code table, ensuring that services performed are recorded with the correct codes — a pandas/ORM port of the original `sql/stored_procedures/batch_medcode_*.sql` files; see [decision 0014](decisions/0014-pandas-billing-rules.md). The procedures themselves stay in `sql/stored_procedures/` for reference; the pipeline no longer calls them.
 
 ### Report
 
-Path - [`sql/stored_procedures/create_billing_report.sql`](../sql/stored_procedures/create_billing_report.sql)
+Path - [`src/medicare_rebuild/billing.py`](../src/medicare_rebuild/billing.py) (`build_billing_report`), a port of [`sql/stored_procedures/create_billing_report.sql`](../sql/stored_procedures/create_billing_report.sql)
 
 - Create a billing report that groups the patients by the count of recorded medical codes and the date of service.

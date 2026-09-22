@@ -1,6 +1,10 @@
 # 0002. Implement billing rules as SQL Server stored procedures
 
-Status: Accepted (2025-01-23, `387726d`; report moved into a procedure 2025-02-03, `086f222`)
+Status: Superseded by [0014](0014-pandas-billing-rules.md) (2025-01-23, `387726d`; report
+moved into a procedure 2025-02-03, `086f222`; superseded 2026-09-22). The procedures
+themselves stay in `sql/stored_procedures/` for reference; the pipeline no longer calls
+them, and the record below describes what was true at the time, not the pipeline as it
+stands now.
 
 ## Context
 

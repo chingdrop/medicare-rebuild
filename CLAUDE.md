@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An ETL pipeline that rebuilds the data architecture for a medical company's remote physician monitoring (diabetes/hypertension telehealth) billing. It extracts patient/device/reading data from legacy SQL databases and a SharePoint CSV export, standardizes it with pandas, and loads it into a new "GPS" SQL Server database whose schema correctly tracks Medicare billing CPT codes (99202, 99453, 99454, 99457, 99458 — see `sql/stored_procedures/batch_medcode_99XXX.sql`).
+An ETL pipeline that rebuilds the data architecture for a medical company's remote physician monitoring (diabetes/hypertension telehealth) billing. It extracts patient/device/reading data from legacy SQL databases and a SharePoint CSV export, standardizes it with pandas, and loads it into a new "GPS" SQL Server database whose schema correctly tracks Medicare billing CPT codes (99202, 99453, 99454, 99457, 99458 — computed in `src/medicare_rebuild/billing.py`, a pandas/ORM port of the original `sql/stored_procedures/batch_medcode_99XXX.sql`; see decision 0014).
 
 ## Commands
 
@@ -43,6 +43,10 @@ CI (`.github/workflows/ci.yml`) runs `test` (ruff + mypy + unit pytest) and `int
 Patient/device/reading data crosses from the old schema's `sharepoint_id` (or `Vendor` name) to the new schema's auto-generated identity `patient_id`/`device_id`/`vendor_id` by inserting the parent ORM objects and calling `session.flush()`, which populates their identity attribute immediately (see decision 0015) — no separate `SELECT`-and-merge step. Every `import_*_data` method in `DataImporter` follows this insert-parent-then-resolve-then-insert-children order; a row whose parent identity can't be resolved (an orphan source row, or one belonging to a rejected patient) is dropped, not inserted with a null foreign key (`_drop_unresolved` in `__main__.py`).
 
 Lookup-table foreign keys (`temp_status_type` → `patient_status_type_id`, `temp_user` → `user_id`, `temp_note_type` → `note_type_id`) are resolved the same way, but are allowed to stay `NULL` when nothing matches: a `{name: id}` dict is built from one query per lookup table and applied with `.map()` (via `_map_id`, which avoids pandas' float/NaN upcast of the id column) before the row is constructed, replacing the four `UPDATE ... WHERE temp_X IS NOT NULL` statements the code used to run once at the end of `import_all_data()`.
+
+### `billing.py` — billing computation
+
+`create_billing_report()` (`__main__.py`) calls `billing.run_billing(session, end_date)` then `billing.build_billing_report(session, start_date, end_date)`. Each CPT code has an `apply_*` function that is a faithful pandas/ORM port of one `sql/stored_procedures/batch_medcode_*.sql` file (see decision 0014); the procedures themselves stay in `sql/stored_procedures/` for reference but the pipeline no longer calls them. Every `apply_*` function does its own query-compute-insert-commit, matching the original's one-procedure-per-`EXEC` granularity, so a later rule's "already has a code" check sees what an earlier one just inserted — `run_billing` calls them in the same fixed order `create_billing_report()` used to call the procedures in (see `docs/billing-rules.md`: How the rules interact). The pandas logic itself is factored into small, pure helpers (`_qualifying_by_minutes`, `_qualifying_by_reading_days`, `_qualifying_99458`, `_since`, `_in_report_window`) that take plain DataFrames and return plain DataFrames, so the documented boundary cases (899/900 s for 99202, 1199/1200 s for 99457, 16-day and 30-day-window edges for 99453/99454, the report's midnight-of-end-date exclusion) are tested directly in `tests/test_billing.py` without a database.
 
 ### `utils/dataframe_utils.py` — three function categories
 

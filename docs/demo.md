@@ -14,9 +14,9 @@ were written down when the data was generated.
 ## What it proves, and what it does not
 
 **It shows that**, given source data with known structure, the pipeline as committed in
-`src/medicare_rebuild/` and the stored procedures in `sql/stored_procedures/` produce
-exactly the outcomes the data was built to produce: which patients are loaded and which
-are rejected, which billing codes are applied and when, and what the billing report
+`src/medicare_rebuild/` (billing computed by `billing.py`, see [decision 0014](decisions/0014-pandas-billing-rules.md))
+produces exactly the outcomes the data was built to produce: which patients are loaded and
+which are rejected, which billing codes are applied and when, and what the billing report
 contains. The data includes threshold cases (just below, at, just above), window edges,
 duplicates, out-of-order dates and malformed fields; see the [scenario table](#scenarios).
 
@@ -24,8 +24,9 @@ duplicates, out-of-order dates and malformed fields; see the [scenario table](#s
 
 - the pipeline is correct against real data or the real production schema. The GPS and
   legacy tables are *reconstructed* for the demo (see [What is reconstructed](#what-is-reconstructed-or-replaced));
-- the billing thresholds match Medicare's rules. The expected values encode what the
-  stored procedures are written to do, not what CMS requires;
+- the billing thresholds match Medicare's rules. The expected values encode what
+  `billing.py` (a faithful port of the original stored procedures) is written to do, not
+  what CMS requires;
 - the Microsoft Graph client works. It is replaced by a local file for the run
   (it is covered by `tests/test_api_utils.py` instead).
 
@@ -162,7 +163,7 @@ Everything is invented and marked as such:
 ```text
 tools/synthetic_data/            demo tooling, outside the installed package
   generator.py, scenarios.py     data + expectations, written together
-  schema.py                      builds the demo tables from medicare_rebuild.models + which billing procedures to apply
+  schema.py                      builds the demo tables from medicare_rebuild.models
   demo.py                        runs the real pipeline, compares with the manifest
 demo_data/                       generated: Patient_Export.csv, users.json, legacy/*.csv, manifest.json
 ```
@@ -174,13 +175,14 @@ demo_data/                       generated: Patient_Export.csv, users.json, lega
 2. **Load.** Two throwaway databases are created: a *legacy* database holding the source
    tables the pipeline reads, and a *GPS* database with the target tables, built from
    `medicare_rebuild.models` (see [decision 0015](decisions/0015-full-orm-schema-of-record.md)).
-   The billing stored procedures are applied verbatim from `sql/stored_procedures/`.
+   No stored procedures are installed; billing runs entirely through `billing.py`.
 3. **Run.** The unmodified pipeline runs (`import_all_data`, then `create_billing_report`,
    with the same date windows `main()` uses).
 4. **Compare.** Row counts, rejected patients, every applied billing code (patient, code,
    timestamp), the report rows, resolved references, and per-scenario behaviour are checked
-   against the manifest. The pipeline swallows SQL errors (it logs and returns), so the runner
-   also fails if any error was logged.
+   against the manifest. A billing error now raises and stops the run (see decision 0014);
+   the runner also fails the demo if anything is logged at ERROR level, which covers
+   whatever else in the pipeline still logs and continues rather than raising.
 
 ### What is reconstructed or replaced
 

@@ -18,6 +18,10 @@ anything before that commit.
   legacy source tables. `sql/schema.sql` is generated from them (`make schema`),
   checked for drift by a test. See
   [decision 0015](docs/decisions/0015-full-orm-schema-of-record.md).
+- `src/medicare_rebuild/billing.py`: billing computation ported from the T-SQL stored
+  procedures to pandas and the ORM, with unit tests (`tests/test_billing.py`) pinning
+  the exact boundary cases `docs/billing-rules.md` documents. See
+  [decision 0014](docs/decisions/0014-pandas-billing-rules.md).
 
 ### Changed
 
@@ -27,12 +31,20 @@ anything before that commit.
   `UPDATE ... WHERE temp_X IS NOT NULL` statements. The demo and integration tests
   build their GPS databases from the same models instead of independently
   reconstructed DDL.
+- `create_billing_report()`'s internals now call `billing.run_billing()` and
+  `billing.build_billing_report()` instead of executing the `batch_medcode_*` and
+  `create_billing_report` stored procedures; its public signature is unchanged. A
+  billing error now raises and stops the run instead of being logged and swallowed.
 
 ### Removed
 
 - `add_id_col` (`utils/dataframe_utils.py`) and the deferred-`UPDATE` SQL in
   `queries.py`; the pipeline's own `reset_all_billing_tables` stored-procedure call,
   replaced by `models.reset_all_data`.
+- The demo's stored-procedure installation (`tools/synthetic_data/schema.py`'s
+  `PROCEDURES` list and `procedure_sql()`); the demo database no longer installs any
+  stored procedure. `sql/stored_procedures/*.sql` remain in the repository for
+  reference (see `sql/stored_procedures/README.md`), but nothing calls them anymore.
 
 ## [1.0.0] - 2026-09-22
 

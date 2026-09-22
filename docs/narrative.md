@@ -32,7 +32,10 @@ they came about rather than what they were:
   ([0007](decisions/0007-sqlalchemy-engine-and-raw-sql.md)) — came from a direction set
   for the project, not a technical call I'd have made unprompted. I'd have reached for
   pandas over more SQL, and moved more of the ID-resolution logic into Python, given the
-  choice.
+  choice. Working on this portfolio version, I went back and actually did both: a full
+  SQLAlchemy ORM schema ([0015](decisions/0015-full-orm-schema-of-record.md)) and billing
+  rules ported to pandas ([0014](decisions/0014-pandas-billing-rules.md)). Neither reads
+  as an aspiration anymore.
 - Extracting to a separate stage rather than transforming the source database in place
   ([0001](decisions/0001-staged-etl-in-pandas.md)) was a real constraint, not a
   preference: that database was live production infrastructure, still serving the

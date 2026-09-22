@@ -9,7 +9,7 @@ Decisions are not edited to hide a change of mind. A record that is later replac
 | # | Decision | Summary |
 |---|----------|---------|
 | [0001](0001-staged-etl-in-pandas.md) | Stage the pipeline as extract, transform in pandas, load | Read into DataFrames, transform with pandas functions, load into SQL Server in dependency order. |
-| [0002](0002-billing-rules-in-stored-procedures.md) | Implement billing rules as SQL Server stored procedures | Billing codes are computed by T-SQL stored procedures; Python only calls them and exports the report. |
+| [0002](0002-billing-rules-in-stored-procedures.md) | Implement billing rules as SQL Server stored procedures | *Superseded by 0014.* Billing codes are computed by T-SQL stored procedures; Python only calls them and exports the report. |
 | [0003](0003-medical-code-rows-carry-the-date-of-service.md) | Record billable events as timestamped medical-code rows | A code is a timestamped `medical_code` row; the report derives the date of service from it. |
 | [0004](0004-database-assigned-keys-and-full-reset.md) | Let the database assign keys; make runs repeatable by full reset | Database identity keys, `temp_*` columns resolved at the end, and a full reset per run. |
 | [0005](0005-validate-in-transform-and-drop-bad-patient-rows.md) | Validate in the transform stage and drop rows that break column limits | Normalize, then drop patient rows that break column limits, with no reporting. |
@@ -21,4 +21,5 @@ Decisions are not edited to hide a change of mind. A record that is later replac
 | [0011](0011-uv-src-layout-and-python-312.md) | Manage dependencies with uv, use a src layout, require Python 3.12 | uv and `uv.lock`, `src/` layout, Python 3.12 or newer. |
 | [0012](0012-lint-type-check-and-test-in-ci.md) | Lint, type-check and test on every push and pull request | Ruff, mypy and tests in CI and pre-commit; a separate integration job. |
 | [0013](0013-inline-the-shared-helpers.md) | Inline the shared helpers so the repository is self-contained | Copy the REST adapter, directory helper and DataFrame writer into the package and drop the git dependency. |
+| [0014](0014-pandas-billing-rules.md) | Port billing rules from SQL stored procedures to pandas | Billing computation moves to `billing.py`, a faithful pandas/ORM port; the stored procedures stay for reference but are no longer called. |
 | [0015](0015-full-orm-schema-of-record.md) | Adopt SQLAlchemy declarative models as the schema of record | Declarative models replace the reconstructed demo/test schemas and the raw-SQL load path; `sql/schema.sql` is generated from them. |
