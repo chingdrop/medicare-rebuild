@@ -49,6 +49,7 @@ dev = [
     "pre-commit>=4.6.0",
     "faker>=40.39.0",
     "pytest-cov>=7.1.0",
+    "time-machine>=3.5.1",
 ]
 
 [tool.pytest.ini_options]

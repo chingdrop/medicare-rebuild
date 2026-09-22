@@ -1,7 +1,7 @@
 import logging
 import os
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +14,7 @@ from medicare_rebuild.billing import build_billing_report, run_billing
 from medicare_rebuild.helpers import (
     delete_files_in_dir,
     get_files_in_dir,
+    get_last_month_billing_cycle,
 )
 from medicare_rebuild.logger import setup_logger
 from medicare_rebuild.models import (
@@ -550,8 +551,23 @@ def main() -> None:
     load_dotenv()
     logger = setup_logger("main", level="debug")
 
-    import_all_data("2025-01-01", "2025-02-28", logger=logger)
-    create_billing_report("2025-02-01", "2025-02-28", logger=logger)
+    report_start, report_end = get_last_month_billing_cycle()
+    # The billing rules' rolling windows look back up to 30 days (99454) or 1 month
+    # (99457/99458) from the report end date, so the import window starts a full
+    # calendar month before the report itself -- not just the report's own month -- to
+    # make sure every reading/note those windows need has actually been loaded.
+    import_start = (report_start - timedelta(days=1)).replace(day=1)
+
+    import_all_data(
+        import_start.strftime("%Y-%m-%d"),
+        report_end.strftime("%Y-%m-%d"),
+        logger=logger,
+    )
+    create_billing_report(
+        report_start.strftime("%Y-%m-%d"),
+        report_end.strftime("%Y-%m-%d"),
+        logger=logger,
+    )
 
 
 if __name__ == "__main__":

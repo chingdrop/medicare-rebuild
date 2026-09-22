@@ -40,5 +40,5 @@ uv run medicare-rebuild
 ```
 
 - The patient export must be at `data/Patient_Export.csv`, relative to the working directory.
-- `main()` currently hardcodes its date windows: import `2025-01-01` to `2025-02-28`, billing report `2025-02-01` to `2025-02-28`.
+- `main()` derives its date windows from `helpers.get_last_month_billing_cycle()`: the billing report covers last calendar month, and the import window starts one calendar month earlier than that, so the billing rules' rolling windows (up to 30 days/1 month back from the report end date) have every reading/note they need already loaded.
 - Requires the ODBC Driver 18 for SQL Server; see [Tech stack](../README.md#tech-stack).

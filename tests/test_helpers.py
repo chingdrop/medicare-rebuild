@@ -1,6 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 
+import time_machine
+
 from medicare_rebuild.helpers import (
     create_file,
     delete_files_in_dir,
@@ -55,27 +57,30 @@ def test_delete_files_in_dir_missing_dir_is_noop(tmp_path):
     delete_files_in_dir(missing)
 
 
-class _FixedMarchDateTime(datetime):
-    @classmethod
-    def today(cls):
-        return cls(2024, 3, 15)
+# The three tests below freeze at noon, not midnight: time_machine treats a naive
+# datetime as UTC, and datetime.today() (what get_last_month_billing_cycle() calls)
+# returns local time, so a midnight instant could land on the wrong calendar day on a
+# machine whose local timezone isn't UTC. Noon leaves a 12-hour margin either way.
 
 
-def test_get_last_month_billing_cycle(monkeypatch):
-    monkeypatch.setattr("medicare_rebuild.helpers.datetime", _FixedMarchDateTime)
+@time_machine.travel(datetime(2024, 3, 15, 12, 0))
+def test_get_last_month_billing_cycle():
+    """Today being in March gives February's cycle, including its leap-year 29th."""
     first_day, last_day = get_last_month_billing_cycle()
     assert first_day == datetime(2024, 2, 1)
     assert last_day == datetime(2024, 2, 29)
 
 
-class _FixedJanuaryDateTime(datetime):
-    @classmethod
-    def today(cls):
-        return cls(2024, 1, 15)
-
-
-def test_get_last_month_billing_cycle_crosses_year_boundary(monkeypatch):
-    monkeypatch.setattr("medicare_rebuild.helpers.datetime", _FixedJanuaryDateTime)
+@time_machine.travel(datetime(2024, 1, 15, 12, 0))
+def test_get_last_month_billing_cycle_crosses_year_boundary():
     first_day, last_day = get_last_month_billing_cycle()
     assert first_day == datetime(2023, 12, 1)
     assert last_day == datetime(2023, 12, 31)
+
+
+@time_machine.travel(datetime(2024, 6, 1, 12, 0))
+def test_get_last_month_billing_cycle_on_the_first_of_the_month():
+    """Today being the 1st still gives the full prior month, not a zero-length one."""
+    first_day, last_day = get_last_month_billing_cycle()
+    assert first_day == datetime(2024, 5, 1)
+    assert last_day == datetime(2024, 5, 31)

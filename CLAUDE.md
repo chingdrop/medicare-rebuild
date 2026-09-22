@@ -78,4 +78,4 @@ Legacy source DBs (shared username/password, separate DB names): `LEGACY_SQL_USE
 Azure AD (MS Graph): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, plus `AZURE_GROUP_ID` (the group whose members are imported into the `user` table).
 All are read via `os.environ[...]` (not `.get()`), so a missing var fails fast with a `KeyError` naming it rather than silently passing `None` into `pyodbc`.
 
-`main()` (`__main__.py`) currently hardcodes its billing period date ranges (`import_all_data("2025-01-01", "2025-02-28", ...)`) rather than deriving them — `helpers.get_last_month_billing_cycle()` exists but isn't wired into `main()` yet.
+`main()` (`__main__.py`) derives its billing period date ranges from `helpers.get_last_month_billing_cycle()` (last calendar month, computed from `datetime.today()`) rather than hardcoding them. `create_billing_report()`'s window is exactly that month; `import_all_data()`'s starts one full calendar month earlier, since the billing rules' rolling windows (99454's 30 days, 99457/99458's 1 month) look back from the report end date and need that earlier data already loaded.

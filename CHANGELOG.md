@@ -43,6 +43,13 @@ anything before that commit.
 - `DatabaseManager.create_engine`'s connection-URL construction moved into a standalone
   `build_mssql_url()` (`db_utils.py`) so `alembic/env.py` can build the same URL from
   the same `GPS_SQL_*` variables without duplicating it.
+- `main()` now derives its date windows from `helpers.get_last_month_billing_cycle()`
+  instead of hardcoding `2025-01-01`/`2025-02-28`; the import window starts one
+  calendar month before the billing report's, so the billing rules' rolling windows
+  have every reading/note they need already loaded. `tests/test_main.py` (new) pins
+  this with `time-machine` (new dev dependency), which also replaced a hand-rolled
+  `datetime` subclass in `tests/test_helpers.py`'s existing coverage of the same
+  helper.
 
 ### Removed
 
