@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from medicare_rebuild.billing import build_billing_report, run_billing
 from medicare_rebuild.helpers import (
     delete_files_in_dir,
     get_files_in_dir,
@@ -534,22 +535,13 @@ def create_billing_report(
         host=os.environ["GPS_SQL_HOST"],
         database=os.environ["GPS_SQL_DB"],
     )
-    medcode_params = {"today_date": end_date}
+    session = gps.get_session()
 
-    gps.execute_query("EXEC reset_medical_code_tables")
-    gps.execute_query("EXEC batch_medcode_99202")
-    gps.execute_query("EXEC batch_medcode_99453_bg")
-    gps.execute_query("EXEC batch_medcode_99453_bp")
-    gps.execute_query("EXEC batch_medcode_99454_bg :today_date", medcode_params)
-    gps.execute_query("EXEC batch_medcode_99454_bp :today_date", medcode_params)
-    gps.execute_query("EXEC batch_medcode_99457 :today_date", medcode_params)
-    gps.execute_query("EXEC batch_medcode_99458 :today_date", medcode_params)
+    run_billing(session, end_date)
+    df = build_billing_report(session, start_date, end_date)
 
-    df = gps.read_sql(
-        "EXEC create_billing_report @start_date = ?, @end_date = ?",
-        params=(start_date, end_date),
-    )
     write_structured_file(df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False)
+    session.close()
     gps.close()
 
 
