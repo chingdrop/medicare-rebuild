@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
-from shared_tools.rest_adapter import RestAdapter, RestAdapterConfig
+from medicare_rebuild.utils.rest_adapter import RestAdapter, RestAdapterConfig
 
 
 def _http_logger(logger: logging.Logger) -> logging.Logger:
-    """Logger for the shared REST adapter, held at INFO or above.
+    """Logger for the REST adapter, held at INFO or above.
 
     At DEBUG the adapter logs request parameters and bodies, which for the token
     request include the Azure AD client secret. Records still reach the parent

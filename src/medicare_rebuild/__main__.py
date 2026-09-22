@@ -6,8 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 from dotenv import load_dotenv
-from shared_tools.atomic_io import ensure_dir
-from shared_tools.tabular_io import write_structured_file
 
 from medicare_rebuild.helpers import (
     delete_files_in_dir,
@@ -29,6 +27,7 @@ from medicare_rebuild.queries import (
     update_user_stmt,
 )
 from medicare_rebuild.utils.api_utils import MSGraphApi
+from medicare_rebuild.utils.atomic_io import ensure_dir
 from medicare_rebuild.utils.dataframe_utils import (
     add_id_col,
     check_patient_db_constraints,
@@ -46,6 +45,7 @@ from medicare_rebuild.utils.dataframe_utils import (
     normalize_users,
 )
 from medicare_rebuild.utils.db_utils import DatabaseManager
+from medicare_rebuild.utils.tabular_io import write_structured_file
 
 
 class DataImporter:
