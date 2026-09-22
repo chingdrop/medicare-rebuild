@@ -5,8 +5,7 @@ Run it through `make demo` (see docs/demo.md). What it does, in order:
 1. Create two throwaway databases on the dev SQL Server container: a "legacy" source
    database (the tables the pipeline reads) and a GPS target database.
 2. Load the generated CSV files into the legacy tables; create the GPS tables from
-   `medicare_rebuild.models` (the schema of record, see decision 0015) and apply the
-   repo's billing stored procedures verbatim.
+   `medicare_rebuild.models` (the schema of record, see decision 0015).
 3. Run the unmodified pipeline: `import_all_data`, the patient-note step that
    `import_all_data` does not call, then `create_billing_report`.
 4. Compare what came out with the manifest the generator wrote.
@@ -149,7 +148,6 @@ def prepare_databases(data_dir: Path) -> None:
     try:
         schema.create_gps_schema(gps.engine)
         schema.seed_lookups(gps.get_session())
-        _run(GPS_DB, [schema.procedure_sql(p) for p in schema.PROCEDURES])
     finally:
         gps.close()
 
@@ -172,8 +170,13 @@ def prepare_databases(data_dir: Path) -> None:
 
 
 class _ErrorCounter(logging.Handler):
-    """The pipeline's DatabaseManager logs and swallows SQL errors; count them so a
-    silently failing stored procedure fails the demo instead of passing quietly."""
+    """Count any ERROR-level log the pipeline emits, so a silent failure fails the demo
+    instead of passing quietly. Originally aimed at DatabaseManager.execute_query, which
+    logs and swallows a failing stored procedure's error rather than raising; as of
+    decision 0014, billing no longer goes through execute_query at all, so a billing
+    error now raises and stops the run outright instead of needing this counter to
+    notice -- kept as a general safety net for whatever else still logs at this
+    level."""
 
     def __init__(self) -> None:
         super().__init__(level=logging.ERROR)

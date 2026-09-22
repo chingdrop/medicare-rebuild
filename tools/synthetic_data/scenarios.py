@@ -4,7 +4,8 @@ Each builder creates source data for one patient AND states what the pipeline
 should produce for it. The expectations are written down as part of building the
 data (e.g. "16 distinct days of readings, so a 99453 stamped at the last
 reading"), not computed by re-running any billing logic. The thresholds come from
-sql/stored_procedures/*.sql and the repo's tests; see docs/demo.md.
+`medicare_rebuild.billing` (a faithful pandas/ORM port of sql/stored_procedures/*.sql,
+see decision 0014) and the repo's tests; see docs/demo.md.
 """
 
 import math
