@@ -138,7 +138,7 @@ Running against real sources needs service accounts for the old and new SQL Serv
 
 ## Design decisions
 
-Why the pipeline is built the way it is - staged ETL, billing rules in stored procedures, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md).
+Why the pipeline is built the way it is - staged ETL, billing rules in stored procedures, database-assigned keys, the testing approach and more - is recorded in short decision records. See [docs/decisions/](docs/decisions/README.md). For a first-person account of building it - what broke, and what I'd change now - see [docs/narrative.md](docs/narrative.md).
 
 ## Security and data handling
 

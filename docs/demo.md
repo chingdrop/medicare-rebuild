@@ -207,7 +207,7 @@ change them.
 - **Multi-device patients get duplicated readings** (S07). Readings are joined to the device
   table on `patient_id`, so a patient with two devices has every reading loaded once per
   device. Billing is unaffected (it counts distinct days), but row counts are inflated.
-  This is a known item in `JOURNEY.md`.
+  See [billing-rules.md](billing-rules.md#known-gaps-and-assumptions).
 - **A code can be applied yet fall outside the report** (S10, S13). The report keeps codes
   stamped up to midnight at the *start* of the end date, so a reading received at 00:20 on the
   last day is coded but not reported. Similarly, S14: data recorded after midnight on the end
