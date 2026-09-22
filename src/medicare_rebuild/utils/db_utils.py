@@ -8,6 +8,25 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql import Selectable
 
 
+def build_mssql_url(username: str, password: str, host: str, database: str) -> URL:
+    """The `mssql+pyodbc` connection URL `DatabaseManager.create_engine` connects with,
+    factored out so `alembic/env.py` can build the same URL from the same `GPS_SQL_*`
+    environment variables without either duplicating this or instantiating a full
+    `DatabaseManager` (see decision 0016)."""
+    return URL.create(
+        "mssql+pyodbc",
+        username=username,
+        password=password,
+        host=host,
+        port=1433,
+        database=database,
+        query={
+            "driver": "ODBC Driver 18 for SQL Server",
+            "TrustServerCertificate": "yes",
+        },
+    )
+
+
 class DatabaseManager:
     def __init__(self, logger=None):
         """
@@ -50,18 +69,7 @@ class DatabaseManager:
             host (str): The hostname of the SQL Server.
             database (str): The name of the database.
         """
-        connection_url = URL.create(
-            "mssql+pyodbc",
-            username=username,
-            password=password,
-            host=host,
-            port=1433,
-            database=database,
-            query={
-                "driver": "ODBC Driver 18 for SQL Server",
-                "TrustServerCertificate": "yes",
-            },
-        )
+        connection_url = build_mssql_url(username, password, host, database)
         # hide_parameters keeps bound values (patient row data) out of the text of
         # SQLAlchemy errors, which are logged and can reach tracebacks.
         engine = create_engine(connection_url, hide_parameters=True)

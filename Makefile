@@ -6,10 +6,13 @@ PATIENTS ?=
 FAULT ?=
 GEN_ARGS = $(if $(SEED),--seed $(SEED)) $(if $(PATIENTS),--patients $(PATIENTS)) $(if $(FAULT),--inject-fault $(FAULT))
 
-.PHONY: demo reconcile demo-down schema
+.PHONY: demo reconcile demo-down schema migrate
 
 schema:
 	uv run python -m tools.generate_schema
+
+migrate:
+	uv run alembic upgrade head
 
 demo:
 	docker compose up -d mssql
