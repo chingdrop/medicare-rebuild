@@ -12,9 +12,7 @@ The pipeline reads several SQL Server databases and writes one, mixing pandas bu
 
 ## Alternatives considered
 
-None recorded for ORM versus raw SQL. Connection handling changed once: "add connect and close connections" (`a4783c5`) was reverted (`5d4605d`, 2025-02-01).
-
-<!-- TODO(craig): why raw SQL and pandas rather than ORM models. -->
+Using SQLAlchemy at all was the author's own preferred direction, brought in for proper connection and session management from Python rather than hand-rolled `pyodbc` calls. Full ORM-mapped classes were not part of that goal: the billing rules themselves were required to stay in SQL (see [0002](0002-billing-rules-in-stored-procedures.md)), so there was no logic left on the Python side that ORM models would have served. Connection handling changed once beyond that: "add connect and close connections" (`a4783c5`) was reverted (`5d4605d`, 2025-02-01).
 
 ## Consequences
 

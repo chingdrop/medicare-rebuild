@@ -12,9 +12,9 @@ The patient export is read from `data/Patient_Export.csv`. Legacy tables are que
 
 ## Alternatives considered
 
-The Tenovi vendor API was used as the readings source (`38e0248`, 2025-02-26) and then reverted to the legacy database (`04276e2`, 2025-03-06, "revert to original data source"). No reason is recorded. `TenoviApi` remains but the pipeline does not call it.
+The Tenovi vendor API was used as the readings source (`38e0248`, 2025-02-26) and then reverted to the legacy database (`04276e2`, 2025-03-06, "revert to original data source"). `TenoviApi` remains but the pipeline does not call it. The reason: the client stopped paying their Tenovi bill after a while, which made the API unusable, so the pipeline fell back to the legacy database it already had access to.
 
-<!-- TODO(craig): why the SharePoint data is a downloaded CSV rather than an API read, and why the legacy database won over the vendor API. -->
+SharePoint was read as a downloaded CSV rather than through an API because SharePoint was the CRM platform for the whole company, its structure was constantly being changed by other work, and reading it directly hit performance issues severe enough to stall the system.
 
 ## Consequences
 

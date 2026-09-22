@@ -12,9 +12,7 @@ There is no separate date-of-service entity. Each awarded code is a row in `medi
 
 ## Alternatives considered
 
-None recorded. Commit `02df5bb` (2025-02-13) split the report query into CTEs "for grouping anomalies"; that is the only recorded change to how the report groups rows.
-
-<!-- TODO(craig): whether a dedicated date-of-service table was considered. -->
+A dedicated date-of-service table was not considered at the time this was built, though the author later views it as worth considering for a future revision. Commit `02df5bb` (2025-02-13) split the report query into CTEs "for grouping anomalies"; that is the only recorded change to how the report groups rows.
 
 ## Consequences
 

@@ -12,9 +12,7 @@ Each code has a T-SQL procedure (`batch_medcode_*`) that reads the loaded tables
 
 ## Alternatives considered
 
-None recorded. History shows logic moving into SQL over time: the table resets (`e35ee05`, `b3bec50`), the report query (`086f222`) and the 99458 calculation, which was folded into one query (`970aeb6`, 2025-02-03) and split into CTEs again on 2025-02-13 (`007c8ec`, "to fix grouping anomaly").
-
-<!-- TODO(craig): why SQL rather than pandas for the rules. -->
+SQL was a direction set for this project, not a choice made on technical grounds recorded here: doing the rules in SQL was requested, while pandas was the author's own preferred direction for a later version. History shows logic moving into SQL over time: the table resets (`e35ee05`, `b3bec50`), the report query (`086f222`) and the 99458 calculation, which was folded into one query (`970aeb6`, 2025-02-03) and split into CTEs again on 2025-02-13 (`007c8ec`, "to fix grouping anomaly").
 
 ## Consequences
 

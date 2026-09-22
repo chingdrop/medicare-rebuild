@@ -12,9 +12,7 @@ The database assigns identity keys. Python inserts parent rows first, reads back
 
 ## Alternatives considered
 
-None recorded. Commit `c4022b9` (2025-02-18, "move update queries to main") moved the `UPDATE` calls from `billing_report.py` into `main.py`.
-
-<!-- TODO(craig): why keys are not assigned in Python. -->
+Assigning keys in Python (rather than relying on the database's identity columns) was the author's own preferred direction; keeping them in SQL was the direction set for this project. Commit `c4022b9` (2025-02-18, "move update queries to main") moved the `UPDATE` calls from `billing_report.py` into `main.py`.
 
 ## Consequences
 

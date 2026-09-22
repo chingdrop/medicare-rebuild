@@ -12,9 +12,7 @@ Copy only the code the pipeline uses into the main package (`utils/rest_adapter.
 
 ## Alternatives considered
 
-The alternatives are not recorded in the repository.
-
-<!-- TODO(craig): why inline rather than publish the library to PyPI, use a submodule, or keep the git dependency. -->
+Publishing `py-shared-tools` to PyPI, or keeping it as a submodule or a pinned git dependency. All three still require a reader to reach a second repository or registry before the first `uv sync` succeeds. This repository is meant to be read and run by a portfolio audience with as little friction as possible, so a self-contained clone with a one-command setup was chosen over keeping the code in one place for reuse.
 
 ## Consequences
 

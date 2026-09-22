@@ -6,9 +6,7 @@ This is a reference implementation maintained on a best-effort basis. Only the l
 
 ## Reporting a vulnerability
 
-Please report vulnerabilities privately using GitHub's private vulnerability reporting: open the repository's **Security** tab and choose **Report a vulnerability** ([direct link](https://github.com/chingdrop/medicare-rebuild/security/advisories/new)). Do not open a public issue for a security problem.
-
-<!-- TODO(craig): backup security contact email, if wanted -->
+Please report vulnerabilities privately using GitHub's private vulnerability reporting: open the repository's **Security** tab and choose **Report a vulnerability** ([direct link](https://github.com/chingdrop/medicare-rebuild/security/advisories/new)). Do not open a public issue for a security problem. There is no separate email contact; GitHub private vulnerability reporting is the only channel.
 
 What to expect: an acknowledgement within 7 days and an initial assessment within 14 days. Fixes are made when the maintainer has time; there is no service-level commitment.
 

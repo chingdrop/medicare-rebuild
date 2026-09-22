@@ -12,9 +12,7 @@ The transform stage normalizes values, then `check_patient_db_constraints` drops
 
 ## Alternatives considered
 
-A failed-patient export was written for a while (`e4d42ac`, 2025-02-05, "add failed data exports as a new dataframe") and then switched off (`bdf23e8`, 2025-02-21, "disable failed patient export file creation"). The helper is still in `dataframe_utils.py`, commented out. No reason is recorded.
-
-<!-- TODO(craig): why the failed-row export was disabled, and where the limit values (11, 9, 2, 5, 30) come from. -->
+A failed-patient export was written for a while (`e4d42ac`, 2025-02-05, "add failed data exports as a new dataframe") and then switched off (`bdf23e8`, 2025-02-21, "disable failed patient export file creation"). The helper is still in `dataframe_utils.py`, commented out. It was meant to surface which patients failed to bill, but time became a constraint and the client's priority was getting the billing report itself ready, so it was disabled rather than finished. The limit values (11, 9, 2, 5, 30) are not independently derived; they mirror the real target database's original column widths from its schema design, which is not reproduced in this repository.
 
 ## Consequences
 

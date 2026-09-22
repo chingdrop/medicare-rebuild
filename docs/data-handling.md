@@ -14,12 +14,12 @@ The transform functions in [`dataframe_utils.py`](../src/medicare_rebuild/utils/
 
 - Every connection detail and secret is read from environment variables with `os.environ[...]`, so a missing one raises immediately ([`__main__.py`](../src/medicare_rebuild/__main__.py)). The variables are listed in [configuration.md](configuration.md).
 - `main()` loads a `.env` file with python-dotenv (`__main__.py`, `load_dotenv()`).
-- [`.gitignore`](../.gitignore) ignores `.env` and `.env.*` and keeps `!.env.example` trackable. No `.env.example` file exists in the repository. <!-- TODO(craig): add a .env.example with placeholder values, or remove the .gitignore exception. -->
+- [`.gitignore`](../.gitignore) ignores `.env` and `.env.*` and keeps `!.env.example` trackable. [`.env.example`](../.env.example) lists every variable from [configuration.md](configuration.md) with a `changeme` placeholder; copy it to `.env` and fill in real values.
 - The only passwords in the repository are the throwaway SQL Server `sa` password in [`docker-compose.yml`](../docker-compose.yml), the CI workflow and the test defaults. They protect disposable local and CI containers holding synthetic data.
 
 ### Connection security
 
-- SQL Server: [`db_utils.py`](../src/medicare_rebuild/utils/db_utils.py) builds a `mssql+pyodbc` URL with ODBC Driver 18 and sets `TrustServerCertificate=yes`, which makes the client accept any server certificate without validating it. It does not set `Encrypt`, so the driver default applies. <!-- TODO(craig): confirm the ODBC Driver 18 default for Encrypt, and what a real deployment would set. --> The setting suits a disposable container with a self-signed certificate and does not suit a real deployment (see Part B). The port is fixed at 1433.
+- SQL Server: [`db_utils.py`](../src/medicare_rebuild/utils/db_utils.py) builds a `mssql+pyodbc` URL with ODBC Driver 18 and sets `TrustServerCertificate=yes`, which makes the client accept any server certificate without validating it. It does not set `Encrypt`, so the driver default applies. This suits a disposable container with a self-signed certificate and does not suit a real deployment: a real deployment should explicitly set `Encrypt=yes` (mandatory encrypted connections) rather than rely on the driver default (see Part B). The port is fixed at 1433.
 - HTTP APIs: the Microsoft login and Graph endpoints and the Tenovi endpoint are hard-coded `https://` URLs ([`api_utils.py`](../src/medicare_rebuild/utils/api_utils.py)).
 - Error text: `create_engine` sets `hide_parameters=True` so SQL error messages do not include bound row values (`db_utils.py`).
 
@@ -48,7 +48,7 @@ This repository demonstrates none of the following operationally. It is guidance
 
 - **Compliance first.** Handling real patient data needs a business associate agreement with each vendor involved and a compliance and security review before any real data is loaded.
 - **Least privilege.** Use separate database accounts: read-only for the legacy sources, and a load account limited to the target database. Do not use an administrator account such as `sa`.
-- **Encryption in transit.** Use certificates the client can validate and require encryption; do not set `TrustServerCertificate=yes`.
+- **Encryption in transit.** Use certificates the client can validate, set `Encrypt=yes` explicitly rather than relying on the driver default, and do not set `TrustServerCertificate=yes`.
 - **Encryption at rest.** Encrypt the databases, backups and the disk holding `data/`, snapshots, reports and logs.
 - **Access logging.** Log who accessed or exported patient data, separately from application debug logs, and review it.
 - **Secret management.** Keep secrets in a managed secret store with rotation instead of `.env` files, and keep them out of logs.
