@@ -1,6 +1,6 @@
 # 0007. Use SQLAlchemy as an engine and session layer with raw SQL, not ORM models
 
-Status: Accepted (2025-01-21, `1876b04`, `60131d0`)
+Status: Superseded by [0015](0015-full-orm-schema-of-record.md) (2025-01-21, `1876b04`, `60131d0`; superseded 2026-09-22). The "no mapped classes" part of this decision no longer holds for the GPS load path; `DatabaseManager`'s engine/session layer, `execute_query`, and `to_sql` for the legacy demo tables are unaffected and still described accurately below.
 
 ## Context
 

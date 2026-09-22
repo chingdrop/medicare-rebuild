@@ -1,6 +1,6 @@
 # 0004. Let the database assign keys; make runs repeatable by full reset
 
-Status: Accepted (2025-01-23, `975c5f6`; reset moved into a procedure 2025-02-03, `e35ee05`)
+Status: Accepted (2025-01-23, `975c5f6`; reset moved into a procedure 2025-02-03, `e35ee05`). Partially amended by [0015](0015-full-orm-schema-of-record.md) (2026-09-22): the database still assigns identity keys and each run still starts from a full reset, but the *mechanism* described below (`add_id_col`, deferred `UPDATE` statements, the reset as a stored procedure) has been replaced. See that record for the current mechanism.
 
 ## Context
 

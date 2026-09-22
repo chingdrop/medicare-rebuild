@@ -86,8 +86,8 @@ Problems are handled quietly: rows are dropped or nulled, not flagged. Nothing i
 
 | Problem | What happens | Where | Demo |
 |---------|--------------|-------|------|
-| Patient row breaks a column limit: phone over 11 digits, SSN over 9, state over 2 characters after normalization, ZIP over 5, emergency phone over 11, Medicare ID over 11, payer ID over 30 | Patient dropped, silently, together with their devices, readings and notes (those cannot find a patient to link to) | `check_patient_db_constraints` (`dataframe_utils.py` L721-731); `add_id_col` inner merge (L734-747) | S39-S42 |
-| Notes, devices or readings for an ID with no patient row | Dropped by the same merge | `add_id_col` | S46 |
+| Patient row breaks a column limit: phone over 11 digits, SSN over 9, state over 2 characters after normalization, ZIP over 5, emergency phone over 11, Medicare ID over 11, payer ID over 30 | Patient dropped, silently, together with their devices, readings and notes (those cannot find a patient to link to) | `check_patient_db_constraints` (`dataframe_utils.py` L722-732); `_drop_unresolved` (`__main__.py`) | S39-S42 |
+| Notes, devices or readings for an ID with no patient row | Dropped the same way | `_drop_unresolved` (`__main__.py`) | S46 |
 | Readings for a patient with no device | Dropped (readings are linked through the device table) | `import_gluc_readings_data`, `import_bp_readings_data` (`__main__.py`) | S16 |
 | Device flagged as a resupply, or vendor other than Tenovi or Omron | Excluded by the source query | `queries.py` L22 | S17 |
 | Readings or notes recorded after midnight at the start of the end date | Never extracted (the extract window is `<=` the end date at 00:00:00) | `queries.py` L5, L11, L28, L39 | S14 |
@@ -131,4 +131,4 @@ Added while reviewing this document for accuracy. It is background from secondar
 
 ## As of
 
-This document reflects the code at commit `24902e7` (2026-09-22). No stored procedure or Python rule logic has changed since `fd284b2` (2026-09-21), when this document was first written; this revision only resolves open questions in the prose. Payer and CMS rules change; this describes what the implementation does, not current policy.
+This document reflects the code as of the commit that adopted the ORM load path (decision 0015). No stored procedure or billing-rule logic has changed since `fd284b2` (2026-09-21), when this document was first written; this revision only updates two evidence pointers (`add_id_col` was replaced) after that load-path change. Payer and CMS rules change; this describes what the implementation does, not current policy.

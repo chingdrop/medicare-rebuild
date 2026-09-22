@@ -29,9 +29,9 @@ Additional functions included:
 
 ### Load
 
-Once transformed, the data is loaded into a new Microsoft SQL Server database. The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
+Once transformed, the data is loaded into a new Microsoft SQL Server database via SQLAlchemy declarative models (`src/medicare_rebuild/models.py`), which are the schema of record — see [decision 0015](decisions/0015-full-orm-schema-of-record.md). The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
 
-The schema design is shown in the [Data model](../README.md#data-model) section of the README (diagrams in [`docs/erd/`](erd/)).
+The schema design is shown in the [Data model](../README.md#data-model) section of the README (diagrams in [`docs/erd/`](erd/)); the generated DDL is [`sql/schema.sql`](../sql/schema.sql).
 
 **Stored Procedures** are used to query and insert entries into the medical code table, ensuring that services performed are recorded with the correct Medicare codes.
 

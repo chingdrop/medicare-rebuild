@@ -11,7 +11,28 @@ anything before that commit.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `src/medicare_rebuild/models.py` and `legacy_models.py`: SQLAlchemy declarative
+  models that are now the GPS schema of record, and Core table definitions for the
+  legacy source tables. `sql/schema.sql` is generated from them (`make schema`),
+  checked for drift by a test. See
+  [decision 0015](docs/decisions/0015-full-orm-schema-of-record.md).
+
+### Changed
+
+- `DataImporter`'s load path now inserts through the ORM and resolves identity and
+  lookup-table foreign keys via `session.flush()` and small dict lookups, replacing
+  `add_id_col`, the three `get_*_id_stmt` queries, and the four deferred
+  `UPDATE ... WHERE temp_X IS NOT NULL` statements. The demo and integration tests
+  build their GPS databases from the same models instead of independently
+  reconstructed DDL.
+
+### Removed
+
+- `add_id_col` (`utils/dataframe_utils.py`) and the deferred-`UPDATE` SQL in
+  `queries.py`; the pipeline's own `reset_all_billing_tables` stored-procedure call,
+  replaced by `models.reset_all_data`.
 
 ## [1.0.0] - 2026-09-22
 

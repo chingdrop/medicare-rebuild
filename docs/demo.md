@@ -162,7 +162,7 @@ Everything is invented and marked as such:
 ```text
 tools/synthetic_data/            demo tooling, outside the installed package
   generator.py, scenarios.py     data + expectations, written together
-  schema.py                      reconstructed demo tables + which stored procedures to apply
+  schema.py                      builds the demo tables from medicare_rebuild.models + which billing procedures to apply
   demo.py                        runs the real pipeline, compares with the manifest
 demo_data/                       generated: Patient_Export.csv, users.json, legacy/*.csv, manifest.json
 ```
@@ -172,8 +172,9 @@ demo_data/                       generated: Patient_Export.csv, users.json, lega
    reading"). Expectations are written by construction; nothing re-implements the billing
    rules to compute them. They are written to `demo_data/manifest.json`.
 2. **Load.** Two throwaway databases are created: a *legacy* database holding the source
-   tables the pipeline reads, and a *GPS* database with the target tables. The stored
-   procedures are applied verbatim from `sql/stored_procedures/`.
+   tables the pipeline reads, and a *GPS* database with the target tables, built from
+   `medicare_rebuild.models` (see [decision 0015](decisions/0015-full-orm-schema-of-record.md)).
+   The billing stored procedures are applied verbatim from `sql/stored_procedures/`.
 3. **Run.** The unmodified pipeline runs (`import_all_data`, then `create_billing_report`,
    with the same date windows `main()` uses).
 4. **Compare.** Row counts, rejected patients, every applied billing code (patient, code,
@@ -183,10 +184,13 @@ demo_data/                       generated: Patient_Export.csv, users.json, lega
 
 ### What is reconstructed or replaced
 
-- **Tables.** The repo has no authoritative schema. The demo tables in `schema.py` are
-  *reconstructed, not authoritative*: inferred from the columns the pipeline writes, the
-  columns the stored procedures read, and the ERDs in `docs/erd/`. Constraints and column
-  widths are guesses that are just permissive enough to run.
+- **GPS tables.** These are authoritative-by-construction, not a reconstruction: `schema.py`
+  builds them from `medicare_rebuild.models`, the same declarative models a real deployment's
+  load path uses (see [decision 0015](decisions/0015-full-orm-schema-of-record.md)).
+- **Legacy source tables.** These remain a reconstruction: inferred from the columns
+  `queries.py` reads and the ERDs in `docs/erd/`, since the real source system is not part of
+  this repository. Constraints and column widths are guesses that are just permissive enough
+  to run.
 - **Microsoft Graph.** `DataImporter.get_user_data` builds an `MSGraphApi` internally, which
   would call `login.microsoftonline.com` and `graph.microsoft.com`. During the demo only,
   the runner swaps that one class for a stand-in that reads `demo_data/users.json`
@@ -194,8 +198,8 @@ demo_data/                       generated: Patient_Export.csv, users.json, lega
   and the `AZURE_*` variables are set to obvious placeholders that are never used.
 - **Patient notes.** `main()` and `import_all_data()` never import patient notes (that step
   was dropped in a refactor), so as written they cannot produce 99202, 99457 or 99458. The
-  runner calls `get_patient_note_data` / `import_patient_note_data` itself, then re-runs the
-  two note `UPDATE` statements. This is the only orchestration difference from `main()`.
+  runner calls `get_patient_note_data` / `import_patient_note_data` itself. This is the only
+  orchestration difference from `main()`.
 
 No file under `src/` or `sql/` is modified by the demo.
 

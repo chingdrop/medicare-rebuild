@@ -33,7 +33,7 @@ flowchart LR
     subgraph py["Python: src/medicare_rebuild"]
         EX["Extract<br/>DataImporter.get_*_data"]
         TR["Transform<br/>utils/dataframe_utils.py<br/>standardize, create, normalize,<br/>check_patient_db_constraints"]
-        LD["Load<br/>DataImporter.import_*_data<br/>add_id_col, DatabaseManager.to_sql"]
+        LD["Load<br/>DataImporter.import_*_data<br/>models.py ORM classes"]
     end
     subgraph gps["GPS database (SQL Server)"]
         DB[("patient, device, reading,<br/>note and user tables")]
@@ -154,7 +154,7 @@ Versions come from [`pyproject.toml`](pyproject.toml).
 
 - **Python** 3.12 or newer.
 - **ODBC Driver 18**: Required for connecting to Microsoft SQL Server.
-- **SQLAlchemy**: SQL toolkit and ORM. Used here for engines, sessions and raw SQL execution, not ORM models.
+- **SQLAlchemy**: SQL toolkit and ORM. Declarative models (`src/medicare_rebuild/models.py`) are the schema of record and drive the load path; the billing stored procedures are still called through raw SQL (see [Design decisions](#design-decisions)).
   - **pyodbc**: Used for ODBC connections.
 - **Pandas**: A library for data manipulation and analysis.
   - **NumPy**: Numeric support for Pandas.
