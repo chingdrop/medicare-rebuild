@@ -6,7 +6,7 @@ This page explains where this project comes from, what data it does and does not
 
 - **Context.** The pipeline addresses a healthcare provider running a remote patient monitoring program billed to Medicare. That kind of program needs billing data that records the date of service for each billable event (device setup, device use, and time spent with the patient). The source data lived in several legacy SQL databases and SharePoint list exports.
 - **This repository.** It is a cleaned-up version of the pipeline built for that program, prepared for publication as a portfolio project. Client data, credentials, identifiers and client-specific configuration were removed or replaced with neutral names and environment variables. It is not an independent reimplementation.
-- **Carried over.** The pipeline's code, schema design, stored procedures and billing logic.
+- **Carried over.** The pipeline's code, schema design, stored procedures and billing logic. <!-- TODO(craig): confirm helper code provenance matches the statement -->
 - **Not carried over.** Patient data, credentials, tenant or directory identifiers, hostnames, and client-specific configuration. The code reads such values from environment variables at run time; none are stored in the repository.
 
 ## Data boundary

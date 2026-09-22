@@ -158,7 +158,7 @@ Versions come from [`pyproject.toml`](pyproject.toml).
 - **Requests**: A library for making HTTP requests.
 - **python-dotenv**: Loads environment variables from a `.env` file.
 - **colorlog**: Colored console logging.
-- **py-shared-tools**: Shared HTTP, filesystem and spreadsheet-output helpers (git dependency).
+- **certifi** and **urllib3**: TLS certificates and retry support for the REST adapter (`utils/rest_adapter.py`).
 
 ## Testing
 

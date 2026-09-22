@@ -2,6 +2,8 @@
 
 The pipeline's stages in detail. For the one-screen overview and diagram, see the [README](../README.md); for the schema diagrams, see [Data model](../README.md#data-model).
 
+> **Inlined helpers.** `utils/rest_adapter.py`, `utils/atomic_io.py` and `utils/tabular_io.py` were factored out of a separate shared library (`py-shared-tools`) and copied into this repository, so it is self-contained and needs no second repository to install. See [decision 0013](decisions/0013-inline-the-shared-helpers.md).
+
 ## Pipeline stages
 
 ### Extraction

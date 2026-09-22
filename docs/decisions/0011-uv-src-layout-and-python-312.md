@@ -1,6 +1,6 @@
 # 0011. Manage dependencies with uv, use a src layout, require Python 3.12
 
-Status: Accepted (2026-07-16, `680c585`)
+Status: Accepted (2026-07-16, `680c585`). The `py-shared-tools` dependency behind the Python floor was later removed ([0013](0013-inline-the-shared-helpers.md)); the floor itself was not changed.
 
 ## Context
 

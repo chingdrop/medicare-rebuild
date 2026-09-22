@@ -20,3 +20,4 @@ Decisions are not edited to hide a change of mind. A record that is later replac
 | [0010](0010-shared-http-client-and-failing-loudly.md) | Use the shared REST adapter and let HTTP failures stop the run | Shared REST adapter; HTTP errors raise and stop the run. |
 | [0011](0011-uv-src-layout-and-python-312.md) | Manage dependencies with uv, use a src layout, require Python 3.12 | uv and `uv.lock`, `src/` layout, Python 3.12 or newer. |
 | [0012](0012-lint-type-check-and-test-in-ci.md) | Lint, type-check and test on every push and pull request | Ruff, mypy and tests in CI and pre-commit; a separate integration job. |
+| [0013](0013-inline-the-shared-helpers.md) | Inline the shared helpers so the repository is self-contained | Copy the REST adapter, directory helper and DataFrame writer into the package and drop the git dependency. |

@@ -1,6 +1,6 @@
 # 0010. Use the shared REST adapter and let HTTP failures stop the run
 
-Status: Accepted (2026-07-16, `5c73d2a`)
+Status: Accepted (2026-07-16, `5c73d2a`). The adapter's sourcing was later superseded by [0013](0013-inline-the-shared-helpers.md): it is now copied into this repository; the decision that failures stop the run stands.
 
 ## Context
 
@@ -24,4 +24,4 @@ Keeping the old wrapper, which returned `None` on errors. The commit chose raisi
 
 - [`api_utils.py`](../../src/medicare_rebuild/utils/api_utils.py)
 - [`test_get_group_members_raises_on_http_error`](../../tests/test_api_utils.py), `test_get_readings_raises_on_http_error` (same file)
-- [`pyproject.toml`](../../pyproject.toml) (`[tool.uv.sources]`)
+- [`rest_adapter.py`](../../src/medicare_rebuild/utils/rest_adapter.py) (the inlined adapter; until 0013 it came from a git dependency declared in `pyproject.toml`)
