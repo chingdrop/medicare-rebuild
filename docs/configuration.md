@@ -18,6 +18,21 @@ Loaded from a `.env` file (via python-dotenv) or the environment. All are read w
 | Legacy source databases (shared username, password and host) | `LEGACY_SQL_USERNAME`, `LEGACY_SQL_PASSWORD`, `LEGACY_SQL_HOST`, plus one database name each: `LEGACY_SQL_SP_NOTES`, `LEGACY_SQL_SP_TIME`, `LEGACY_SQL_SP_FULFILLMENT`, `LEGACY_SQL_SP_READINGS` |
 | Azure AD (Microsoft Graph) | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_GROUP_ID` (the group whose members are imported into the `user` table) |
 
+## Setting up the GPS database schema
+
+A real GPS database is created with Alembic, not `CREATE TABLE` statements run by hand:
+
+```sh
+make migrate            # or: uv run alembic upgrade head
+```
+
+This reads the same `GPS_SQL_*` variables as everything else and applies every
+migration in [`alembic/versions/`](../alembic/versions/) up to the latest. See
+[decision 0016](decisions/0016-alembic-migrations-for-the-gps-database.md) and
+[`alembic/README.md`](../alembic/README.md). The demo and integration tests don't use
+this -- they build an ephemeral database directly from `medicare_rebuild.models`, which
+is faster and needs no migration history for a database that gets thrown away anyway.
+
 ## Running against real sources
 
 ```sh

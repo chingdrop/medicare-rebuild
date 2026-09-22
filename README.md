@@ -156,6 +156,7 @@ Versions come from [`pyproject.toml`](pyproject.toml).
 - **ODBC Driver 18**: Required for connecting to Microsoft SQL Server.
 - **SQLAlchemy**: SQL toolkit and ORM. Declarative models (`src/medicare_rebuild/models.py`) are the schema of record and drive the load path; billing computation also runs through the ORM (`billing.py`), not raw SQL (see [Design decisions](#design-decisions)).
   - **pyodbc**: Used for ODBC connections.
+  - **Alembic**: versioned migrations for the GPS database, generated from the same declarative models (`alembic/`, `make migrate`).
 - **Pandas**: A library for data manipulation and analysis.
   - **NumPy**: Numeric support for Pandas.
   - **openpyxl**: Used by Pandas for Excel file operations.

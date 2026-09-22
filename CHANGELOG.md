@@ -22,6 +22,11 @@ anything before that commit.
   procedures to pandas and the ORM, with unit tests (`tests/test_billing.py`) pinning
   the exact boundary cases `docs/billing-rules.md` documents. See
   [decision 0014](docs/decisions/0014-pandas-billing-rules.md).
+- `alembic/`: versioned migrations for the GPS database, generated from
+  `models.py`. `make migrate` (`alembic upgrade head`) creates or updates a real GPS
+  database; `tests/integration/test_alembic_integration.py` guards the migration
+  chain against drifting from the models. See
+  [decision 0016](docs/decisions/0016-alembic-migrations-for-the-gps-database.md).
 
 ### Changed
 
@@ -35,6 +40,9 @@ anything before that commit.
   `billing.build_billing_report()` instead of executing the `batch_medcode_*` and
   `create_billing_report` stored procedures; its public signature is unchanged. A
   billing error now raises and stops the run instead of being logged and swallowed.
+- `DatabaseManager.create_engine`'s connection-URL construction moved into a standalone
+  `build_mssql_url()` (`db_utils.py`) so `alembic/env.py` can build the same URL from
+  the same `GPS_SQL_*` variables without duplicating it.
 
 ### Removed
 

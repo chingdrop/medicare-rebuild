@@ -31,7 +31,7 @@ Additional functions included:
 
 Once transformed, the data is loaded into a new Microsoft SQL Server database via SQLAlchemy declarative models (`src/medicare_rebuild/models.py`), which are the schema of record — see [decision 0015](decisions/0015-full-orm-schema-of-record.md). The new schema and entity relationships allow for the accurate recording of service dates for billable Medicare services.
 
-The schema design is shown in the [Data model](../README.md#data-model) section of the README (diagrams in [`docs/erd/`](erd/)); the generated DDL is [`sql/schema.sql`](../sql/schema.sql).
+The schema design is shown in the [Data model](../README.md#data-model) section of the README (diagrams in [`docs/erd/`](erd/)); the generated DDL is [`sql/schema.sql`](../sql/schema.sql). A real GPS database is created and updated with [Alembic](../alembic/) migrations (`make migrate`), not by hand — see [decision 0016](decisions/0016-alembic-migrations-for-the-gps-database.md).
 
 **Billing** (`src/medicare_rebuild/billing.py`) computes the Medicare codes and queries and inserts entries into the medical code table, ensuring that services performed are recorded with the correct codes — a pandas/ORM port of the original `sql/stored_procedures/batch_medcode_*.sql` files; see [decision 0014](decisions/0014-pandas-billing-rules.md). The procedures themselves stay in `sql/stored_procedures/` for reference; the pipeline no longer calls them.
 
