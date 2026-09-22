@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from medicare_rebuild.utils.dataframe_utils import (
-    add_id_col,
     check_patient_db_constraints,
     create_emcontacts_df,
     create_med_necessity_df,
@@ -376,11 +375,3 @@ def test_check_patient_db_constraints():
     )
     result = check_patient_db_constraints(df)
     assert result.shape == (1, 9)
-
-
-def test_add_id_col():
-    df = pd.DataFrame({"name": ["John Doe"], "age": [30]})
-    id_df = pd.DataFrame({"name": ["John Doe"], "id": [1]})
-    result = add_id_col(df, id_df, "name")
-    assert result.shape == (1, 2)
-    assert "name" not in result.columns

@@ -3,33 +3,45 @@ import os
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from dotenv import load_dotenv
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from medicare_rebuild.helpers import (
     delete_files_in_dir,
     get_files_in_dir,
 )
 from medicare_rebuild.logger import setup_logger
+from medicare_rebuild.models import (
+    BloodPressureReading,
+    Device,
+    EmergencyContact,
+    GlucoseReading,
+    MedicalNecessity,
+    NoteType,
+    Patient,
+    PatientAddress,
+    PatientInsurance,
+    PatientNote,
+    PatientStatus,
+    PatientStatusType,
+    User,
+    Vendor,
+    reset_all_data,
+)
 from medicare_rebuild.queries import (
     get_bg_readings_stmt,
     get_bp_readings_stmt,
-    get_device_id_stmt,
     get_fulfillment_stmt,
     get_notes_log_stmt,
-    get_patient_id_stmt,
     get_time_log_stmt,
-    get_vendor_id_stmt,
-    update_patient_note_stmt,
-    update_patient_status_stmt,
-    update_user_note_stmt,
-    update_user_stmt,
 )
 from medicare_rebuild.utils.api_utils import MSGraphApi
 from medicare_rebuild.utils.atomic_io import ensure_dir
 from medicare_rebuild.utils.dataframe_utils import (
-    add_id_col,
     check_patient_db_constraints,
     create_emcontacts_df,
     create_med_necessity_df,
@@ -46,6 +58,43 @@ from medicare_rebuild.utils.dataframe_utils import (
 )
 from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.utils.tabular_io import write_structured_file
+
+
+def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
+    """df.to_dict("records") for constructing ORM rows, with every missing value (NaN,
+    NaT, ...) converted to a real Python None first. `DataFrame.to_sql`, which the
+    pipeline used before decision 0015, did this conversion internally; constructing
+    ORM rows directly does not, and pyodbc rejects a raw NaN/NaT bound to a VARCHAR or
+    DATETIME2 column outright rather than silently writing NULL. `.astype(object)`
+    before `.where()` is required: on a typed (e.g. datetime64) column, `.where(...,
+    None)` alone still leaves NaT in place, since None gets coerced back to the
+    column's own null value for that dtype. DataFrame columns are always strings in
+    this pipeline; pandas-stubs types the keys as the more general `Hashable`, which is
+    the only reason this needs a cast."""
+    clean = df.astype(object).where(df.notna(), None)  # type: ignore[call-overload]
+    return clean.to_dict("records")  # type: ignore[return-value]
+
+
+def _map_id(series: pd.Series, lookup: dict) -> pd.Series:
+    """series.map(lookup) for resolving a temp_* column to a foreign-key id, without
+    pandas' automatic float64/NaN upcast: plain Series.map() turns any unmatched value
+    into numpy NaN and silently turns every *matched* int into a float alongside it,
+    and neither round-trips cleanly into an integer column through the ORM. Building
+    the result with a plain Python list keeps real ints and real None."""
+    return pd.Series([lookup.get(v) for v in series], index=series.index, dtype=object)
+
+
+def _drop_unresolved(df: pd.DataFrame, *cols: str) -> pd.DataFrame:
+    """Drop rows where any of `cols` failed to resolve (is None) -- what
+    `add_id_col`'s inner merge (patient_id, device_id, vendor_id resolution before
+    decision 0015) did implicitly: a row whose parent identity can't be found is
+    dropped, not inserted with a NULL foreign key. Only used for that kind of
+    resolution; a temp_* lookup-table FK (note type, coach, status type) that doesn't
+    resolve is meant to stay NULL, matching the deferred UPDATE statements this
+    replaced, so those call sites do not use this helper."""
+    for col in cols:
+        df = df[df[col].notna()]
+    return df
 
 
 class DataImporter:
@@ -69,6 +118,7 @@ class DataImporter:
             host=os.environ["GPS_SQL_HOST"],
             database=os.environ["GPS_SQL_DB"],
         )
+        self.session: Session = self.gps.get_session()
         self.snaps_dir = Path.cwd() / "data" / "snaps"
 
     @staticmethod
@@ -81,6 +131,15 @@ class DataImporter:
             path (Path, str): The path to save the Excel file.
         """
         write_structured_file(df, path, file_type="xlsx", index=False)
+
+    def _lookup(self, model: type, key_attr: str, value_attr: str) -> dict[Any, Any]:
+        """A small {key: id} dict from a lookup or already-loaded table, queried fresh
+        each call so this works regardless of which DataImporter instance or session
+        loaded the rows it depends on (see decision 0015)."""
+        rows = self.session.execute(
+            select(getattr(model, key_attr), getattr(model, value_attr))
+        )
+        return {k: v for k, v in rows if k is not None}
 
     def get_user_data(self, snap: bool = False) -> pd.DataFrame:
         """
@@ -171,13 +230,11 @@ class DataImporter:
             database=os.environ["LEGACY_SQL_SP_TIME"],
         )
         notes_df = notes_db.read_sql(
-            get_notes_log_stmt,
-            params=(self.start_date, self.end_date),
+            get_notes_log_stmt(self.start_date, self.end_date),
             parse_dates=["TimeStamp"],
         )
         time_df = time_db.read_sql(
-            get_time_log_stmt,
-            params=(self.start_date, self.end_date),
+            get_time_log_stmt(self.start_date, self.end_date),
             parse_dates=["Start_Time", "End_Time"],
         )
         time_df = time_df.rename(
@@ -212,7 +269,7 @@ class DataImporter:
             host=os.environ["LEGACY_SQL_HOST"],
             database=os.environ["LEGACY_SQL_SP_FULFILLMENT"],
         )
-        df = fulfillment_db.read_sql(get_fulfillment_stmt)
+        df = fulfillment_db.read_sql(get_fulfillment_stmt())
         df = normalize_devices(df)
         if snap:
             self.snap_dataframe(df, self.snaps_dir / "snap_device_df.xlsx")
@@ -236,8 +293,7 @@ class DataImporter:
             database=os.environ["LEGACY_SQL_SP_READINGS"],
         )
         df = readings_db.read_sql(
-            get_bg_readings_stmt,
-            params=(self.start_date, self.end_date),
+            get_bg_readings_stmt(self.start_date, self.end_date),
             parse_dates=["Time_Recorded", "Time_Recieved"],
         )
         if snap:
@@ -263,8 +319,7 @@ class DataImporter:
             database=os.environ["LEGACY_SQL_SP_READINGS"],
         )
         df = readings_db.read_sql(
-            get_bp_readings_stmt,
-            params=(self.start_date, self.end_date),
+            get_bp_readings_stmt(self.start_date, self.end_date),
             parse_dates=["Time_Recorded", "Time_Recieved"],
         )
         if snap:
@@ -279,39 +334,54 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The user data DataFrame to import.
         """
-        self.gps.to_sql(df, "user", if_exists="append")
+        self.session.add_all(User(**row) for row in _records(df))
+        self.session.commit()
 
     def import_patient_data(self, patient_data: dict[str, pd.DataFrame]) -> None:
         """
         Imports patient data into the database.
 
+        Resolves temp_user -> user_id and temp_status_type -> patient_status_type_id by
+        looking the lookup tables up before insert, then inserts the patient rows and
+        uses the identity keys SQLAlchemy assigns them on flush to link every dependent
+        row (address, insurance, medical necessity, status, emergency contacts) -- no
+        separate SELECT-and-merge step is needed for that part (see decision 0015).
+
         Args:
             patient_data (Dict[str, pd.DataFrame]): A dictionary of patient data DataFrames to import.
         """
-        self.gps.to_sql(patient_data["patient"], "patient", if_exists="append")
-        patient_id_df = self.gps.read_sql(get_patient_id_stmt)
-
-        address_df = add_id_col(
-            df=patient_data["address"], id_df=patient_id_df, col="sharepoint_id"
-        )
-        insurance_df = add_id_col(
-            df=patient_data["insurance"], id_df=patient_id_df, col="sharepoint_id"
-        )
-        med_nec_df = add_id_col(
-            df=patient_data["med_nec"], id_df=patient_id_df, col="sharepoint_id"
-        )
-        patient_status_df = add_id_col(
-            df=patient_data["status"], id_df=patient_id_df, col="sharepoint_id"
-        )
-        emcontacts_df = add_id_col(
-            df=patient_data["emcontacts"], id_df=patient_id_df, col="sharepoint_id"
+        user_lookup = self._lookup(User, "display_name", "user_id")
+        status_lookup = self._lookup(
+            PatientStatusType, "name", "patient_status_type_id"
         )
 
-        self.gps.to_sql(address_df, "patient_address", if_exists="append")
-        self.gps.to_sql(insurance_df, "patient_insurance", if_exists="append")
-        self.gps.to_sql(med_nec_df, "medical_necessity", if_exists="append")
-        self.gps.to_sql(patient_status_df, "patient_status", if_exists="append")
-        self.gps.to_sql(emcontacts_df, "emergency_contact", if_exists="append")
+        patient_df = patient_data["patient"].copy()
+        patient_df["user_id"] = _map_id(patient_df["temp_user"], user_lookup)
+        patients = [Patient(**row) for row in _records(patient_df)]
+        self.session.add_all(patients)
+        self.session.flush()
+        patient_ids = {p.sharepoint_id: p.patient_id for p in patients}
+
+        def with_patient_id(df: pd.DataFrame) -> pd.DataFrame:
+            df = df.copy()
+            df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
+            return df.drop(columns=["sharepoint_id"])
+
+        address_df = with_patient_id(patient_data["address"])
+        insurance_df = with_patient_id(patient_data["insurance"])
+        med_nec_df = with_patient_id(patient_data["med_nec"])
+        status_df = with_patient_id(patient_data["status"])
+        status_df["patient_status_type_id"] = _map_id(
+            status_df["temp_status_type"], status_lookup
+        )
+        emcontacts_df = with_patient_id(patient_data["emcontacts"])
+
+        self.session.add_all(PatientAddress(**r) for r in _records(address_df))
+        self.session.add_all(PatientInsurance(**r) for r in _records(insurance_df))
+        self.session.add_all(MedicalNecessity(**r) for r in _records(med_nec_df))
+        self.session.add_all(PatientStatus(**r) for r in _records(status_df))
+        self.session.add_all(EmergencyContact(**r) for r in _records(emcontacts_df))
+        self.session.commit()
 
     def import_patient_note_data(self, df: pd.DataFrame) -> None:
         """
@@ -320,9 +390,19 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The patient note data DataFrame to import.
         """
-        patient_id_df = self.gps.read_sql(get_patient_id_stmt)
-        df = add_id_col(df, id_df=patient_id_df, col="sharepoint_id")
-        self.gps.to_sql(df, "patient_note", if_exists="append")
+        patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
+        note_type_lookup = self._lookup(NoteType, "name", "note_type_id")
+        user_lookup = self._lookup(User, "display_name", "user_id")
+
+        df = df.copy()
+        df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
+        df = df.drop(columns=["sharepoint_id"])
+        df = _drop_unresolved(df, "patient_id")
+        df["note_type_id"] = _map_id(df["temp_note_type"], note_type_lookup)
+        df["user_id"] = _map_id(df["temp_user"], user_lookup)
+
+        self.session.add_all(PatientNote(**row) for row in _records(df))
+        self.session.commit()
 
     def import_device_data(self, df: pd.DataFrame) -> None:
         """
@@ -331,12 +411,36 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The device data DataFrame to import.
         """
-        patient_id_df = self.gps.read_sql(get_patient_id_stmt)
-        vendor_id_df = self.gps.read_sql(get_vendor_id_stmt)
-        df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
-        vendor_id_df = vendor_id_df.rename(columns={"name": "Vendor"})
-        df = add_id_col(df=df, id_df=vendor_id_df, col="Vendor")
-        self.gps.to_sql(df, "device", if_exists="append")
+        patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
+        vendor_ids = self._lookup(Vendor, "name", "vendor_id")
+
+        df = df.copy()
+        df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
+        df["vendor_id"] = _map_id(df["Vendor"], vendor_ids)
+        df = df.drop(columns=["sharepoint_id", "Vendor"])
+        df = _drop_unresolved(df, "patient_id", "vendor_id")
+
+        self.session.add_all(Device(**row) for row in _records(df))
+        self.session.commit()
+
+    def _resolve_device_readings(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Resolve sharepoint_id -> patient_id, then fan out each reading once per
+        device the patient has -- a plain relational join, same as the pipeline has
+        always done (see the "multi-device patients get duplicated readings" known
+        gap in docs/billing-rules.md; this preserves that behavior, it does not fix
+        it, per decision 0015's scope). patient_id is a join key only: readings link
+        to a patient through their device, not through a patient_id column of their
+        own (confirmed while building the reconciliation checks; see
+        docs/reconciliation.md), so it is dropped again once it has done that job."""
+        patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
+        devices = pd.DataFrame(
+            self.session.execute(select(Device.device_id, Device.patient_id)),
+            columns=["device_id", "patient_id"],
+        )
+        df = df.copy()
+        df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
+        df = df.drop(columns=["sharepoint_id"])
+        return pd.merge(df, devices, on="patient_id").drop(columns=["patient_id"])
 
     def import_gluc_readings_data(self, df: pd.DataFrame) -> None:
         """
@@ -345,11 +449,9 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The glucose readings data DataFrame to import.
         """
-        patient_id_df = self.gps.read_sql(get_patient_id_stmt)
-        device_id_df = self.gps.read_sql(get_device_id_stmt)
-        df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
-        df = add_id_col(df=df, id_df=device_id_df, col="patient_id")
-        self.gps.to_sql(df, "glucose_reading", if_exists="append")
+        df = self._resolve_device_readings(df)
+        self.session.add_all(GlucoseReading(**row) for row in _records(df))
+        self.session.commit()
 
     def import_bp_readings_data(self, df: pd.DataFrame) -> None:
         """
@@ -358,21 +460,19 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The blood pressure readings data DataFrame to import.
         """
-        patient_id_df = self.gps.read_sql(get_patient_id_stmt)
-        device_id_df = self.gps.read_sql(get_device_id_stmt)
-        df = add_id_col(df=df, id_df=patient_id_df, col="sharepoint_id")
-        df = add_id_col(df=df, id_df=device_id_df, col="patient_id")
-        self.gps.to_sql(df, "blood_pressure_reading", if_exists="append")
+        df = self._resolve_device_readings(df)
+        self.session.add_all(BloodPressureReading(**row) for row in _records(df))
+        self.session.commit()
 
     def close_db(self) -> None:
         """
         Closes the database connection.
         """
+        self.session.close()
         if self.gps:
             self.gps.close()
 
 
-# The default logger is the root logger; a single shared default is intended.
 def import_all_data(
     start_date,
     end_date,
@@ -388,15 +488,6 @@ def import_all_data(
         snap (bool): Whether to save a snapshot of the DataFrame. Defaults to False (optional).
         logger (logging.Logger): Logger instance for logging. Defaults to logging.getLogger() (optional).
     """
-    gps = DatabaseManager(logger=logger)
-    gps.create_engine(
-        username=os.environ["GPS_SQL_USERNAME"],
-        password=os.environ["GPS_SQL_PASSWORD"],
-        host=os.environ["GPS_SQL_HOST"],
-        database=os.environ["GPS_SQL_DB"],
-    )
-    gps.execute_query("EXEC reset_all_billing_tables")
-
     data_dir = Path.cwd() / "data"
     snaps_dir = data_dir / "snaps"
     ensure_dir(snaps_dir)
@@ -404,6 +495,8 @@ def import_all_data(
         delete_files_in_dir(snaps_dir)
 
     dim = DataImporter(start_date, end_date, logger=logger)
+    reset_all_data(dim.session)
+
     user_df = dim.get_user_data(snap=snap)
     dim.import_user_data(user_df)
     patient_data = dim.get_patient_data(data_dir / "Patient_Export.csv", snap=snap)
@@ -416,14 +509,7 @@ def import_all_data(
     dim.import_bp_readings_data(bp_df)
     dim.close_db()
 
-    gps.execute_query(update_patient_note_stmt)
-    gps.execute_query(update_patient_status_stmt)
-    gps.execute_query(update_user_stmt)
-    gps.execute_query(update_user_note_stmt)
-    gps.close()
 
-
-# The default logger is the root logger; a single shared default is intended.
 def create_billing_report(
     start_date,
     end_date,

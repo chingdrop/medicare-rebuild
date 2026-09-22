@@ -1,12 +1,13 @@
 import pandas as pd
 import pytest
 
+from medicare_rebuild.models import GpsBase
 from tests.integration.conftest import (
     DB_HOST,
     DB_PASSWORD,
     DB_PORT,
     DB_USER,
-    execute_ddl,
+    _connect,
 )
 
 pytestmark = pytest.mark.integration
@@ -15,105 +16,17 @@ JSON_HEADERS = {"Content-Type": "application/json"}
 
 GROUP_ID = "00000000-0000-0000-0000-000000000000"
 
-SCHEMA = [
-    """
-    CREATE TABLE [user] (
-        user_id INT IDENTITY PRIMARY KEY,
-        first_name VARCHAR(100),
-        last_name VARCHAR(100),
-        display_name VARCHAR(200),
-        email VARCHAR(200),
-        ms_entra_id VARCHAR(100)
-    )
-    """,
-    """
-    CREATE TABLE patient (
-        patient_id INT IDENTITY PRIMARY KEY,
-        first_name VARCHAR(100),
-        last_name VARCHAR(100),
-        middle_name VARCHAR(100),
-        name_suffix VARCHAR(20),
-        full_name VARCHAR(200),
-        nick_name VARCHAR(100),
-        date_of_birth DATETIME2,
-        sex VARCHAR(10),
-        email VARCHAR(200),
-        phone_number VARCHAR(20),
-        social_security VARCHAR(20),
-        temp_race VARCHAR(50),
-        temp_marital_status VARCHAR(50),
-        preferred_language VARCHAR(50),
-        weight_lbs INT,
-        height_in INT,
-        sharepoint_id INT,
-        temp_user VARCHAR(100)
-    )
-    """,
-    """
-    CREATE TABLE patient_address (
-        patient_address_id INT IDENTITY PRIMARY KEY,
-        street_address VARCHAR(200),
-        city VARCHAR(100),
-        temp_state VARCHAR(10),
-        zipcode VARCHAR(10),
-        patient_id INT
-    )
-    """,
-    """
-    CREATE TABLE patient_insurance (
-        patient_insurance_id INT IDENTITY PRIMARY KEY,
-        medicare_beneficiary_id VARCHAR(20),
-        primary_payer_id VARCHAR(50),
-        primary_payer_name VARCHAR(100),
-        secondary_payer_id VARCHAR(50),
-        secondary_payer_name VARCHAR(100),
-        patient_id INT
-    )
-    """,
-    """
-    CREATE TABLE medical_necessity (
-        medical_necessity_id INT IDENTITY PRIMARY KEY,
-        evaluation_datetime DATETIME2,
-        temp_dx_code VARCHAR(20),
-        patient_id INT
-    )
-    """,
-    """
-    CREATE TABLE patient_status (
-        patient_status_id INT IDENTITY PRIMARY KEY,
-        temp_status_type VARCHAR(50),
-        modified_date DATETIME2,
-        temp_user VARCHAR(100),
-        patient_id INT
-    )
-    """,
-    """
-    CREATE TABLE emergency_contact (
-        emergency_contact_id INT IDENTITY PRIMARY KEY,
-        full_name VARCHAR(200),
-        phone_number VARCHAR(20),
-        relationship VARCHAR(50),
-        patient_id INT
-    )
-    """,
-]
-
-
-TABLES = [
-    "user",
-    "patient",
-    "patient_address",
-    "patient_insurance",
-    "medical_necessity",
-    "patient_status",
-    "emergency_contact",
-]
-
 
 @pytest.fixture
 def gps_schema(test_database):
-    drop_statements = [f"DROP TABLE IF EXISTS [{table}]" for table in TABLES]
-    execute_ddl(test_database, drop_statements + SCHEMA)
+    """The real GPS schema (medicare_rebuild.models), not a second, independently
+    maintained reconstruction of it -- see decision 0015."""
+    db = _connect(test_database)
+    try:
+        GpsBase.metadata.drop_all(db.engine, checkfirst=True)
+        GpsBase.metadata.create_all(db.engine)
+    finally:
+        db.close()
     return test_database
 
 

@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy import Row, create_engine, event, text
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.sql import Selectable
 
 
 class DatabaseManager:
@@ -119,7 +120,7 @@ class DatabaseManager:
 
     def read_sql(
         self,
-        query: str,
+        query: str | Selectable,
         params: tuple | None = None,
         parse_dates: list[str] | None = None,
     ) -> pd.DataFrame:
@@ -127,15 +128,18 @@ class DatabaseManager:
         Reads a SQL query and returns the result as a DataFrame.
 
         Args:
-            query (str): The SQL query to execute.
-            params (tuple): Query parameters used in execution. Defaults to None (optional).
+            query (str | Selectable): The SQL query to execute, either a raw string
+                (e.g. an ``EXEC`` call) or a SQLAlchemy Core/ORM select construct with
+                any filtering already bound into it (in which case `params` is unused).
+            params (tuple): Positional parameters for a string query with `?`
+                placeholders. Defaults to None (optional).
             parse_dates (List[str]): List of column names to parse as datetime. Defaults to None (optional).
 
         Returns:
             pd.DataFrame: The query results as a DataFrame.
         """
         df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
-        single_line_query = query.replace("\n", " ")
+        single_line_query = str(query).replace("\n", " ")
         self.logger.debug(f"Query: {single_line_query}")
         self.logger.debug(f"Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...")
         return df

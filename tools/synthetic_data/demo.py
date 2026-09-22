@@ -4,16 +4,17 @@ Run it through `make demo` (see docs/demo.md). What it does, in order:
 
 1. Create two throwaway databases on the dev SQL Server container: a "legacy" source
    database (the tables the pipeline reads) and a GPS target database.
-2. Load the generated CSV files into the legacy tables; create the GPS tables
-   (reconstructed, see schema.py) and apply the repo's stored procedures verbatim.
-3. Run the unmodified pipeline: `import_all_data`, the two patient-note steps that
+2. Load the generated CSV files into the legacy tables; create the GPS tables from
+   `medicare_rebuild.models` (the schema of record, see decision 0015) and apply the
+   repo's billing stored procedures verbatim.
+3. Run the unmodified pipeline: `import_all_data`, the patient-note step that
    `import_all_data` does not call, then `create_billing_report`.
 4. Compare what came out with the manifest the generator wrote.
 
 Deviation from `medicare_rebuild.__main__.main()` (documented in docs/demo.md):
 * `main()` never imports patient notes (dropped in an earlier refactor), so the runner
-  calls `get_patient_note_data` / `import_patient_note_data` itself and re-runs the two
-  note UPDATE statements. Without this, 99202/99457/99458 could not be demonstrated.
+  calls `get_patient_note_data` / `import_patient_note_data` itself. Without this,
+  99202/99457/99458 could not be demonstrated.
 * The Microsoft Graph step is replaced by a local-file stand-in so nothing touches the
   network. `DataImporter.get_user_data` itself runs unmodified.
 
@@ -142,19 +143,20 @@ def prepare_databases(data_dir: Path) -> None:
                 f"CREATE DATABASE {name}",
             ],
         )
-    _run(
-        GPS_DB,
-        [
-            *schema.GPS_TABLES,
-            *schema.seed_statements(),
-            *(schema.procedure_sql(p) for p in schema.PROCEDURES),
-        ],
-    )
-    _run(LEGACY_DB, schema.LEGACY_TABLES)
+
+    gps = DatabaseManager()
+    gps.create_engine(DB_USER, DB_PASSWORD, f"{DB_HOST},{DB_PORT}", GPS_DB)
+    try:
+        schema.create_gps_schema(gps.engine)
+        schema.seed_lookups(gps.get_session())
+        _run(GPS_DB, [schema.procedure_sql(p) for p in schema.PROCEDURES])
+    finally:
+        gps.close()
 
     legacy = DatabaseManager()
     legacy.create_engine(DB_USER, DB_PASSWORD, f"{DB_HOST},{DB_PORT}", LEGACY_DB)
     try:
+        schema.create_legacy_schema(legacy.engine)
         for table, (csv, date_cols) in schema.LEGACY_LOADS.items():
             df = pd.read_csv(
                 data_dir / "legacy" / csv,
@@ -213,7 +215,6 @@ def run_pipeline(data_dir: Path, work_dir: Path) -> list[str]:
     shutil.copy(data_dir / FILES["patients"], work_dir / "data" / "Patient_Export.csv")
 
     from medicare_rebuild import __main__ as pipeline
-    from medicare_rebuild.queries import update_patient_note_stmt, update_user_note_stmt
 
     start, end = (
         cfg.IMPORT_START.strftime("%Y-%m-%d"),
@@ -231,11 +232,11 @@ def run_pipeline(data_dir: Path, work_dir: Path) -> list[str]:
         chdir(work_dir),
     ):
         pipeline.import_all_data(start, end, logger=logger)
-        # The two note steps main() no longer runs (see module docstring).
+        # The note step main() no longer runs (see module docstring). Resolving
+        # temp_note_type/temp_user happens inside import_patient_note_data itself now
+        # (decision 0015), so no follow-up UPDATE is needed here.
         importer = pipeline.DataImporter(start, end, logger=logger)
         importer.import_patient_note_data(importer.get_patient_note_data())
-        importer.gps.execute_query(update_patient_note_stmt)
-        importer.gps.execute_query(update_user_note_stmt)
         importer.close_db()
         pipeline.create_billing_report(r_start, r_end, logger=logger)
     return counter.messages

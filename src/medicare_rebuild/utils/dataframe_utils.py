@@ -730,19 +730,3 @@ def check_patient_db_constraints(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df["primary_payer_id"].apply(lambda x: len(str(x)) <= 30)]
     df = df[df["secondary_payer_id"].apply(lambda x: len(str(x)) <= 30)]
     return df
-
-
-def add_id_col(df: pd.DataFrame, id_df: pd.DataFrame, col: str) -> pd.DataFrame:
-    """Merge pandas dataframes on specified column. Remove specified column after merge.
-
-    Args:
-        df (pandas.DataFrame): Target dataframe requiring ID column.
-        id_df (pandas.DataFrame): ID dataframe containing ID column.
-        col (str): Column name to be merged and deleted.
-
-    Returns:
-        pandas.Series: Target dataframe with newly added ID column.
-    """
-    df = pd.merge(df, id_df, on=col)
-    df.drop(columns=[col], inplace=True)
-    return df

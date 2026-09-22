@@ -24,26 +24,38 @@ EXPECTED_CHECK = {
     "report-off-by-one": "6 report totals",
 }
 
-_SQL = {
-    "drop-rows": """
+# Each fault is a list of one or more statements, run in order.
+_SQL: dict[str, list[str]] = {
+    "drop-rows": [
+        """
         DELETE FROM glucose_reading WHERE glucose_reading_id IN (
             SELECT TOP 3 gr.glucose_reading_id
             FROM glucose_reading gr JOIN device d ON d.device_id = gr.device_id
             WHERE d.patient_id NOT IN (SELECT patient_id FROM medical_code)
-            ORDER BY d.patient_id, gr.glucose_reading_id)""",
-    "duplicate-keys": """
+            ORDER BY d.patient_id, gr.glucose_reading_id)"""
+    ],
+    "duplicate-keys": [
+        """
         UPDATE device
         SET hardware_uuid = (
             SELECT hardware_uuid FROM device
             WHERE device_id = (SELECT MIN(device_id) FROM device))
-        WHERE device_id = (SELECT MAX(device_id) FROM device)""",
-    "orphan-fk": """
+        WHERE device_id = (SELECT MAX(device_id) FROM device)"""
+    ],
+    "orphan-fk": [
+        # models.py declares a real foreign key on device_id (decision 0015), unlike
+        # the demo's earlier hand-written schema, so it has to be disabled before this
+        # deliberately-corrupting UPDATE can run -- exactly what a real DBA would need
+        # to do to hand-craft a broken row like this one.
+        "ALTER TABLE blood_pressure_reading NOCHECK CONSTRAINT ALL",
+        """
         UPDATE blood_pressure_reading SET device_id = 987654321
         WHERE blood_pressure_reading_id = (
             SELECT TOP 1 b.blood_pressure_reading_id
             FROM blood_pressure_reading b JOIN device d ON d.device_id = b.device_id
             WHERE d.patient_id NOT IN (SELECT patient_id FROM medical_code)
             ORDER BY b.blood_pressure_reading_id)""",
+    ],
 }
 
 
@@ -74,4 +86,4 @@ def apply_faults(names: list[str], report_path: Path) -> None:
         if name == "report-off-by-one":
             bump_report_count(report_path)
         else:
-            _run(GPS_DB, [_SQL[name]])
+            _run(GPS_DB, _SQL[name])

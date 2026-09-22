@@ -1,86 +1,79 @@
-# --- GET Queries --- #
-get_bg_readings_stmt = """
-SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BG_Reading, Manual_Reading
-FROM Glucose_Readings
-WHERE Time_Recorded >= ? AND Time_Recorded <= ?
+"""SQL for the legacy source databases, as SQLAlchemy Core selects against the table
+definitions in legacy_models.py, so DataImporter's extract methods read through the
+same schema-of-record path as the GPS load side (see decision 0015).
+
+These are functions, not module-level constants, because the date-range filter has to
+be bound to real values per call (the pipeline no longer builds a `?`-placeholder
+string and passes `params=(start, end)` separately at execution time — the bound
+values are part of the returned Select itself).
 """
 
-get_bp_readings_stmt = """
-SELECT SharePoint_ID, Device_Model, Time_Recorded, Time_Recieved, BP_Reading_Systolic, BP_Reading_Diastolic, Manual_Reading
-FROM Blood_Pressure_Readings
-WHERE Time_Recorded >= ? AND Time_Recorded <= ?
-"""
+from datetime import datetime
 
-get_device_id_stmt = """
-SELECT device_id, patient_id
-FROM device
-"""
+from sqlalchemy import Select, select
 
-get_fulfillment_stmt = """
-SELECT Vendor, Device_ID, Device_Name, Patient_ID
-FROM Fulfillment_All
-WHERE Resupply = 0 AND Vendor IN ('Tenovi', 'Omron')
-"""
-
-get_notes_log_stmt = """
-SELECT SharePoint_ID, Notes, TimeStamp, AZURE_UPN, Time_Note, Note_ID
-FROM Medical_Notes
-WHERE TimeStamp >= ? AND TimeStamp <= ?
-"""
-
-get_patient_id_stmt = """
-SELECT patient_id, sharepoint_id
-FROM patient
-"""
-
-get_time_log_stmt = """
-SELECT SharPoint_ID, Recording_Time, AZURE_UPN, Notes, Auto_Time, Start_Time, End_Time, Note_ID
-FROM Time_Log
-WHERE End_Time >= ? AND End_Time <= ?
-"""
-
-get_vendor_id_stmt = """
-SELECT vendor_id, name
-FROM vendor
-"""
-
-# --- UPDATE Queries --- #
-update_patient_note_stmt = """
-UPDATE patient_note
-SET patient_note.note_type_id = (
-	SELECT nt.note_type_id
-	FROM note_type nt
-	WHERE nt.name = patient_note.temp_note_type
+from medicare_rebuild.legacy_models import (
+    blood_pressure_readings,
+    fulfillment_all,
+    glucose_readings,
+    medical_notes,
+    time_log,
 )
-WHERE patient_note.temp_note_type IS NOT NULL;
-"""
 
-update_patient_status_stmt = """
-UPDATE patient_status
-SET patient_status.patient_status_type_id = (
-	SELECT pst.patient_status_type_id
-	FROM patient_status_type pst
-	WHERE pst.name = patient_status.temp_status_type
-)
-WHERE patient_status.temp_status_type IS NOT NULL;
-"""
 
-update_user_stmt = """
-UPDATE patient
-SET patient.user_id = (
-	SELECT u.user_id
-	FROM [user] u
-	WHERE u.display_name = patient.temp_user
-)
-WHERE patient.temp_user IS NOT NULL;
-"""
+def get_bg_readings_stmt(start: datetime, end: datetime) -> Select:
+    t = glucose_readings
+    return select(
+        t.c.SharePoint_ID,
+        t.c.Device_Model,
+        t.c.Time_Recorded,
+        t.c.Time_Recieved,
+        t.c.BG_Reading,
+        t.c.Manual_Reading,
+    ).where(t.c.Time_Recorded >= start, t.c.Time_Recorded <= end)
 
-update_user_note_stmt = """
-UPDATE patient_note
-SET patient_note.user_id = (
-	SELECT u.user_id
-	FROM [user] u
-	WHERE u.display_name = patient_note.temp_user
-)
-WHERE patient_note.temp_user IS NOT NULL;
-"""
+
+def get_bp_readings_stmt(start: datetime, end: datetime) -> Select:
+    t = blood_pressure_readings
+    return select(
+        t.c.SharePoint_ID,
+        t.c.Device_Model,
+        t.c.Time_Recorded,
+        t.c.Time_Recieved,
+        t.c.BP_Reading_Systolic,
+        t.c.BP_Reading_Diastolic,
+        t.c.Manual_Reading,
+    ).where(t.c.Time_Recorded >= start, t.c.Time_Recorded <= end)
+
+
+def get_fulfillment_stmt() -> Select:
+    t = fulfillment_all
+    return select(t.c.Vendor, t.c.Device_ID, t.c.Device_Name, t.c.Patient_ID).where(
+        t.c.Resupply == 0, t.c.Vendor.in_(["Tenovi", "Omron"])
+    )
+
+
+def get_notes_log_stmt(start: datetime, end: datetime) -> Select:
+    t = medical_notes
+    return select(
+        t.c.SharePoint_ID,
+        t.c.Notes,
+        t.c.TimeStamp,
+        t.c.AZURE_UPN,
+        t.c.Time_Note,
+        t.c.Note_ID,
+    ).where(t.c.TimeStamp >= start, t.c.TimeStamp <= end)
+
+
+def get_time_log_stmt(start: datetime, end: datetime) -> Select:
+    t = time_log
+    return select(
+        t.c.SharPoint_ID,
+        t.c.Recording_Time,
+        t.c.AZURE_UPN,
+        t.c.Notes,
+        t.c.Auto_Time,
+        t.c.Start_Time,
+        t.c.End_Time,
+        t.c.Note_ID,
+    ).where(t.c.End_Time >= start, t.c.End_Time <= end)
