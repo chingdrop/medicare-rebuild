@@ -20,7 +20,7 @@ The alternatives are not recorded in the repository.
 
 - Setup is one command (`uv sync`) with no second repository.
 - Two copies exist if the library is still used elsewhere; fixes must be made in both, or the copies will drift.
-- The library is licensed GPL-3.0 and this repository is MIT. <!-- TODO(craig): confirm the licence for the copied files. -->
+- The library is licensed GPL-3.0, but its sole author is this repository's author, who relicensed the three copied files under this repository's MIT license (noted in each file's header).
 - `requires-python` stays at 3.12; lowering it was not tested.
 - `certifi` and `urllib3` became direct dependencies, because the copied adapter imports them.
 

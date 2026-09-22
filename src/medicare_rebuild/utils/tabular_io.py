@@ -1,9 +1,8 @@
-# Copied from py-shared-tools v1.3.1 (https://github.com/chingdrop/py-shared-tools,
-# commit d54dcd6), copyright Craig Hurley. Only the symbols this repository uses were
-# copied, and docstrings were trimmed where they referred to code that was not copied.
-# The source repository is licensed under GPL-3.0 (see its LICENSE file).
-# TODO(craig): the rest of this repository is MIT. As the sole author you can license
-# these copies under MIT; confirm the intended licence and update this notice.
+# Originally written for py-shared-tools v1.3.1 (https://github.com/chingdrop/
+# py-shared-tools, commit d54dcd6) by Craig Hurley, and relicensed here under this
+# repository's MIT license (see ../../../LICENSE) by the same author. Only the symbols
+# this repository uses were copied, and docstrings were trimmed where they referred to
+# code that was not copied.
 
 """Extension-dispatch tabular file writing: write a DataFrame as CSV, Excel, JSON,
 or HTML based on the file's extension, without the caller picking the right pandas
