@@ -144,6 +144,10 @@ Why the pipeline is built the way it is - staged ETL, billing rules in stored pr
 
 The repository holds synthetic data only. How credentials, connections, logging and data-file guards work (and what a real deployment would still need) is in [docs/data-handling.md](docs/data-handling.md); to report a vulnerability, see [SECURITY.md](SECURITY.md).
 
+## Limitations, roadmap and changelog
+
+What this reference implementation doesn't cover, and what's traceable as a possible next step, is in [docs/limitations-and-roadmap.md](docs/limitations-and-roadmap.md). Notable changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+
 ## Tech stack
 
 Versions come from [`pyproject.toml`](pyproject.toml).
