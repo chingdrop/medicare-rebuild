@@ -20,3 +20,9 @@ ephemeral, throwaway database from `GpsBase.metadata.create_all()` directly, whi
 faster and needs no migration history. `tests/integration/test_alembic_integration.py`
 is what actually exercises the migration chain, confirming it produces the same schema
 `create_all()` would.
+
+Not every migration is a schema change: `31d8eabb7bab_seed_lookup_tables.py` inserts the
+lookup rows (vendors, note types, patient statuses, billing codes) the pipeline resolves
+against, from a frozen copy of `models.LOOKUP_SEEDS`. `tests/test_alembic_seed.py` fails
+if the two copies disagree. A change to the required values needs a new data migration,
+not an edit to that one.

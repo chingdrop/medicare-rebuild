@@ -11,6 +11,7 @@ import pytest
 from alembic.config import Config
 
 from alembic import command
+from medicare_rebuild.__main__ import _require_lookup_seeds
 from tests.integration.conftest import DB_HOST, DB_PASSWORD, DB_PORT, DB_USER, _connect
 
 pytestmark = pytest.mark.integration
@@ -51,3 +52,21 @@ def test_downgrade_to_base_drops_every_table(alembic_config, test_database):
     finally:
         db.close()
     assert rows["n"].iloc[0] == 0
+
+
+def test_upgrade_head_seeds_every_lookup_row(alembic_config, test_database):
+    """A database built only by `make migrate` holds every lookup row the pipeline
+    needs -- the guard in import_all_data() passes against it."""
+    command.upgrade(alembic_config, "head")
+
+    db = _connect(test_database)
+    try:
+        session = db.get_session()
+        try:
+            _require_lookup_seeds(session)
+        finally:
+            session.close()
+    finally:
+        db.close()
+        # The session-scoped test database is shared with later test modules.
+        command.downgrade(alembic_config, "base")

@@ -6,16 +6,15 @@ Run it through `make demo` (see docs/demo.md). What it does, in order:
    database (the tables the pipeline reads) and a GPS target database.
 2. Load the generated CSV files into the legacy tables; create the GPS tables from
    `medicare_rebuild.models` (the schema of record, see decision 0015).
-3. Run the unmodified pipeline: `import_all_data`, the patient-note step that
-   `import_all_data` does not call, then `create_billing_report`.
+3. Run the unmodified pipeline: `import_all_data`, then `create_billing_report`.
 4. Compare what came out with the manifest the generator wrote.
 
 Deviation from `medicare_rebuild.__main__.main()` (documented in docs/demo.md):
-* `main()` never imports patient notes (dropped in an earlier refactor), so the runner
-  calls `get_patient_note_data` / `import_patient_note_data` itself. Without this,
-  99202/99457/99458 could not be demonstrated.
 * The Microsoft Graph step is replaced by a local-file stand-in so nothing touches the
   network. `DataImporter.get_user_data` itself runs unmodified.
+* The configured dates (report end 2025-02-28) are passed as-is, where `main()` passes
+  the first day of the following month as the end bound; keeping the last day as the
+  bound is what lets S10/S13/S14 pin the end-date edge.
 
 The SQL Server credentials below are the throwaway ones already in docker-compose.yml.
 They are dev-only and protect nothing.
@@ -235,12 +234,6 @@ def run_pipeline(data_dir: Path, work_dir: Path) -> list[str]:
         chdir(work_dir),
     ):
         pipeline.import_all_data(start, end, logger=logger)
-        # The note step main() no longer runs (see module docstring). Resolving
-        # temp_note_type/temp_user happens inside import_patient_note_data itself now
-        # (decision 0015), so no follow-up UPDATE is needed here.
-        importer = pipeline.DataImporter(start, end, logger=logger)
-        importer.import_patient_note_data(importer.get_patient_note_data())
-        importer.close_db()
         pipeline.create_billing_report(r_start, r_end, logger=logger)
     return counter.messages
 

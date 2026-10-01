@@ -198,10 +198,11 @@ demo_data/                       generated: Patient_Export.csv, users.json, lega
   the runner swaps that one class for a stand-in that reads `demo_data/users.json`
   (`unittest.mock.patch` inside the runner process). `get_user_data` itself runs unmodified,
   and the `AZURE_*` variables are set to obvious placeholders that are never used.
-- **Patient notes.** `main()` and `import_all_data()` never import patient notes (that step
-  was dropped in a refactor), so as written they cannot produce 99202, 99457 or 99458. The
-  runner calls `get_patient_note_data` / `import_patient_note_data` itself. This is the only
-  orchestration difference from `main()`.
+- **Dates.** The runner passes its configured dates (report end 2025-02-28) straight to
+  `import_all_data()` and `create_billing_report()`, where `main()` would pass the first day
+  of the following month as the end bound. Keeping the last day as the bound is what lets
+  S10, S13 and S14 pin the end-date edge described below. This and Microsoft Graph are the
+  only orchestration differences from `main()`.
 
 No file under `src/` or `sql/` is modified by the demo.
 
@@ -217,7 +218,8 @@ change them.
 - **A code can be applied yet fall outside the report** (S10, S13). The report keeps codes
   stamped up to midnight at the *start* of the end date, so a reading received at 00:20 on the
   last day is coded but not reported. Similarly, S14: data recorded after midnight on the end
-  date is never extracted.
+  date is never extracted. `main()` avoids losing a real month's last day this way by passing
+  the first day of the following month as the end date.
 - **Duplicate notes double-count time** (S35). Nothing de-duplicates notes, so a note present
   twice is counted twice toward 99457.
 - **Rejected patients disappear silently** (S39-S42). Rows violating column limits are
