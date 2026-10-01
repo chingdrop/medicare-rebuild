@@ -249,7 +249,7 @@ def _patients_with_any_code(session: Session, type_names: list[str]) -> set[int]
         )
         .where(MedicalCodeType.name.in_(type_names))
     ).all()
-    return {pid for (pid,) in rows}
+    return {pid for (pid,) in rows if pid is not None}
 
 
 def _excluded_patients(
@@ -260,7 +260,7 @@ def _excluded_patients(
         .where(MedicalCode.med_code_type_id == code_type_id)
         .where(MedicalCode.timestamp_applied >= window_start)
     ).all()
-    return {pid for (pid,) in rows}
+    return {pid for (pid,) in rows if pid is not None}
 
 
 def _linked_devices(session: Session, code_type_id: int) -> pd.DataFrame:
