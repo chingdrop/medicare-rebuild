@@ -36,7 +36,7 @@ COLUMNS = {
     "patient_status": ["patient_status_id", "patient_id", "patient_status_type_id"],
     "emergency_contact": ["emergency_contact_id", "patient_id"],
     "vendor": ["vendor_id"],
-    "device": ["device_id", "hardware_uuid", "patient_id", "vendor_id"],
+    "device": ["device_id", "hardware_uuid", "name", "patient_id", "vendor_id"],
     "glucose_reading": [
         "glucose_reading_id",
         "device_id",
@@ -178,12 +178,14 @@ def world() -> tuple[Source, Loaded, dict]:
                 {
                     "device_id": 100,
                     "hardware_uuid": "d1",
+                    "name": "Glucometer",
                     "patient_id": 10,
                     "vendor_id": 1,
                 },
                 {
                     "device_id": 101,
                     "hardware_uuid": "d2",
+                    "name": "Glucometer",
                     "patient_id": 11,
                     "vendor_id": 1,
                 },
@@ -314,7 +316,7 @@ def test_conservation_fails_when_a_loaded_row_goes_missing():
 def test_conservation_counts_device_fanout_as_a_documented_disposition():
     src, loaded, derived = world()
     t = loaded.tables
-    # A second device for patient 1 loads each of their readings twice.
+    # A second glucose meter for patient 1 loads each of their glucose readings twice.
     t["device"] = pd.concat(
         [
             t["device"],
@@ -324,6 +326,7 @@ def test_conservation_counts_device_fanout_as_a_documented_disposition():
                     {
                         "device_id": 102,
                         "hardware_uuid": "d3",
+                        "name": "Glucometer",
                         "patient_id": 10,
                         "vendor_id": 1,
                     }
@@ -577,3 +580,36 @@ def test_output_carries_counts_and_ids_but_no_row_values():
     text, payload = render_text(rec), render_json(rec)
     assert "SentinelFirstName" not in text + payload
     assert json.loads(payload)["counts_and_synthetic_ids_only"] is True
+
+
+def test_conservation_does_not_count_a_device_of_another_type_as_fanout():
+    """A blood pressure cuff does not receive glucose readings, so adding one for
+    patient 1 leaves the glucose counts exactly as they were."""
+    src, loaded, derived = world()
+    t = loaded.tables
+    t["device"] = pd.concat(
+        [
+            t["device"],
+            table(
+                "device",
+                [
+                    {
+                        "device_id": 102,
+                        "hardware_uuid": "d3",
+                        "name": "Blood Pressure Cuff",
+                        "patient_id": 10,
+                        "vendor_id": 1,
+                    }
+                ],
+            ),
+        ]
+    )
+    src.devices = pd.concat(
+        [
+            src.devices,
+            pd.DataFrame({"Patient_ID": [1], "Vendor": ["Omron"], "Resupply": [0]}),
+        ]
+    )
+    r = checks.check_row_conservation(src, loaded, CFG, REASONS, derived)
+    assert r.ok
+    assert r.details["sources"]["glucose readings"]["loaded_from_fanout"] == 0

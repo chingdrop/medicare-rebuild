@@ -13,6 +13,28 @@ anything before that commit.
 
 ### Fixed
 
+- Readings are linked only to a device of their own type. Legacy readings carry no
+  device ID, and they used to be joined on the patient alone, so a patient with a
+  glucose meter and a blood pressure cuff had every glucose reading attached to the
+  cuff too, and vice versa. `standardize_device_type` classifies each device from its
+  name, and a reading whose patient has no device of its type is dropped and logged.
+  The demo now loads 807 glucose and 507 blood pressure readings (was 823 and 523);
+  the billing report is unchanged. Reconciliation's `NO_DEVICE_ON_FILE` disposition is
+  now `NO_MATCHING_DEVICE`.
+- Legacy database connections are always closed: the extract methods open them through
+  `DataImporter._legacy_db()`, and `import_all_data()`/`create_billing_report()` close
+  the GPS connection even when a step fails. Three of the four extract methods never
+  closed theirs.
+- Notes are matched to their author by Entra sign-in name. `AZURE_UPN` was compared to
+  users' display names, so notes recorded by sign-in name never resolved a user. A new
+  `user.user_principal_name` column (migration `25e93cc1aeb6`) holds Graph's
+  `userPrincipalName`, matched case-insensitively. A display name shared by two users
+  (for a patient's health coach) is now left unmatched and logged instead of resolving
+  to whichever row came last.
+- Duplicate patients are no longer silent: a SharePoint ID on more than one patient row
+  keeps only its first row (the others would have taken over its notes, devices and
+  readings), and patients sharing a name and date of birth are logged as possible
+  duplicates. The commented-out `patient_check_failed_data` prototype is removed.
 - A GPS database built with `make migrate` had empty lookup tables, so a real run
   dropped every device (no vendor to resolve against) and with it every reading, then
   stopped in billing on the first code type lookup. A new migration

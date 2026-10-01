@@ -112,6 +112,7 @@ def test_import_user_data(data_importer, requests_mock):
                     "surname": "Coach",
                     "displayName": "Alex Coach",
                     "mail": "alex.coach@example.com",
+                    "userPrincipalName": "acoach@example.com",
                     "id": "entra-id-1",
                 }
             ]

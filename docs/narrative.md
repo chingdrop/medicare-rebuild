@@ -60,9 +60,10 @@ why the two test layers exist.
 
 Multi-device patients loading duplicated readings — a join fans out per device rather
 than per patient — is a similar case: harmless to billing (which counts distinct days,
-not rows), but a real anomaly I noticed and never tracked down at the time. It's
-documented now in [billing-rules.md](billing-rules.md#known-gaps-and-assumptions) and
-pinned by the synthetic demo.
+not rows), but a real anomaly I noticed and never tracked down at the time. It's fixed
+now: readings are linked only to a device of their own type (see
+[billing-rules.md](billing-rules.md#known-gaps-and-assumptions)), and the synthetic demo
+pins that.
 
 ## What I'd change now
 

@@ -35,6 +35,17 @@ STAFF = [
     SERVICE_ACCOUNT,
 ]
 
+
+def upn(name: str) -> str:
+    """A staff member's Entra sign-in name, as Graph's userPrincipalName and as the
+    legacy notes' AZURE_UPN (which the pipeline matches notes to users on). The
+    special-cased names above are already sign-in-name placeholders and stay as they
+    are; a display name like a coach's becomes an example.com address."""
+    if " " not in name:
+        return name
+    return "".join(ch for ch in name.lower() if ch.isalnum()) + "@example.com"
+
+
 # Fixed fictional addresses. Single-word cities because the pipeline strips spaces
 # from city names. ZIP codes use the unassigned 000xx range.
 ADDRESSES = [

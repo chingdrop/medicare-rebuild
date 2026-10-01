@@ -117,7 +117,7 @@ def test_every_scenario_is_present_in_the_manifest_and_data(generated):
         else:
             assert pid not in export_ids and pid in source_ids, s["key"]
         assert set(s["flags"]) <= {
-            "reading_fanout",
+            "multi_device",
             "report_end_date_edge",
             "duplicate_rows_loaded_as_is",
             "call_time_double_counted",
@@ -132,7 +132,7 @@ def test_every_billing_code_and_edge_case_is_covered(generated):
     for code in cfg.BILLING_CODES:
         assert code in rules
     flags = {f for s in manifest["scenarios"] for f in s["flags"]}
-    assert {"reading_fanout", "report_end_date_edge"} <= flags
+    assert {"multi_device", "report_end_date_edge"} <= flags
     edges = " ".join(s["edge"] for s in manifest["scenarios"])
     for phrase in (
         "just below",
