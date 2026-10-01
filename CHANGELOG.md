@@ -30,6 +30,14 @@ anything before that commit.
 
 ### Changed
 
+- Upgraded to pandas 3 (3.0.6) and NumPy 2 (2.5.3), with `pandas-stubs` 3.0.5:
+  `pyproject.toml` now requires `pandas >=3.0.0, <4.0.0` and `numpy >=2.0.0, <3.0.0`
+  (pandas 3 requires NumPy 2 on newer Pythons). `create_med_necessity_df` builds its
+  split diagnosis-code column with `.assign` (pandas 3's default `str` dtype rejects
+  writing lists into the column in place), and `fill_primary_payer` /
+  `fill_primary_payer_id` read the "nan" text placeholder through a small helper
+  instead of a regex `row.replace`, which the new stubs reject. The demo's report
+  content hash is unchanged.
 - `DataImporter`'s load path now inserts through the ORM and resolves identity and
   lookup-table foreign keys via `session.flush()` and small dict lookups, replacing
   `add_id_col`, the three `get_*_id_stmt` queries, and the four deferred
