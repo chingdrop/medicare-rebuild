@@ -191,9 +191,11 @@ class DataImporter:
                 ids.setdefault(k.lower() if casefold else k, set()).add(v)
         ambiguous = sorted(k for k, v in ids.items() if len(v) > 1)
         if ambiguous:
+            # A count only: the values themselves are staff names, and logs carry no
+            # row contents (docs/data-handling.md).
             self.logger.warning(
                 f"{len(ambiguous)} {model.__tablename__}.{key_attr} value(s) belong to "
-                f"more than one row and will not be matched: {', '.join(ambiguous)}"
+                "more than one row and will not be matched"
             )
         return {k: next(iter(v)) for k, v in ids.items() if len(v) == 1}
 
@@ -265,15 +267,18 @@ class DataImporter:
         df = normalize_patients(df)
         df = check_patient_db_constraints(df)
         df, dup_ids = drop_duplicate_sharepoint_ids(df)
+        # Counts only: logs carry no row contents (docs/data-handling.md). Run with
+        # snap=True to inspect the rows themselves.
         if dup_ids:
             self.logger.warning(
                 f"{len(dup_ids)} SharePoint ID(s) appear on more than one patient row; "
-                f"kept the first row of each: {dup_ids}"
+                "kept the first row of each"
             )
-        for ids in find_possible_duplicate_patients(df):
+        possible_dupes = find_possible_duplicate_patients(df)
+        if possible_dupes:
             self.logger.warning(
-                f"Possible duplicate patient (same name and date of birth): "
-                f"SharePoint IDs {ids}"
+                f"{len(possible_dupes)} possible duplicate patient(s): rows with "
+                "different SharePoint IDs share a name and date of birth"
             )
         res = {
             "patient": create_patient_df(df),
@@ -478,8 +483,7 @@ class DataImporter:
         if unclassified.any():
             self.logger.warning(
                 f"{int(unclassified.sum())} device(s) loaded whose name does not say "
-                "whether they are a glucose meter or a blood pressure cuff; no "
-                f"reading will be linked to them: {sorted(set(df.loc[unclassified, 'name']))}"
+                "what type of device they are; no reading will be linked to them"
             )
 
         self.session.add_all(Device(**row) for row in _records(df))
@@ -517,8 +521,8 @@ class DataImporter:
         )
         if no_device.any():
             self.logger.warning(
-                f"{int(no_device.sum())} {device_type} reading(s) dropped: the patient "
-                f"has no {device_type} device on file"
+                f"{int(no_device.sum())} reading(s) dropped: the patient has no device "
+                "of the reading's type on file"
             )
         return pd.merge(df, devices, on="patient_id").drop(columns=["patient_id"])
 

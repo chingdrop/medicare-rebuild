@@ -102,7 +102,8 @@ def test_unique_lookup_leaves_shared_keys_unmatched_and_logs_them(managers, capl
         lookup = importer._unique_lookup(pipeline.User, "display_name", "user_id")
 
     assert lookup == {"Sam Roe": 3}
-    assert "Jane Doe" in caplog.text
+    assert "1 user.display_name value(s)" in caplog.text
+    assert "Jane Doe" not in caplog.text  # counts only, never row contents
 
 
 def test_unique_lookup_casefold_matches_sign_in_names_case_insensitively(managers):
