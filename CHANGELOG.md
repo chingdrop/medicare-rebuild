@@ -30,6 +30,12 @@ anything before that commit.
 
 ### Changed
 
+- README's Data model section draws the five ERDs as Mermaid `erDiagram`s generated
+  from `models.py` (real columns, keys and foreign keys) instead of embedding the PNGs.
+  Tables from the original design that were never built (the language, race, marital
+  status, state and diagnosis-code lookups, patient comments, and the fulfillment
+  tables) are shown dotted and marked *design only*. The PNGs stay in `docs/erd/` as
+  the original design, still linked from the decision records and other docs.
 - Upgraded to pandas 3 (3.0.6) and NumPy 2 (2.5.3), with `pandas-stubs` 3.0.5:
   `pyproject.toml` now requires `pandas >=3.0.0, <4.0.0` and `numpy >=2.0.0, <3.0.0`
   (pandas 3 requires NumPy 2 on newer Pythons). `create_med_necessity_df` builds its
