@@ -92,27 +92,227 @@ Full output, how the demo works, and how to reset it (`make demo-down`): [docs/d
 
 ## Data model
 
-Schema design (the pipeline populates the patient, device, reading, note and medical-code tables).
+The GPS database's tables, drawn from [`models.py`](src/medicare_rebuild/models.py), the schema of record ([decision 0015](docs/decisions/0015-full-orm-schema-of-record.md)); the generated DDL is [`sql/schema.sql`](sql/schema.sql). Solid lines are real foreign keys. Dotted lines and entities marked *(design only)* come from the original schema design ([`docs/erd/`](docs/erd/)) but were not built as tables: most survive as a `temp_*` text column holding the raw value, and the fulfillment tables do not exist at all. Every foreign key column is nullable, and `temp_*` columns without a matching key stay unresolved text.
 
-![Patient ERD](docs/erd/1_patient_erd.png)
+### Patient
 
-*Patient, address, emergency contacts, status history, user and lookup tables.*
+```mermaid
+erDiagram
+    patient_status_type ||--o{ patient_status : classifies
+    user ||--o{ patient : "assigned to"
+    patient ||--o{ patient_address : has
+    address_state |o..o{ patient_address : "temp_state"
+    marital_status |o..o{ patient : "temp_marital_status"
+    user |o..o{ patient_status : "changed by (temp_user)"
+    patient ||--o{ patient_status : "status history"
+    language |o..o{ patient : "preferred_language"
+    patient ||--o{ emergency_contact : has
+    race |o..o{ patient : "temp_race"
 
-![Patient Health ERD](docs/erd/2_patient_health_erd.png)
+    language["language (design only)"] {
+    }
+    race["race (design only)"] {
+    }
+    marital_status["marital_status (design only)"] {
+    }
+    address_state["address_state (design only)"] {
+    }
+    patient {
+        int patient_id PK
+        int user_id FK
+        int sharepoint_id "legacy SharePoint ID"
+        string first_name
+        string last_name
+        string middle_name
+        string name_suffix
+        string full_name
+        string nick_name
+        datetime2 date_of_birth
+        string sex
+        string email
+        string phone_number
+        string social_security
+        string temp_race
+        string temp_marital_status
+        string preferred_language
+        int weight_lbs
+        int height_in
+        string temp_user
+    }
+    user {
+        int user_id PK
+        string first_name
+        string last_name
+        string display_name
+        string email
+        string ms_entra_id
+    }
+    patient_address {
+        int patient_address_id PK
+        int patient_id FK
+        string street_address
+        string city
+        string temp_state
+        string zipcode
+    }
+    emergency_contact {
+        int emergency_contact_id PK
+        int patient_id FK
+        string full_name
+        string phone_number
+        string relationship
+    }
+    patient_status {
+        int patient_status_id PK
+        int patient_id FK
+        int patient_status_type_id FK
+        string temp_status_type
+        datetime2 modified_date
+        string temp_user
+    }
+    patient_status_type {
+        int patient_status_type_id PK
+        string name
+    }
+```
 
-*Devices, glucose and blood pressure readings, and medical necessity (diagnosis codes).*
+### Patient health
 
-![Patient Note ERD](docs/erd/3_patient_time_erd.png)
+```mermaid
+erDiagram
+    device ||--o{ blood_pressure_reading : records
+    dx_code |o..o{ medical_necessity : "temp_dx_code"
+    patient ||--o{ device : uses
+    device ||--o{ glucose_reading : records
+    vendor ||--o{ device : supplies
+    patient ||--o{ medical_necessity : "diagnosed with"
 
-*Patient notes and comments, by user and note type.*
+    dx_code["dx_code (design only)"] {
+    }
+    device {
+        int device_id PK
+        int patient_id FK
+        int vendor_id FK
+        string hardware_uuid
+        string name
+    }
+    vendor {
+        int vendor_id PK
+        string name
+    }
+    glucose_reading {
+        int glucose_reading_id PK
+        int device_id FK
+        datetime2 recorded_datetime
+        datetime2 received_datetime "drives 99453/99454 day counts"
+        float glucose_reading
+        bit is_manual
+        string temp_device
+    }
+    blood_pressure_reading {
+        int blood_pressure_reading_id PK
+        int device_id FK
+        datetime2 recorded_datetime
+        datetime2 received_datetime "drives 99453/99454 day counts"
+        float systolic_reading
+        float diastolic_reading
+        bit is_manual
+        string temp_device
+    }
+    medical_necessity {
+        int medical_necessity_id PK
+        int patient_id FK
+        datetime2 evaluation_datetime "on-board date"
+        string temp_dx_code
+    }
+```
 
-![Patient Billing ERD](docs/erd/4_patient_billing_erd.png)
+### Patient notes
 
-*Insurance, medical codes by type, and the link between codes and devices.*
+```mermaid
+erDiagram
+    patient ||..o{ patient_comment : "about"
+    note_type ||--o{ patient_note : classifies
+    user ||..o{ patient_comment : writes
+    user ||--o{ patient_note : writes
+    patient ||--o{ patient_note : "about"
 
-![Patient Fulfillment ERD](docs/erd/5_patient_fulfillment_erd.png)
+    patient_note {
+        int patient_note_id PK
+        int patient_id FK
+        int user_id FK
+        int note_type_id FK
+        nvarchar note_content
+        datetime2 note_datetime
+        float call_time_seconds "drives 99202/99457/99458"
+        datetime2 start_call_datetime
+        datetime2 end_call_datetime
+        bit is_manual
+        string temp_user
+        string temp_note_type
+    }
+    note_type {
+        int note_type_id PK
+        string name
+    }
+    patient_comment["patient_comment (design only)"] {
+    }
+```
 
-*Orders and resupply, with vendors and devices. Not loaded by this pipeline.*
+### Patient billing
+
+A billable event is a timestamped `medical_code` row: `timestamp_applied` is the date of service the billing report groups by ([decision 0003](docs/decisions/0003-medical-code-rows-carry-the-date-of-service.md)). `medical_code_device` links a code to the devices whose readings earned it; in this pipeline only 99453 writes these links, to every device the patient has.
+
+```mermaid
+erDiagram
+    patient ||--o{ patient_insurance : "covered by"
+    patient ||--o{ medical_necessity : "diagnosed with"
+    patient ||--o{ medical_code : "billed"
+    medical_code_type ||--o{ medical_code : classifies
+    medical_code ||--o{ medical_code_device : "based on"
+    device ||--o{ medical_code_device : "based on"
+
+    patient_insurance {
+        int patient_insurance_id PK
+        int patient_id FK
+        string medicare_beneficiary_id
+        string primary_payer_id
+        string primary_payer_name
+        string secondary_payer_id
+        string secondary_payer_name
+    }
+    medical_code {
+        int med_code_id PK
+        int patient_id FK
+        int med_code_type_id FK
+        datetime2 timestamp_applied "date of service"
+    }
+    medical_code_type {
+        int med_code_type_id PK
+        string name "99202, 99453, 99454, 99457, 99458"
+    }
+    medical_code_device {
+        int medical_code_device_id PK
+        int med_code_id FK
+        int device_id FK
+    }
+```
+
+### Patient fulfillment (design only)
+
+Orders and resupply were part of the original design but have no tables in `models.py` and are not loaded by this pipeline; only `patient`, `device` and `vendor` exist.
+
+```mermaid
+erDiagram
+    vendor ||--o{ device : supplies
+    order_device }o..|| device : "shipped in"
+    order ||..o{ order_resupply : includes
+    order ||..o{ order_device : includes
+    order_status_type ||..o{ order : classifies
+    device ||..o{ resupply : "resupplied by"
+    patient ||..o{ order : places
+    resupply ||..o{ order_resupply : "shipped in"
+```
 
 ## Scope
 
