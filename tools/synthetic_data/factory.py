@@ -149,12 +149,14 @@ class Factory:
                 f"SYN-BG-{sid:06d}-{n}",
                 f"Tenovi Glucometer ({cfg.SYNTHETIC_MARKER})",
                 resupply,
+                kind="bg",
             )
         return Device(
             "Omron",
             f"SYN-BP-{sid:06d}-{n}",
             f"Omron Blood Pressure Cuff ({cfg.SYNTHETIC_MARKER})",
             resupply,
+            kind="bp",
         )
 
     # -- readings ---------------------------------------------------------
@@ -203,7 +205,7 @@ class Factory:
         body = f"{cfg.SYNTHETIC_MARKER} note: {self.rng.choice(templates)}"
         return Note(
             timestamp=when,
-            upn=upn or self.rng.choice(cfg.COACHES),
+            upn=upn or cfg.upn(self.rng.choice(cfg.COACHES)),
             body=body,
             note_type=note_type,
             seconds=seconds,

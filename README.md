@@ -68,8 +68,8 @@ Rows: source -> loaded
   users                         8 ->     8
   patients                    200 ->   196
   devices                     109 ->   103
-  glucose readings            904 ->   823
-  blood pressure readings     507 ->   523
+  glucose readings            904 ->   807
+  blood pressure readings     507 ->   507
   patient notes               158 ->   153
 ...
 Billing codes        applied   in report
@@ -145,6 +145,7 @@ erDiagram
         string last_name
         string display_name
         string email
+        string user_principal_name "matches notes' AZURE_UPN"
         string ms_entra_id
     }
     patient_address {

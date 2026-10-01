@@ -55,7 +55,10 @@ def test_every_source_row_is_accounted_for(clean):
     assert {s["unexplained"] for s in sources.values()} == {0}
     assert sources["patients"]["dispositions"]["PATIENT_REJECTED"] > 0
     assert sources["patients"]["rejected_by_reason"]
-    assert sources["glucose readings"]["loaded_from_fanout"] > 0  # multi-device patient
+    # The multi-device patient (S07) has one glucose meter and one cuff: each reading
+    # is linked only to the device of its own type, so nothing loads twice.
+    assert sources["glucose readings"]["loaded_from_fanout"] == 0
+    assert sources["blood pressure readings"]["loaded_from_fanout"] == 0
 
 
 def test_reconciliation_is_reproducible(clean):

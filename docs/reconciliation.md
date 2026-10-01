@@ -67,8 +67,8 @@ Row conservation (source = loaded + merged + dispositions):
   patients                 source   200 = loaded 196 + duplicates merged 0 + PATIENT_REJECTED 4  [unexplained 0]
                            rejected by reason: EMERGENCY_PHONE_1_LENGTH 1, PHONE_LENGTH 1, STATE_LENGTH 1, ZIP_LENGTH 1
   devices                  source   109 = loaded 103 + duplicates merged 0 + EXCLUDED_BY_SOURCE_QUERY 1 + NO_PATIENT_IN_EXPORT 1 + PATIENT_REJECTED 4  [unexplained 0]
-  glucose readings         source   904 = loaded 823 (of which 16 extra from device fan-out) + duplicates merged 0 + OUTSIDE_EXTRACT_WINDOW 1 + NO_PATIENT_IN_EXPORT 16 + PATIENT_REJECTED 64 + NO_DEVICE_ON_FILE 16  [unexplained 0]
-  blood pressure readings  source   507 = loaded 523 (of which 16 extra from device fan-out) + duplicates merged 0 + OUTSIDE_EXTRACT_WINDOW 0 + NO_PATIENT_IN_EXPORT 0 + PATIENT_REJECTED 0 + NO_DEVICE_ON_FILE 0  [unexplained 0]
+  glucose readings         source   904 = loaded 807 + duplicates merged 0 + OUTSIDE_EXTRACT_WINDOW 1 + NO_PATIENT_IN_EXPORT 16 + PATIENT_REJECTED 64 + NO_MATCHING_DEVICE 16  [unexplained 0]
+  blood pressure readings  source   507 = loaded 507 + duplicates merged 0 + OUTSIDE_EXTRACT_WINDOW 0 + NO_PATIENT_IN_EXPORT 0 + PATIENT_REJECTED 0 + NO_MATCHING_DEVICE 0  [unexplained 0]
   patient notes            source   158 = loaded 153 + duplicates merged 0 + OUTSIDE_EXTRACT_WINDOW 0 + NO_PATIENT_IN_EXPORT 1 + PATIENT_REJECTED 4  [unexplained 0]
   users                    source     8 = loaded 8 + duplicates merged 0  [unexplained 0]
   patient_address          expected   196 = loaded 196  [unexplained 0]

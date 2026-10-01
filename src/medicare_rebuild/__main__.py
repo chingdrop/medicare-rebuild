@@ -1,6 +1,8 @@
 import logging
 import os
 import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -23,6 +25,7 @@ from medicare_rebuild.models import (
     Device,
     EmergencyContact,
     GlucoseReading,
+    GpsBase,
     MedicalNecessity,
     NoteType,
     Patient,
@@ -45,6 +48,8 @@ from medicare_rebuild.queries import (
 from medicare_rebuild.utils.api_utils import MSGraphApi
 from medicare_rebuild.utils.atomic_io import ensure_dir
 from medicare_rebuild.utils.dataframe_utils import (
+    BLOOD_PRESSURE_DEVICE,
+    GLUCOSE_DEVICE,
     check_patient_db_constraints,
     create_emcontacts_df,
     create_med_necessity_df,
@@ -52,12 +57,15 @@ from medicare_rebuild.utils.dataframe_utils import (
     create_patient_df,
     create_patient_insurance_df,
     create_patient_status_df,
+    drop_duplicate_sharepoint_ids,
+    find_possible_duplicate_patients,
     normalize_bg_readings,
     normalize_bp_readings,
     normalize_devices,
     normalize_patient_notes,
     normalize_patients,
     normalize_users,
+    standardize_device_type,
 )
 from medicare_rebuild.utils.db_utils import DatabaseManager
 from medicare_rebuild.utils.tabular_io import write_structured_file
@@ -162,6 +170,49 @@ class DataImporter:
         )
         return {k: v for k, v in rows if k is not None}
 
+    def _unique_lookup(
+        self,
+        model: type[GpsBase],
+        key_attr: str,
+        value_attr: str,
+        casefold: bool = False,
+    ) -> dict[Any, Any]:
+        """Like `_lookup`, for a key that is not guaranteed unique (a display name):
+        a key shared by more than one row is left out, so whatever refers to it stays
+        unresolved (NULL) instead of silently pointing at an arbitrary one of them, and
+        each such key is logged. `casefold` lower-cases the keys, for identifiers that
+        are matched case-insensitively (an Entra sign-in name); callers lower-case the
+        values they look up to match."""
+        ids: dict[Any, set[Any]] = {}
+        for k, v in self.session.execute(
+            select(getattr(model, key_attr), getattr(model, value_attr))
+        ):
+            if k is not None:
+                ids.setdefault(k.lower() if casefold else k, set()).add(v)
+        ambiguous = sorted(k for k, v in ids.items() if len(v) > 1)
+        if ambiguous:
+            self.logger.warning(
+                f"{len(ambiguous)} {model.__tablename__}.{key_attr} value(s) belong to "
+                f"more than one row and will not be matched: {', '.join(ambiguous)}"
+            )
+        return {k: next(iter(v)) for k, v in ids.items() if len(v) == 1}
+
+    @contextmanager
+    def _legacy_db(self, database_var: str) -> Iterator[DatabaseManager]:
+        """A connection to one legacy source database (named by the environment
+        variable `database_var`), closed on exit even if the read fails part-way."""
+        db = DatabaseManager(logger=self.logger)
+        try:
+            db.create_engine(
+                username=os.environ["LEGACY_SQL_USERNAME"],
+                password=os.environ["LEGACY_SQL_PASSWORD"],
+                host=os.environ["LEGACY_SQL_HOST"],
+                database=os.environ[database_var],
+            )
+            yield db
+        finally:
+            db.close()
+
     def get_user_data(self, snap: bool = False) -> pd.DataFrame:
         """
         Retrieves user data from Microsoft Graph API and normalizes it.
@@ -213,6 +264,17 @@ class DataImporter:
         )
         df = normalize_patients(df)
         df = check_patient_db_constraints(df)
+        df, dup_ids = drop_duplicate_sharepoint_ids(df)
+        if dup_ids:
+            self.logger.warning(
+                f"{len(dup_ids)} SharePoint ID(s) appear on more than one patient row; "
+                f"kept the first row of each: {dup_ids}"
+            )
+        for ids in find_possible_duplicate_patients(df):
+            self.logger.warning(
+                f"Possible duplicate patient (same name and date of birth): "
+                f"SharePoint IDs {ids}"
+            )
         res = {
             "patient": create_patient_df(df),
             "address": create_patient_address_df(df),
@@ -236,28 +298,16 @@ class DataImporter:
         Returns:
             pd.DataFrame: The normalized patient note data.
         """
-        notes_db = DatabaseManager(logger=self.logger)
-        notes_db.create_engine(
-            username=os.environ["LEGACY_SQL_USERNAME"],
-            password=os.environ["LEGACY_SQL_PASSWORD"],
-            host=os.environ["LEGACY_SQL_HOST"],
-            database=os.environ["LEGACY_SQL_SP_NOTES"],
-        )
-        time_db = DatabaseManager(logger=self.logger)
-        time_db.create_engine(
-            username=os.environ["LEGACY_SQL_USERNAME"],
-            password=os.environ["LEGACY_SQL_PASSWORD"],
-            host=os.environ["LEGACY_SQL_HOST"],
-            database=os.environ["LEGACY_SQL_SP_TIME"],
-        )
-        notes_df = notes_db.read_sql(
-            get_notes_log_stmt(self.start_date, self.end_date),
-            parse_dates=["TimeStamp"],
-        )
-        time_df = time_db.read_sql(
-            get_time_log_stmt(self.start_date, self.end_date),
-            parse_dates=["Start_Time", "End_Time"],
-        )
+        with self._legacy_db("LEGACY_SQL_SP_NOTES") as notes_db:
+            notes_df = notes_db.read_sql(
+                get_notes_log_stmt(self.start_date, self.end_date),
+                parse_dates=["TimeStamp"],
+            )
+        with self._legacy_db("LEGACY_SQL_SP_TIME") as time_db:
+            time_df = time_db.read_sql(
+                get_time_log_stmt(self.start_date, self.end_date),
+                parse_dates=["Start_Time", "End_Time"],
+            )
         time_df = time_df.rename(
             columns={"SharPoint_ID": "SharePoint_ID", "Notes": "Note_Type"}
         )
@@ -269,8 +319,6 @@ class DataImporter:
         df = normalize_patient_notes(df)
         if snap:
             self.snap_dataframe(df, self.snaps_dir / "snap_note_df.xlsx")
-        time_db.close()
-        notes_db.close()
         return df
 
     def get_device_data(self, snap: bool = False) -> pd.DataFrame:
@@ -283,14 +331,8 @@ class DataImporter:
         Returns:
             pd.DataFrame: The normalized device data.
         """
-        fulfillment_db = DatabaseManager(logger=self.logger)
-        fulfillment_db.create_engine(
-            username=os.environ["LEGACY_SQL_USERNAME"],
-            password=os.environ["LEGACY_SQL_PASSWORD"],
-            host=os.environ["LEGACY_SQL_HOST"],
-            database=os.environ["LEGACY_SQL_SP_FULFILLMENT"],
-        )
-        df = fulfillment_db.read_sql(get_fulfillment_stmt())
+        with self._legacy_db("LEGACY_SQL_SP_FULFILLMENT") as fulfillment_db:
+            df = fulfillment_db.read_sql(get_fulfillment_stmt())
         df = normalize_devices(df)
         if snap:
             self.snap_dataframe(df, self.snaps_dir / "snap_device_df.xlsx")
@@ -306,17 +348,11 @@ class DataImporter:
         Returns:
             pd.DataFrame: The normalized glucose readings.
         """
-        readings_db = DatabaseManager(logger=self.logger)
-        readings_db.create_engine(
-            username=os.environ["LEGACY_SQL_USERNAME"],
-            password=os.environ["LEGACY_SQL_PASSWORD"],
-            host=os.environ["LEGACY_SQL_HOST"],
-            database=os.environ["LEGACY_SQL_SP_READINGS"],
-        )
-        df = readings_db.read_sql(
-            get_bg_readings_stmt(self.start_date, self.end_date),
-            parse_dates=["Time_Recorded", "Time_Recieved"],
-        )
+        with self._legacy_db("LEGACY_SQL_SP_READINGS") as readings_db:
+            df = readings_db.read_sql(
+                get_bg_readings_stmt(self.start_date, self.end_date),
+                parse_dates=["Time_Recorded", "Time_Recieved"],
+            )
         if snap:
             self.snap_dataframe(df, self.snaps_dir / "snap_glucose_df.xlsx")
         df = normalize_bg_readings(df)
@@ -332,17 +368,11 @@ class DataImporter:
         Returns:
             pd.DataFrame: The normalized blood pressure readings.
         """
-        readings_db = DatabaseManager(logger=self.logger)
-        readings_db.create_engine(
-            username=os.environ["LEGACY_SQL_USERNAME"],
-            password=os.environ["LEGACY_SQL_PASSWORD"],
-            host=os.environ["LEGACY_SQL_HOST"],
-            database=os.environ["LEGACY_SQL_SP_READINGS"],
-        )
-        df = readings_db.read_sql(
-            get_bp_readings_stmt(self.start_date, self.end_date),
-            parse_dates=["Time_Recorded", "Time_Recieved"],
-        )
+        with self._legacy_db("LEGACY_SQL_SP_READINGS") as readings_db:
+            df = readings_db.read_sql(
+                get_bp_readings_stmt(self.start_date, self.end_date),
+                parse_dates=["Time_Recorded", "Time_Recieved"],
+            )
         if snap:
             self.snap_dataframe(df, self.snaps_dir / "snap_blood_pressure_df.xlsx")
         df = normalize_bp_readings(df)
@@ -371,7 +401,7 @@ class DataImporter:
         Args:
             patient_data (Dict[str, pd.DataFrame]): A dictionary of patient data DataFrames to import.
         """
-        user_lookup = self._lookup(User, "display_name", "user_id")
+        user_lookup = self._unique_lookup(User, "display_name", "user_id")
         status_lookup = self._lookup(
             PatientStatusType, "name", "patient_status_type_id"
         )
@@ -413,14 +443,18 @@ class DataImporter:
         """
         patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
         note_type_lookup = self._lookup(NoteType, "name", "note_type_id")
-        user_lookup = self._lookup(User, "display_name", "user_id")
+        # Notes record their author's Entra sign-in name (AZURE_UPN), not their display
+        # name, and Entra matches sign-in names case-insensitively.
+        upn_lookup = self._unique_lookup(
+            User, "user_principal_name", "user_id", casefold=True
+        )
 
         df = df.copy()
         df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
         df = df.drop(columns=["sharepoint_id"])
         df = _drop_unresolved(df, "patient_id")
         df["note_type_id"] = _map_id(df["temp_note_type"], note_type_lookup)
-        df["user_id"] = _map_id(df["temp_user"], user_lookup)
+        df["user_id"] = _map_id(df["temp_user"].str.lower(), upn_lookup)
 
         self.session.add_all(PatientNote(**row) for row in _records(df))
         self.session.commit()
@@ -440,27 +474,52 @@ class DataImporter:
         df["vendor_id"] = _map_id(df["Vendor"], vendor_ids)
         df = df.drop(columns=["sharepoint_id", "Vendor"])
         df = _drop_unresolved(df, "patient_id", "vendor_id")
+        unclassified = df["name"].apply(standardize_device_type).isna()
+        if unclassified.any():
+            self.logger.warning(
+                f"{int(unclassified.sum())} device(s) loaded whose name does not say "
+                "whether they are a glucose meter or a blood pressure cuff; no "
+                f"reading will be linked to them: {sorted(set(df.loc[unclassified, 'name']))}"
+            )
 
         self.session.add_all(Device(**row) for row in _records(df))
         self.session.commit()
 
-    def _resolve_device_readings(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Resolve sharepoint_id -> patient_id, then fan out each reading once per
-        device the patient has -- a plain relational join, same as the pipeline has
-        always done (see the "multi-device patients get duplicated readings" known
-        gap in docs/billing-rules.md; this preserves that behavior, it does not fix
-        it, per decision 0015's scope). patient_id is a join key only: readings link
-        to a patient through their device, not through a patient_id column of their
-        own (confirmed while building the reconciliation checks; see
+    def _resolve_device_readings(
+        self, df: pd.DataFrame, device_type: str
+    ) -> pd.DataFrame:
+        """Resolve sharepoint_id -> patient_id, then link each reading to the patient's
+        device(s) of `device_type` (standardize_device_type, from the device name):
+        legacy readings carry no device identifier, so the device type is what keeps
+        a glucose reading off a blood pressure cuff and vice versa. A reading whose
+        patient has no device of that type is dropped and counted in a warning. A
+        patient with more than one device of the same type still gets the reading
+        once per such device -- nothing in the source says which one took it.
+        patient_id is a join key only: readings link to a patient through their
+        device, not through a patient_id column of their own (see
         docs/reconciliation.md), so it is dropped again once it has done that job."""
         patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
         devices = pd.DataFrame(
-            self.session.execute(select(Device.device_id, Device.patient_id)),
-            columns=["device_id", "patient_id"],
+            self.session.execute(
+                select(Device.device_id, Device.patient_id, Device.name)
+            ),
+            columns=["device_id", "patient_id", "name"],
         )
+        devices = devices.loc[
+            devices["name"].apply(standardize_device_type) == device_type,
+            ["device_id", "patient_id"],
+        ]
         df = df.copy()
         df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
         df = df.drop(columns=["sharepoint_id"])
+        no_device = df["patient_id"].notna() & ~df["patient_id"].isin(
+            devices["patient_id"]
+        )
+        if no_device.any():
+            self.logger.warning(
+                f"{int(no_device.sum())} {device_type} reading(s) dropped: the patient "
+                f"has no {device_type} device on file"
+            )
         return pd.merge(df, devices, on="patient_id").drop(columns=["patient_id"])
 
     def import_gluc_readings_data(self, df: pd.DataFrame) -> None:
@@ -470,7 +529,7 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The glucose readings data DataFrame to import.
         """
-        df = self._resolve_device_readings(df)
+        df = self._resolve_device_readings(df, GLUCOSE_DEVICE)
         self.session.add_all(GlucoseReading(**row) for row in _records(df))
         self.session.commit()
 
@@ -481,7 +540,7 @@ class DataImporter:
         Args:
             df (pd.DataFrame): The blood pressure readings data DataFrame to import.
         """
-        df = self._resolve_device_readings(df)
+        df = self._resolve_device_readings(df, BLOOD_PRESSURE_DEVICE)
         self.session.add_all(BloodPressureReading(**row) for row in _records(df))
         self.session.commit()
 
@@ -516,22 +575,24 @@ def import_all_data(
         delete_files_in_dir(snaps_dir)
 
     dim = DataImporter(start_date, end_date, logger=logger)
-    _require_lookup_seeds(dim.session)
-    reset_all_data(dim.session)
+    try:
+        _require_lookup_seeds(dim.session)
+        reset_all_data(dim.session)
 
-    user_df = dim.get_user_data(snap=snap)
-    dim.import_user_data(user_df)
-    patient_data = dim.get_patient_data(data_dir / "Patient_Export.csv", snap=snap)
-    dim.import_patient_data(patient_data)
-    note_df = dim.get_patient_note_data(snap=snap)
-    dim.import_patient_note_data(note_df)
-    device_df = dim.get_device_data(snap=snap)
-    dim.import_device_data(device_df)
-    gluc_df = dim.get_gluc_readings(snap=snap)
-    dim.import_gluc_readings_data(gluc_df)
-    bp_df = dim.get_bp_readings(snap=snap)
-    dim.import_bp_readings_data(bp_df)
-    dim.close_db()
+        user_df = dim.get_user_data(snap=snap)
+        dim.import_user_data(user_df)
+        patient_data = dim.get_patient_data(data_dir / "Patient_Export.csv", snap=snap)
+        dim.import_patient_data(patient_data)
+        note_df = dim.get_patient_note_data(snap=snap)
+        dim.import_patient_note_data(note_df)
+        device_df = dim.get_device_data(snap=snap)
+        dim.import_device_data(device_df)
+        gluc_df = dim.get_gluc_readings(snap=snap)
+        dim.import_gluc_readings_data(gluc_df)
+        bp_df = dim.get_bp_readings(snap=snap)
+        dim.import_bp_readings_data(bp_df)
+    finally:
+        dim.close_db()
 
 
 def create_billing_report(
@@ -559,13 +620,15 @@ def create_billing_report(
         database=os.environ["GPS_SQL_DB"],
     )
     session = gps.get_session()
-
-    run_billing(session, end_date)
-    df = build_billing_report(session, start_date, end_date)
-
-    write_structured_file(df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False)
-    session.close()
-    gps.close()
+    try:
+        run_billing(session, end_date)
+        df = build_billing_report(session, start_date, end_date)
+        write_structured_file(
+            df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False
+        )
+    finally:
+        session.close()
+        gps.close()
 
 
 def main() -> None:

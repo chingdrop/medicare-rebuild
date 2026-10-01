@@ -121,10 +121,11 @@ def _rpm_multi_device(f: Factory, sid: int) -> Plan:
     bg = f.daily_readings("bg", days_between(day(2, 3), 16))
     bp = f.daily_readings("bp", days_between(day(2, 3), 16))
     p.readings = bg + bp
-    # The glucose procedure runs first and links the code to every device the patient
-    # has, so the blood pressure procedures skip: one 99453, one 99454.
+    # Each reading is linked only to the device of its own type, so neither table is
+    # duplicated. The glucose procedure runs first and links the code to every device
+    # the patient has, so the blood pressure procedures skip: one 99453, one 99454.
     p.expected_codes = _rpm_codes(bg)
-    p.flags = ["reading_fanout"]
+    p.flags = ["multi_device"]
     return p
 
 
@@ -448,7 +449,7 @@ SCENARIOS: list[Scenario] = [
         "99453 + 99454",
         "one patient, glucose + BP devices, 16 days each",
         _rpm_multi_device,
-        "one code per patient; readings duplicated by device join",
+        "one code per patient; each reading linked only to its own device type",
     ),
     Scenario(
         "rpm_window_inside",

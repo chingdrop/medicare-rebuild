@@ -271,6 +271,36 @@ def standardize_note_types(note_type: str) -> str:
     return str(note_type).split(",")[0]
 
 
+GLUCOSE_DEVICE = "glucose"
+BLOOD_PRESSURE_DEVICE = "blood_pressure"
+
+
+def standardize_device_type(name) -> str | float:
+    """Classifies a device as a glucose meter or a blood pressure cuff from its name.
+
+    Legacy readings carry no device identifier, only the patient, so this is what
+    links a reading to the right one of a patient's devices. A name that matches
+    both kinds, or neither, returns NaN: that device is still loaded, but no reading
+    is linked to it.
+
+    Args:
+        name (str): Device name from the fulfillment table.
+
+    Returns:
+        str | float: GLUCOSE_DEVICE, BLOOD_PRESSURE_DEVICE, or np.nan.
+    """
+    if not isinstance(name, str):
+        return np.nan
+    lowered = name.lower()
+    is_glucose = re.search(r"gluc|\bbg\b", lowered) is not None
+    is_bp = re.search(r"pressure|\bbp\b|cuff", lowered) is not None
+    if is_glucose and not is_bp:
+        return GLUCOSE_DEVICE
+    if is_bp and not is_glucose:
+        return BLOOD_PRESSURE_DEVICE
+    return np.nan
+
+
 def standardize_vendor(row: pd.Series) -> str:
     """Original values had Vendor name in the Device name.
     If Vendor name is a substring of Device name then return the Vendor name.
@@ -482,13 +512,14 @@ The end result is a Pandas DataFrame that matches the schema and value constrain
 
 
 def normalize_users(df: pd.DataFrame) -> pd.DataFrame:
-    df = df[["givenName", "surname", "displayName", "mail", "id"]]
+    df = df[["givenName", "surname", "displayName", "mail", "userPrincipalName", "id"]]
     df = df.rename(
         columns={
             "givenName": "first_name",
             "surname": "last_name",
             "displayName": "display_name",
             "mail": "email",
+            "userPrincipalName": "user_principal_name",
             "id": "ms_entra_id",
         }
     )
@@ -708,31 +739,26 @@ def normalize_bg_readings(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# def patient_check_failed_data(df: pd.DataFrame) -> pd.DataFrame:
-#     failed_df = df[df['phone_number'].apply(lambda x: len(str(x)) != 11)]
-#     failed_df.loc[failed_df['phone_number'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
-#     failed_df = df[df['social_security'].apply(lambda x: len(str(x)) != 9)]
-#     failed_df.loc[failed_df['social_security'].apply(lambda x: len(str(x)) != 9), 'error_type'] = 'social security length error'
-#     failed_df = df[df['zipcode'].apply(lambda x: len(str(x)) != 5)]
-#     failed_df.loc[failed_df['zipcode'].apply(lambda x: len(str(x)) != 5), 'error_type'] = 'zipcode length error'
-#     failed_df = df[df['emergency_phone_number'].apply(lambda x: len(str(x)) != 11)]
-#     failed_df.loc[failed_df['emergency_phone_number'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
-#     failed_df = df[df['emergency_phone_number2'].apply(lambda x: len(str(x)) != 11)]
-#     failed_df.loc[failed_df['emergency_phone_number2'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'phone number length error'
-#     failed_df = df[df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11)]
-#     failed_df.loc[failed_df['medicare_beneficiary_id'].apply(lambda x: len(str(x)) != 11), 'error_type'] = 'medicare beneficiary id length error'
-#     failed_df = df[df['primary_payer_id'].apply(lambda x: len(str(x)) >= 30)]
-#     failed_df.loc[failed_df['primary_payer_id'].apply(lambda x: len(str(x)) >= 30), 'error_type'] = 'primary payer id length error'
-#     failed_df = df[df['secondary_payer_id'].apply(lambda x: len(str(x)) >= 30)]
-#     failed_df.loc[failed_df['secondary_payer_id'].apply(lambda x: len(str(x)) >= 30), 'error_type'] = 'secondary payer id length error'
-#     missing_df = df[df[['primary_payer_id', 'primary_payer_name']].isnull().all(axis=1)]
-#     missing_df['error_type'] = 'missing insurance information'
-#     duplicate_df = df[df.duplicated(subset=['first_name', 'last_name', 'date_of_birth'], keep=False)]
-#     duplicate_df['error_type'] = 'duplicate patient'
-#     duplicate_df.sort_values(by=['first_name', 'last_name'])
-#     failed_df = pd.concat([failed_df, duplicate_df, missing_df])
-#     failed_df.insert(0, 'error_type', failed_df.pop('error_type'))
-#     return failed_df
+def drop_duplicate_sharepoint_ids(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
+    """Keep only the first row for each sharepoint_id, returning the IDs that had more
+    than one. Every child row (notes, devices, readings) is linked by sharepoint_id,
+    so a second patient row with the same ID would otherwise silently take over all
+    of the first one's children."""
+    dupes = df["sharepoint_id"].duplicated(keep="first")
+    dup_ids = sorted(df.loc[dupes, "sharepoint_id"].unique().tolist())
+    return df[~dupes], dup_ids
+
+
+def find_possible_duplicate_patients(df: pd.DataFrame) -> list[list]:
+    """Groups of sharepoint_ids whose rows share a first name, last name and date of
+    birth: probably one person entered twice. They are only reported, not merged or
+    dropped -- deciding which record is right needs a person, not this pipeline."""
+    keys = ["first_name", "last_name", "date_of_birth"]
+    matched = df.dropna(subset=keys)
+    matched = matched[matched.duplicated(subset=keys, keep=False)]
+    return sorted(
+        sorted(ids) for ids in matched.groupby(keys)["sharepoint_id"].agg(list)
+    )
 
 
 def check_patient_db_constraints(df: pd.DataFrame) -> pd.DataFrame:

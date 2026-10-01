@@ -6,6 +6,11 @@ from collections import Counter
 
 import pandas as pd
 
+from medicare_rebuild.utils.dataframe_utils import (
+    BLOOD_PRESSURE_DEVICE,
+    GLUCOSE_DEVICE,
+    standardize_device_type,
+)
 from tools.reconcile.model import CheckResult, Loaded, Settings, Source
 
 CAP = 20  # most violation IDs recorded per check
@@ -105,9 +110,13 @@ def _sid_of_patient_id(loaded: Loaded) -> dict[int, int]:
     }
 
 
-def device_counts_by_sharepoint_id(loaded: Loaded) -> pd.Series:
+def device_counts_by_sharepoint_id(loaded: Loaded, device_type: str) -> pd.Series:
+    """Loaded devices of `device_type` per patient, classified from the device name
+    with the pipeline's own standardize_device_type -- the devices a reading of that
+    type is linked to."""
     pt = loaded.tables["patient"][["patient_id", "sharepoint_id"]]
-    dv = loaded.tables["device"][["patient_id"]]
+    dv = loaded.tables["device"][["patient_id", "name"]]
+    dv = dv[dv["name"].apply(standardize_device_type) == device_type][["patient_id"]]
     return dv.merge(pt, on="patient_id", how="inner").groupby("sharepoint_id").size()
 
 
@@ -173,15 +182,14 @@ def check_row_conservation(
     }
 
     # readings and notes
-    dev_counts = device_counts_by_sharepoint_id(loaded)
-    for name, frame, table, id_col, time_col, needs_device in [
+    for name, frame, table, id_col, time_col, device_type in [
         (
             "glucose readings",
             src.glucose,
             "glucose_reading",
             "SharePoint_ID",
             "Time_Recorded",
-            True,
+            GLUCOSE_DEVICE,
         ),
         (
             "blood pressure readings",
@@ -189,7 +197,7 @@ def check_row_conservation(
             "blood_pressure_reading",
             "SharePoint_ID",
             "Time_Recorded",
-            True,
+            BLOOD_PRESSURE_DEVICE,
         ),
         (
             "patient notes",
@@ -197,7 +205,7 @@ def check_row_conservation(
             "patient_note",
             "SharePoint_ID",
             "TimeStamp",
-            False,
+            None,
         ),
     ]:
         when = pd.to_datetime(frame[time_col])
@@ -214,9 +222,10 @@ def check_row_conservation(
             "PATIENT_REJECTED": rejected,
         }
         fanout = 0
-        if needs_device:
+        if device_type is not None:
+            dev_counts = device_counts_by_sharepoint_id(loaded, device_type)
             counts = rest[id_col].map(dev_counts).fillna(0).astype(int)
-            disp["NO_DEVICE_ON_FILE"] = int((counts == 0).sum())
+            disp["NO_MATCHING_DEVICE"] = int((counts == 0).sum())
             fanout = int((counts[counts > 0] - 1).sum())
         n_loaded = len(t[table])
         sources[name] = {

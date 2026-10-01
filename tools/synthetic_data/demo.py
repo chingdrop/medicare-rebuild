@@ -539,8 +539,9 @@ def render_summary(manifest: dict, a: Actual, checks: list[Check]) -> str:
         lines.append(f"  {reason}: {', '.join(parts)}")
     if e["multi_device_patients"]:
         lines.append(
-            f"Rows loaded twice: readings for the {e['multi_device_patients']} multi-device patient "
-            "are duplicated once per device (known limitation, see docs/demo.md)"
+            f"Rows loaded more than once: readings for {e['multi_device_patients']} patient(s) "
+            "with two devices of the same type are linked to each (known limitation, "
+            "see docs/demo.md)"
         )
     d = e["duplicates"]
     lines += [

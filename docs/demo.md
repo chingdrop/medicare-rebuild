@@ -76,8 +76,8 @@ Rows: source -> loaded
   users                         8 ->     8
   patients                    200 ->   196
   devices                     109 ->   103
-  glucose readings            904 ->   823
-  blood pressure readings     507 ->   523
+  glucose readings            904 ->   807
+  blood pressure readings     507 ->   507
   patient notes               158 ->   153
 
 Rejected patients (4) - reasons are from the manifest;
@@ -89,9 +89,8 @@ the pipeline drops these rows silently, along with their devices, readings and n
 Other rows not loaded:
   excluded by the source query (Resupply flag set): 1 device
   no matching patient in the export: 1 device, 16 glucose reading, 1 patient note
-  patient has no device on file: 16 glucose reading
+  patient has no device of that type on file: 16 glucose reading
   recorded outside the extract window: 1 glucose reading
-Rows loaded twice: readings for the 1 multi-device patient are duplicated once per device (known limitation, see docs/demo.md)
 
 Duplicates: 16 duplicate reading rows and 1 duplicate note row, loaded as-is (the pipeline does not merge them)
 
@@ -211,10 +210,12 @@ No file under `src/` or `sql/` is modified by the demo.
 These are properties of the pipeline as committed. The demo documents them; it does not
 change them.
 
-- **Multi-device patients get duplicated readings** (S07). Readings are joined to the device
-  table on `patient_id`, so a patient with two devices has every reading loaded once per
-  device. Billing is unaffected (it counts distinct days), but row counts are inflated.
-  See [billing-rules.md](billing-rules.md#known-gaps-and-assumptions).
+- **Readings link only to a device of their own type** (S07). Legacy readings carry no
+  device ID, so the pipeline classifies each device as a glucose meter or a blood pressure
+  cuff from its name and links each reading to the patient's device(s) of that type. The
+  multi-device patient's glucose and blood pressure readings each load once. A patient with
+  two devices of the *same* type would still get each reading once per such device; no
+  scenario covers that. See [billing-rules.md](billing-rules.md#known-gaps-and-assumptions).
 - **A code can be applied yet fall outside the report** (S10, S13). The report keeps codes
   stamped up to midnight at the *start* of the end date, so a reading received at 00:20 on the
   last day is coded but not reported. Similarly, S14: data recorded after midnight on the end
@@ -239,7 +240,7 @@ codes" is what the manifest states; the run must match it exactly.
 | S04 | `rpm_bg_many_per_day` | 99453 + 99454 | counts days, not readings | none |  |
 | S05 | `rpm_bp_16_days` | 99453 + 99454 | threshold (16), bp procedures | 99453, 99454 |  |
 | S06 | `rpm_bp_15_days` | 99453 + 99454 | just below threshold, bp procedures | none |  |
-| S07 | `rpm_multi_device` | 99453 + 99454 | one code per patient; readings duplicated by device join | 99453, 99454 | reading_fanout |
+| S07 | `rpm_multi_device` | 99453 + 99454 | one code per patient; each reading linked only to its own device type | 99453, 99454 | multi_device |
 | S08 | `rpm_window_inside` | 99454 | 30-day window edge, inside | 99453, 99454 |  |
 | S09 | `rpm_window_outside` | 99454 | 30-day window edge, outside (99453 only) | 99453 |  |
 | S10 | `rpm_january_only` | 99453 | code applied outside report period | 99453 (not in report) |  |

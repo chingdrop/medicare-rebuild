@@ -2,6 +2,7 @@ import re
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from medicare_rebuild.utils.dataframe_utils import (
     check_patient_db_constraints,
@@ -11,9 +12,11 @@ from medicare_rebuild.utils.dataframe_utils import (
     create_patient_df,
     create_patient_insurance_df,
     create_patient_status_df,
+    drop_duplicate_sharepoint_ids,
     extract_regex_pattern,
     fill_primary_payer,
     fill_primary_payer_id,
+    find_possible_duplicate_patients,
     keyword_list_search,
     keyword_search,
     normalize_bg_readings,
@@ -23,6 +26,7 @@ from medicare_rebuild.utils.dataframe_utils import (
     normalize_patients,
     normalize_users,
     standardize_call_time,
+    standardize_device_type,
     standardize_dx_code,
     standardize_email,
     standardize_emcontact_relationship,
@@ -249,11 +253,13 @@ def test_normalize_users():
             "surname": ["Doe"],
             "displayName": ["John Doe"],
             "mail": ["john.doe@example.com"],
+            "userPrincipalName": ["jdoe@example.com"],
             "id": ["12345"],
         }
     )
     result = normalize_users(df)
-    assert result.shape == (1, 5)
+    assert result.shape == (1, 6)
+    assert result["user_principal_name"].item() == "jdoe@example.com"
 
 
 def test_normalize_patients():
@@ -375,3 +381,55 @@ def test_check_patient_db_constraints():
     )
     result = check_patient_db_constraints(df)
     assert result.shape == (1, 9)
+
+
+def test_drop_duplicate_sharepoint_ids_keeps_the_first_row():
+    df = pd.DataFrame({"sharepoint_id": [1, 2, 1, 3, 2], "first_name": list("abcde")})
+    result, dup_ids = drop_duplicate_sharepoint_ids(df)
+    assert result["first_name"].tolist() == ["a", "b", "d"]
+    assert dup_ids == [1, 2]
+
+
+def test_drop_duplicate_sharepoint_ids_with_none():
+    df = pd.DataFrame({"sharepoint_id": [1, 2, 3]})
+    result, dup_ids = drop_duplicate_sharepoint_ids(df)
+    assert len(result) == 3
+    assert dup_ids == []
+
+
+def test_find_possible_duplicate_patients_groups_by_name_and_birth_date():
+    df = pd.DataFrame(
+        {
+            "sharepoint_id": [10, 11, 12, 13, 14],
+            "first_name": ["Ann", "Ann", "Ann", "Bob", "Bob"],
+            "last_name": ["Lee", "Lee", "Lee", "Ray", "Ray"],
+            "date_of_birth": pd.to_datetime(
+                ["1950-01-01", "1950-01-01", "1960-01-01", "1940-05-05", None]
+            ),
+        }
+    )
+    # Same name, different birth date (12) is a different person; a missing birth
+    # date (14) can't be matched on.
+    assert find_possible_duplicate_patients(df) == [[10, 11]]
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("Tenovi Glucometer", "glucose"),
+        ("Glucose Meter Kit", "glucose"),
+        ("BG meter", "glucose"),
+        ("Omron Blood Pressure Cuff", "blood_pressure"),
+        ("Tenovi BP Monitor", "blood_pressure"),
+        ("Wrist cuff", "blood_pressure"),
+        ("Tenovi Scale", None),  # neither
+        ("Glucose + BP combo", None),  # both
+        (None, None),
+    ],
+)
+def test_standardize_device_type(name, expected):
+    result = standardize_device_type(name)
+    if expected is None:
+        assert pd.isna(result)
+    else:
+        assert result == expected

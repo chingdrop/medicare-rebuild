@@ -38,6 +38,9 @@ class User(GpsBase):
     last_name: Mapped[str | None] = mapped_column(String(100))
     display_name: Mapped[str | None] = mapped_column(String(200))
     email: Mapped[str | None] = mapped_column(String(200))
+    # The Entra ID sign-in name; legacy notes record their author as this (AZURE_UPN),
+    # not as the display name.
+    user_principal_name: Mapped[str | None] = mapped_column(String(200))
     ms_entra_id: Mapped[str | None] = mapped_column(String(100))
 
 

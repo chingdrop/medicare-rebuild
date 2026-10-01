@@ -88,7 +88,7 @@ def _users() -> list[dict]:
                 "givenName": given,
                 "surname": surname or "Synthetic",
                 "mail": f"{slug}@example.com",
-                "userPrincipalName": f"{slug}@example.com",
+                "userPrincipalName": cfg.upn(name),
             }
         )
     return users
@@ -249,7 +249,11 @@ def _expected(plans: list[Plan]) -> dict:
                 excluded[("patient", drop_reason)] += 1
 
         live_devices = [d for d in p.devices if not d.resupply]
-        if is_loaded and len(live_devices) > 1 and p.readings:
+        # A reading is linked to each of the patient's devices of its own kind (the
+        # pipeline classifies devices by name), so it is only loaded more than once
+        # when the patient has two or more devices of that kind.
+        same_kind = {k: [d for d in live_devices if d.kind == k] for k in ("bg", "bp")}
+        if is_loaded and any(len(same_kind[r.kind]) > 1 for r in p.readings):
             multi_device += 1
         for d in p.devices:
             source["devices"] += 1
@@ -269,10 +273,10 @@ def _expected(plans: list[Plan]) -> dict:
                 excluded[(table, "recorded outside the extract window")] += 1
             elif not is_loaded:
                 excluded[(table, drop_reason)] += 1
-            elif not live_devices:
-                excluded[(table, "patient has no device on file")] += 1
+            elif not same_kind[r.kind]:
+                excluded[(table, "patient has no device of that type on file")] += 1
             else:
-                loaded[table] += len(live_devices)
+                loaded[table] += len(same_kind[r.kind])
 
         for n in p.notes:
             source["patient_note"] += 1

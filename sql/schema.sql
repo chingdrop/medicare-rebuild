@@ -34,6 +34,7 @@ CREATE TABLE [user] (
 	last_name VARCHAR(100) NULL, 
 	display_name VARCHAR(200) NULL, 
 	email VARCHAR(200) NULL, 
+	user_principal_name VARCHAR(200) NULL, 
 	ms_entra_id VARCHAR(100) NULL, 
 	PRIMARY KEY (user_id)
 );

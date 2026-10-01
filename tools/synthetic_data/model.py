@@ -19,6 +19,7 @@ class Device:
     hardware_id: str
     name: str
     resupply: bool = False
+    kind: str = ""  # "bg" or "bp": which readings the pipeline links to this device
 
 
 @dataclass
