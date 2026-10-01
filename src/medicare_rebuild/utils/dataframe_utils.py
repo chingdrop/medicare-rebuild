@@ -190,6 +190,17 @@ def standardize_insurance_id(ins_id: str) -> str | float:
     return extract_regex_pattern(ins_id, id_pattern, keep_original=True)
 
 
+def _text_nan_to_nan(value):
+    """The literal string "nan" (any case) -- what a missing value becomes once a
+    column has been through str() -- as a real missing value; anything else as-is.
+    Replaces `row.replace(r"(?i)^nan$", np.nan, regex=True, inplace=True)`, which
+    pandas-stubs 3 rejects (a non-string replacement value with regex=True) and which
+    only ever mutated the row copy `DataFrame.apply` hands in."""
+    if isinstance(value, str) and value.lower() == "nan":
+        return np.nan
+    return value
+
+
 def fill_primary_payer(row: pd.Series) -> str | float:
     """Fills primary payer name with 'Medicare Part B'.
     If insurance name and insurance ID is null; and medicare beneficiary ID is not null.
@@ -201,14 +212,14 @@ def fill_primary_payer(row: pd.Series) -> str | float:
     Returns:
         str | float: The standardized primary payer name.
     """
-    row.replace(r"(?i)^nan$", np.nan, regex=True, inplace=True)
+    ins_name = _text_nan_to_nan(row["Insurance Name:"])
     if (
-        pd.isnull(row["Insurance Name:"])
-        and pd.isnull(row["Insurance ID:"])
-        and not pd.isnull(row["Medicare ID number"])
+        pd.isnull(ins_name)
+        and pd.isnull(_text_nan_to_nan(row["Insurance ID:"]))
+        and not pd.isnull(_text_nan_to_nan(row["Medicare ID number"]))
     ):
         return "Medicare Part B"
-    return row["Insurance Name:"]
+    return ins_name
 
 
 def fill_primary_payer_id(row: pd.Series) -> str | float:
@@ -222,10 +233,12 @@ def fill_primary_payer_id(row: pd.Series) -> str | float:
     Returns:
         str | float: The standardized primary payer ID.
     """
-    row.replace(r"(?i)^nan$", np.nan, regex=True, inplace=True)
-    if row["Insurance Name:"] == "Medicare Part B" and pd.isnull(row["Insurance ID:"]):
-        return row["Medicare ID number"]
-    return row["Insurance ID:"]
+    ins_id = _text_nan_to_nan(row["Insurance ID:"])
+    if _text_nan_to_nan(row["Insurance Name:"]) == "Medicare Part B" and pd.isnull(
+        ins_id
+    ):
+        return _text_nan_to_nan(row["Medicare ID number"])
+    return ins_id
 
 
 def standardize_call_time(call_time) -> int | float:
@@ -408,8 +421,11 @@ def create_patient_insurance_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_med_necessity_df(df: pd.DataFrame) -> pd.DataFrame:
-    med_nec_df = df[["evaluation_datetime", "temp_dx_code", "sharepoint_id"]]
-    med_nec_df.loc[:, "temp_dx_code"] = med_nec_df["temp_dx_code"].str.split(",")
+    # .assign, not .loc: pandas 3's default `str` dtype rejects writing lists into the
+    # existing column in place.
+    med_nec_df = df[["evaluation_datetime", "temp_dx_code", "sharepoint_id"]].assign(
+        temp_dx_code=lambda d: d["temp_dx_code"].str.split(",")
+    )
     med_nec_df = med_nec_df.explode("temp_dx_code", ignore_index=True)
     return med_nec_df
 
