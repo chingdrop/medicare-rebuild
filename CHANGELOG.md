@@ -11,6 +11,22 @@ anything before that commit.
 
 ## [Unreleased]
 
+### Fixed
+
+- A GPS database built with `make migrate` had empty lookup tables, so a real run
+  dropped every device (no vendor to resolve against) and with it every reading, then
+  stopped in billing on the first code type lookup. A new migration
+  (`31d8eabb7bab_seed_lookup_tables.py`) seeds `models.LOOKUP_SEEDS` -- the vendor, note
+  type, patient status and billing code values the pipeline's own code produces or
+  looks up by name -- and `import_all_data()` now refuses to run if any is missing.
+- `import_all_data()` imports patient notes again. The step was dropped in `d229b65`
+  (2025-03-06), so a run through `main()` could never produce 99202, 99457 or 99458; the
+  demo no longer has to call it separately.
+- `main()` no longer loses the last day of every billing month. Every end bound
+  downstream is midnight at the start of the date given, so passing the month's last
+  day (as `main()` did since `445011e`) dropped all of that day's readings, notes and
+  codes; it now passes the first day of the following month.
+
 ### Added
 
 - `src/medicare_rebuild/models.py` and `legacy_models.py`: SQLAlchemy declarative

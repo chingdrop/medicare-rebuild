@@ -18,6 +18,7 @@ from medicare_rebuild.helpers import (
 )
 from medicare_rebuild.logger import setup_logger
 from medicare_rebuild.models import (
+    LOOKUP_SEEDS,
     BloodPressureReading,
     Device,
     EmergencyContact,
@@ -97,6 +98,24 @@ def _drop_unresolved(df: pd.DataFrame, *cols: str) -> pd.DataFrame:
     for col in cols:
         df = df[df[col].notna()]
     return df
+
+
+def _require_lookup_seeds(session: Session) -> None:
+    """Fail fast if the GPS database's lookup tables are missing the rows the load and
+    billing steps resolve against (models.LOOKUP_SEEDS, seeded by `make migrate`).
+    Without them every device would be dropped as having no vendor -- taking every
+    reading with it -- and billing would stop on its first code type lookup, so a
+    database that skipped the seed migration fails here, before anything is loaded,
+    rather than producing an empty report."""
+    missing = []
+    for model, names in LOOKUP_SEEDS.items():
+        present = set(session.scalars(select(model.name)))  # type: ignore[attr-defined]
+        missing += [f"{model.__tablename__}.{n}" for n in names if n not in present]
+    if missing:
+        raise RuntimeError(
+            "GPS lookup tables are missing required rows (run `make migrate`): "
+            + ", ".join(missing)
+        )
 
 
 class DataImporter:
@@ -497,12 +516,15 @@ def import_all_data(
         delete_files_in_dir(snaps_dir)
 
     dim = DataImporter(start_date, end_date, logger=logger)
+    _require_lookup_seeds(dim.session)
     reset_all_data(dim.session)
 
     user_df = dim.get_user_data(snap=snap)
     dim.import_user_data(user_df)
     patient_data = dim.get_patient_data(data_dir / "Patient_Export.csv", snap=snap)
     dim.import_patient_data(patient_data)
+    note_df = dim.get_patient_note_data(snap=snap)
+    dim.import_patient_note_data(note_df)
     device_df = dim.get_device_data(snap=snap)
     dim.import_device_data(device_df)
     gluc_df = dim.get_gluc_readings(snap=snap)
@@ -557,15 +579,22 @@ def main() -> None:
     # calendar month before the report itself -- not just the report's own month -- to
     # make sure every reading/note those windows need has actually been loaded.
     import_start = (report_start - timedelta(days=1)).replace(day=1)
+    # Every end bound downstream is midnight at the *start* of the date it is given:
+    # the source queries keep rows recorded `<=` it, and the report keeps codes stamped
+    # `<=` it (both inherited from the original SQL; see docs/billing-rules.md). Passing
+    # the month's last day would drop that whole day, so pass the first day of the
+    # next month instead. The rolling windows then look back from that same midnight,
+    # covering the full billing month.
+    end_bound = report_end + timedelta(days=1)
 
     import_all_data(
         import_start.strftime("%Y-%m-%d"),
-        report_end.strftime("%Y-%m-%d"),
+        end_bound.strftime("%Y-%m-%d"),
         logger=logger,
     )
     create_billing_report(
         report_start.strftime("%Y-%m-%d"),
-        report_end.strftime("%Y-%m-%d"),
+        end_bound.strftime("%Y-%m-%d"),
         logger=logger,
     )
 

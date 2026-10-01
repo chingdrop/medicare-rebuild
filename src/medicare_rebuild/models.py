@@ -252,6 +252,21 @@ class MedicalCodeDevice(GpsBase):
     medical_code: Mapped[MedicalCode | None] = relationship(back_populates="devices")
 
 
+# The lookup rows the pipeline resolves temp_*/name columns against, and the only
+# values its own code produces or looks up by name: the source query's vendor filter,
+# normalize_patient_notes' note types (99202 looks "Initial Evaluation" up by name),
+# normalize_patients' status mapping, and the billing codes billing.py applies. Seeded
+# into a real GPS database by the 31d8eabb7bab migration, which keeps its own frozen
+# copy; tests/test_alembic_seed.py fails if the two drift apart. A source value not
+# listed here (another note type, say) stays NULL, as any unmatched lookup does.
+LOOKUP_SEEDS: dict[type[GpsBase], list[str]] = {
+    Vendor: ["Tenovi", "Omron"],
+    NoteType: ["Initial Evaluation", "Alert"],
+    PatientStatusType: ["Active", "Inactive", "Onboard", "Do Not Call"],
+    MedicalCodeType: ["99202", "99453", "99454", "99457", "99458"],
+}
+
+
 # Order matters for reset_all_data(): children before the parents they reference, to
 # satisfy foreign key constraints during DELETE (mirrors reset_all_billing_tables.sql).
 RESET_ORDER: list[type[GpsBase]] = [

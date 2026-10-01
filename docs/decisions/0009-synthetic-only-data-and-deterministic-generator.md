@@ -17,7 +17,7 @@ Computing expectations by re-implementing the billing rules is named and set asi
 ## Consequences
 
 - The demo's tables are reconstructed, not authoritative.
-- The demo calls the patient-note steps that `main()` does not, and replaces Graph with a local file.
+- The demo replaces Graph with a local file. (It also used to call the patient-note steps itself, until `import_all_data()` was fixed to import notes.)
 - The manifest encodes the procedures' current thresholds, not payer policy.
 
 ## Evidence

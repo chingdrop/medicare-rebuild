@@ -27,7 +27,7 @@ make migrate            # or: uv run alembic upgrade head
 ```
 
 This reads the same `GPS_SQL_*` variables as everything else and applies every
-migration in [`alembic/versions/`](../alembic/versions/) up to the latest. See
+migration in [`alembic/versions/`](../alembic/versions/) up to the latest, including the one that seeds the lookup tables (vendors, note types, patient statuses and billing codes) the pipeline resolves against. `import_all_data()` stops with an error naming any missing lookup row, so a database that skipped this step fails before anything is loaded. See
 [decision 0016](decisions/0016-alembic-migrations-for-the-gps-database.md) and
 [`alembic/README.md`](../alembic/README.md). The demo and integration tests don't use
 this -- they build an ephemeral database directly from `medicare_rebuild.models`, which
@@ -40,5 +40,5 @@ uv run medicare-rebuild
 ```
 
 - The patient export must be at `data/Patient_Export.csv`, relative to the working directory.
-- `main()` derives its date windows from `helpers.get_last_month_billing_cycle()`: the billing report covers last calendar month, and the import window starts one calendar month earlier than that, so the billing rules' rolling windows (up to 30 days/1 month back from the report end date) have every reading/note they need already loaded.
+- `main()` derives its date windows from `helpers.get_last_month_billing_cycle()`: the billing report covers last calendar month (its end bound is the first day of the current month, since every end bound is midnight at the start of the date given), and the import window starts one calendar month earlier than that, so the billing rules' rolling windows (up to 30 days/1 month back from the report end date) have every reading/note they need already loaded.
 - Requires the ODBC Driver 18 for SQL Server; see [Tech stack](../README.md#tech-stack).
