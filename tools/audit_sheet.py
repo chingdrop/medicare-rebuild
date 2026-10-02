@@ -5,11 +5,12 @@ report (`make reconcile`), the demo's manifest checks (`make demo`) and the
 generator's manifest -- nothing is typed in by hand. After `make demo` and
 `make reconcile`:
 
-    uv run python -m tools.audit_sheet                      # demo_output/audit_sheet.html
-    uv run python -m tools.audit_sheet --png docs/audit-sheet.png \\
-        --chrome "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    uv run python -m tools.audit_sheet                         # HTML only
+    uv run python -m tools.audit_sheet --png docs/audit-sheet.png
 
-`--png` also needs ffmpeg. Headless Chrome screenshots a fixed-size window, not the
+`--png` finds Chrome, Chromium, Edge or Brave on its own -- including the Chromium
+vhs downloads for `docs/demo.tape` -- or takes `--chrome <path>`, and also needs
+ffmpeg. Headless Chrome screenshots a fixed-size window, not the
 page, so the sheet is captured in a window taller than it needs and the empty
 background below it is trimmed off.
 
@@ -19,6 +20,7 @@ Counts and synthetic IDs only, like the reconciliation report itself.
 import argparse
 import html
 import json
+import shutil
 import subprocess
 import tempfile
 from datetime import datetime
@@ -400,6 +402,39 @@ TEMPLATE = """<!doctype html>
 """
 
 
+BROWSERS = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+    "google-chrome",
+    "google-chrome-stable",
+    "chromium",
+    "chromium-browser",
+    "microsoft-edge",
+]
+
+
+def find_browser() -> str | None:
+    """A Chromium-based browser that can screenshot headlessly: a known install, one
+    on PATH, or the Chromium vhs (via go-rod) downloads for recording demo.tape."""
+    for candidate in BROWSERS:
+        found = shutil.which(candidate) or (
+            candidate if Path(candidate).is_file() else None
+        )
+        if found:
+            return found
+    rod = sorted(Path.home().glob(".cache/rod/browser/chromium-*"), reverse=True)
+    for root in rod:
+        for exe in (
+            root / "Chromium.app/Contents/MacOS/Chromium",  # macOS
+            root / "chrome",  # Linux
+        ):
+            if exe.is_file():
+                return str(exe)
+    return None
+
+
 def render_png(page: Path, png: Path, chrome: str, margin: int = 32) -> None:
     """Screenshot `page` with headless Chrome in a deliberately tall window, then crop
     the PNG to the last row that differs from the background, plus `margin` CSS px."""
@@ -443,14 +478,22 @@ def main() -> None:
     ap.add_argument("--data-dir", type=Path, default=Path("demo_data"))
     ap.add_argument("--output-dir", type=Path, default=Path("demo_output"))
     ap.add_argument("--png", type=Path, help="also render the sheet to this PNG")
-    ap.add_argument("--chrome", default="chromium", help="Chrome/Chromium binary")
+    ap.add_argument("--chrome", help="Chrome/Chromium binary (default: look for one)")
     a = ap.parse_args()
     out = a.output_dir / "audit_sheet.html"
     out.write_text(build(a.data_dir, a.output_dir))
     print(f"Wrote {out}")
     if a.png:
-        render_png(out, a.png, a.chrome)
-        print(f"Wrote {a.png}")
+        chrome = a.chrome or find_browser()
+        if not chrome or not (shutil.which(chrome) or Path(chrome).is_file()):
+            ap.error(
+                f"no browser found{f' at {chrome}' if chrome else ''}: install Chrome "
+                "or Chromium, or pass --chrome <path> to one"
+            )
+        if not shutil.which("ffmpeg"):
+            ap.error("--png needs ffmpeg on PATH (macOS: brew install ffmpeg)")
+        render_png(out, a.png, chrome)
+        print(f"Wrote {a.png} (rendered with {chrome})")
 
 
 if __name__ == "__main__":

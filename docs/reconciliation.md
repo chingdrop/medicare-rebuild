@@ -96,7 +96,8 @@ RECONCILIATION: PASS (8/8 checks)
 `checks.json` and the generator's manifest into one page
 ([`docs/audit-sheet.png`](audit-sheet.png), shown in the README): the stages of the run,
 where every source row went, the billing codes and these checks. Add
-`--png <file> --chrome <path to Chrome or Chromium>` to render it (needs ffmpeg). Every
+`--png <file>` to render it; it finds Chrome, Chromium, Edge, Brave or the Chromium vhs
+downloads for the demo GIF (or pass `--chrome <path>`), and needs ffmpeg. Every
 figure comes from those files; none is typed in.
 
 ## Real output: an injected fault
