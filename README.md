@@ -92,6 +92,10 @@ Full output, how the demo works, and how to reset it (`make demo-down`): [docs/d
 - **Demo run** (synthetic data, default seed): 196 of 200 patients loaded (4 rejected by the pipeline's constraint checks), 89 billing-report rows, and codes applied 99202 x13, 99453 x46, 99454 x44, 99457 x34, 99458 x18, with all 27 checks against the expected-results manifest passing.
 - **Original scale:** approximately 22,000 Medicare-eligible patients, completed within a 3-month timeframe.
 
+![Audit sheet for one demo run: every source row loaded or dropped for a named reason, 8/8 reconciliation checks and 27/27 manifest checks passing, and the billing codes applied versus reported](docs/audit-sheet.png)
+
+*The demo run's audit on one page, built from its own output (`make demo`, `make reconcile`, then `python -m tools.audit_sheet`). See [docs/reconciliation.md](docs/reconciliation.md).*
+
 ## Data model
 
 The GPS database's tables, drawn from [`models.py`](src/medicare_rebuild/models.py), the schema of record ([decision 0015](docs/decisions/0015-full-orm-schema-of-record.md)); the generated DDL is [`sql/schema.sql`](sql/schema.sql). Solid lines are real foreign keys. Dotted lines and entities marked *(design only)* come from the original schema design ([`docs/erd/`](docs/erd/)) but were not built as tables: most survive as a `temp_*` text column holding the raw value, and the fulfillment tables do not exist at all. Every foreign key column is nullable, and `temp_*` columns without a matching key stay unresolved text.

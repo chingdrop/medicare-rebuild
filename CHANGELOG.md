@@ -53,6 +53,10 @@ anything before that commit.
 
 - `docs/demo.gif`, a recording of a real `make demo` run, embedded in the README, and
   `docs/demo.tape`, the [vhs](https://github.com/charmbracelet/vhs) script that renders it.
+- `tools/audit_sheet.py` and `docs/audit-sheet.png`: a one-page audit of a demo run
+  (stages, where every source row went, billing codes, reconciliation checks), built
+  only from the run's own `reconcile.json`, `checks.json` and manifest, and rendered
+  with headless Chrome via `--png`. Shown in the README's Results section.
 - `src/medicare_rebuild/models.py` and `legacy_models.py`: SQLAlchemy declarative
   models that are now the GPS schema of record, and Core table definitions for the
   legacy source tables. `sql/schema.sql` is generated from them (`make schema`),

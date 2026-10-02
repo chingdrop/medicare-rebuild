@@ -81,6 +81,9 @@ ignore = [
     "S101",  # assert used for internal invariants in demo tooling
     "S311",  # seeded `random` for reproducible synthetic data; not security-sensitive
 ]
+"tools/audit_sheet.py" = [
+    "S603",  # runs Chrome and ffmpeg with argument lists (no shell), picked by the person running it
+]
 
 [tool.mypy]
 python_version = "3.12"
