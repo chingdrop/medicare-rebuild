@@ -60,6 +60,8 @@ uv sync
 make demo
 ```
 
+![make demo: the pipeline running end to end on synthetic data, ending in 27/27 checks passed](docs/demo.gif)
+
 Expected output (trimmed; a first run also downloads the SQL Server image and Python dependencies):
 
 ```text
