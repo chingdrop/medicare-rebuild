@@ -18,20 +18,10 @@ collects it into one place rather than repeating it.
 
 ## Possible next steps
 
-This section is meant to hold only directions that trace back to an open
-`TODO(craig)` marker left somewhere in the repository's docs or code comments — not
-ideas added while writing this page.
+Open bugs, features and housekeeping are tracked in one place,
+[`TODO.md`](../TODO.md) at the repository root, rather than as `TODO(craig)` markers
+scattered through the docs and code. That list includes every limitation above that
+has a concrete next step.
 
-As of this page's last check (`git grep -n "TODO(craig)"`, see the repository's
-release-hygiene history for the exact sweep), **there are no open `TODO(craig)`
-markers anywhere in the repository.** Every one previously left across
-`docs/decisions/`, `docs/billing-rules.md`, `docs/data-handling.md` and
-`docs/provenance-and-data-boundary.md` has been resolved into the documents
-themselves. There is nothing to list here at this time.
-
-<!-- TODO(craig): as new TODO(craig) markers accumulate elsewhere in the docs or
-code, prune and fold them into this list; remove this marker once the list holds
-real, current content. -->
-
-These are directions, not commitments, and nothing here should be read as a
-release plan.
+These are directions, not commitments, and nothing there should be read as a release
+plan.
