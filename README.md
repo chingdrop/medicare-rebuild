@@ -353,7 +353,7 @@ The repository holds synthetic data only. How credentials, connections, logging 
 
 ## Limitations, roadmap and changelog
 
-What this reference implementation doesn't cover, and what's traceable as a possible next step, is in [docs/limitations-and-roadmap.md](docs/limitations-and-roadmap.md). Notable changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+What this reference implementation doesn't cover is in [docs/limitations-and-roadmap.md](docs/limitations-and-roadmap.md); open bugs and planned features are in [TODO.md](TODO.md). Notable changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Tech stack
 

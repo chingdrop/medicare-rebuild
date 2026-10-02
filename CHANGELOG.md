@@ -51,6 +51,9 @@ anything before that commit.
 
 ### Added
 
+- `TODO.md`: the one list of open bugs, billing and pipeline features, production
+  hardening and repo housekeeping. `docs/limitations-and-roadmap.md`'s "Possible next
+  steps" and its last `TODO(craig)` marker now point there.
 - `docs/demo.gif`, a recording of a real `make demo` run, embedded in the README, and
   `docs/demo.tape`, the [vhs](https://github.com/charmbracelet/vhs) script that renders it.
 - `tools/audit_sheet.py` and `docs/audit-sheet.png`: a one-page audit of a demo run
