@@ -62,7 +62,8 @@ pipeline ran in).
 ## Real output
 
 This is the unedited output of `make demo` from an actual run (with the container image
-already pulled):
+already pulled). The README's [recording](demo.gif) is the same run; re-render it with
+`vhs docs/demo.tape` (see the comments in [`demo.tape`](demo.tape)).
 
 ```text
 docker compose up -d mssql
@@ -70,6 +71,7 @@ docker compose up -d mssql
 uv run python -m tools.synthetic_data --out demo_data  
 Generated 200 synthetic patients (seed 20250228) in demo_data/ - 46 named scenarios
 uv run python -m tools.synthetic_data.demo --data-dir demo_data --output-dir demo_output
+16 reading(s) dropped: the patient has no device of the reading's type on file
 Synthetic demo - seed 20250228, 200 patients, 46 named scenarios
 
 Rows: source -> loaded

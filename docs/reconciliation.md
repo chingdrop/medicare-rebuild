@@ -90,6 +90,16 @@ Checks:
 RECONCILIATION: PASS (8/8 checks)
 ```
 
+### As a one-page audit sheet
+
+`uv run python -m tools.audit_sheet` turns a clean run's `reconcile.json`, the demo's
+`checks.json` and the generator's manifest into one page
+([`docs/audit-sheet.png`](audit-sheet.png), shown in the README): the stages of the run,
+where every source row went, the billing codes and these checks. Add
+`--png <file>` to render it; it finds Chrome, Chromium, Edge, Brave or the Chromium vhs
+downloads for the demo GIF (or pass `--chrome <path>`), and needs ffmpeg. Every
+figure comes from those files; none is typed in.
+
 ## Real output: an injected fault
 
 Faults are optional and off by default. `make demo FAULT=orphan-fk` generates the same data,
