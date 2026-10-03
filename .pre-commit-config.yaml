@@ -13,8 +13,11 @@ repos:
     rev: v2.3.0
     hooks:
       - id: mypy
+        # The hook runs in its own environment: give it the typed libraries src/
+        # imports, or their types become Any and warn_unused_ignores misfires.
         additional_dependencies:
           - pandas-stubs
+          - sqlalchemy>=2.0.23,<3.0.0
         files: ^src/
 
   # Secret scanning on staged changes. CI scans the full history as well.
