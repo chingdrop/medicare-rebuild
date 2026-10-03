@@ -105,13 +105,17 @@ select = ["E", "F", "I", "B", "UP", "SIM", "S"]
 [tool.mypy]
 python_version = "3.12"
 files = ["src"]
-# Lenient baseline: passes today. Stricter settings would flag (as of 2026-09):
-#   --strict                 42 errors in src: 12 type-arg, 11 no-untyped-def,
-#                            10 no-untyped-call, 7 no-any-return, 2 arg-type
-#   --check-untyped-defs     2 errors (arg-type) in one file
-#   --disallow-untyped-defs  11 errors in 4 files
-#   --warn-return-any        7 errors in 2 files
-# tools/ and tests/ are not type-checked (`mypy src tools` reports 8 errors in tools/).
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+check_untyped_defs = true
+# Passes today with the flags above. Stricter settings would flag (measured 2026-10-03):
+#   --strict                 56 errors in 7 files: 21 type-arg, 17 no-untyped-def,
+#                            10 no-untyped-call, 8 no-any-return
+#   --disallow-untyped-defs  17 errors in 5 files
+#   --warn-return-any        8 errors in 3 files
+# tools/ and tests/ are not type-checked (`mypy src tools` reports 34 errors in tools/).
 
 [tool.coverage.run]
 source = ["src/medicare_rebuild", "tools"]

@@ -82,7 +82,7 @@ def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
     column's own null value for that dtype. DataFrame columns are always strings in
     this pipeline; pandas-stubs types the keys as the more general `Hashable`, which is
     the only reason this needs a cast."""
-    clean = df.astype(object).where(df.notna(), None)  # type: ignore[call-overload]
+    clean = df.astype(object).where(df.notna(), None)
     return clean.to_dict("records")  # type: ignore[return-value]
 
 
