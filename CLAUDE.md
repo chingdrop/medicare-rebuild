@@ -12,7 +12,7 @@ An ETL pipeline that rebuilds the data architecture for a medical company's remo
 uv sync                        # install deps + create .venv
 uv run pytest                  # unit tests (default; mocks all external systems)
 uv run pytest -m integration   # integration tests (needs a real SQL Server, see below)
-uv run pytest tests/test_dataframe_utils.py::test_standardize_state  # single test
+uv run pytest tests/utils/test_dataframe_utils.py::test_standardize_state  # single test
 uv run ruff check .            # lint
 uv run ruff format .           # format
 uv run mypy                    # type check (src/ only, per [tool.mypy] files config)
@@ -33,7 +33,7 @@ CI (`.github/workflows/ci.yml`) runs `test` (ruff + mypy + unit pytest) and `int
 
 `tests/integration/conftest.py` creates a dedicated database per test session and skips gracefully if no server is reachable — connection details default to `docker-compose.yml`'s and are overridable via `INTEGRATION_DB_HOST`/`PORT`/`USER`/`PASSWORD`. On Apple Silicon the SQL Server image only runs via x86_64 emulation (no native arm64 build exists); GitHub's runners are x86_64 natively.
 
-`sql/schema.sql` is generated from `src/medicare_rebuild/models.py` and `legacy_models.py` (the schema of record, see decision 0015) via `make schema`; a test (`tests/test_generate_schema.py`) fails if it drifts from the models. The integration tests, and the demo, build their databases from the same classes via `metadata.create_all()`, so there is only one definition of the GPS schema to keep in sync.
+`sql/schema.sql` is generated from `src/medicare_rebuild/models.py` and `legacy_models.py` (the schema of record, see decision 0015) via `make schema`; a test (`tests/tools/test_generate_schema.py`) fails if it drifts from the models. The integration tests, and the demo, build their databases from the same classes via `metadata.create_all()`, so there is only one definition of the GPS schema to keep in sync.
 
 Alembic migrations for the GPS database (only -- not the legacy source databases) live in `alembic/`, targeting `GpsBase.metadata`; `make migrate` (`alembic upgrade head`) is how a real GPS database is created or updated (see decision 0016). The demo and integration tests still use `metadata.create_all()`, not Alembic -- a throwaway database has no schema history to migrate from. `tests/integration/test_alembic_integration.py` runs the migration chain against a real database and fails if it drifts from `models.py` (`alembic check`). The second migration seeds the four lookup tables (`vendor`, `note_type`, `patient_status_type`, `medical_code_type`) with `models.LOOKUP_SEEDS` -- the only values the pipeline's own code produces or looks up by name -- keeping a frozen copy that `tests/test_alembic_seed.py` pins to the constant. `import_all_data()` refuses to run (`_require_lookup_seeds`) if any of those rows is missing, rather than silently dropping every device for want of a vendor. The demo seeds its own larger vocabulary (`tools/synthetic_data/schema.py`), which must include every required value.
 

@@ -25,5 +25,5 @@ Publishing `py-shared-tools` to PyPI, or keeping it as a submodule or a pinned g
 ## Evidence
 
 - [`rest_adapter.py`](../../src/medicare_rebuild/vendor/rest_adapter.py), [`atomic_io.py`](../../src/medicare_rebuild/vendor/atomic_io.py), [`tabular_io.py`](../../src/medicare_rebuild/vendor/tabular_io.py)
-- [`test_rest_adapter.py`](../../tests/test_rest_adapter.py), [`test_atomic_io.py`](../../tests/test_atomic_io.py), [`test_tabular_io.py`](../../tests/test_tabular_io.py)
+- [`test_rest_adapter.py`](../../tests/vendor/test_rest_adapter.py), [`test_atomic_io.py`](../../tests/vendor/test_atomic_io.py), [`test_tabular_io.py`](../../tests/vendor/test_tabular_io.py)
 - [`pyproject.toml`](../../pyproject.toml) (no git source)

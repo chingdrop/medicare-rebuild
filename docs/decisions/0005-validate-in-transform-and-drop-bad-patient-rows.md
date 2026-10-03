@@ -23,5 +23,5 @@ A failed-patient export was written for a while (`e4d42ac`, 2025-02-05, "add fai
 ## Evidence
 
 - [`check_patient_db_constraints`](../../src/medicare_rebuild/utils/dataframe_utils.py) and the commented-out `patient_check_failed_data` (since removed; its duplicate-patient check became `find_possible_duplicate_patients`, which logs likely duplicates without dropping them)
-- [`test_check_patient_db_constraints`](../../tests/test_dataframe_utils.py)
-- [`test_manifest_rejections_match_the_real_normalisation`](../../tests/test_synthetic_data.py)
+- [`test_check_patient_db_constraints`](../../tests/utils/test_dataframe_utils.py)
+- [`test_manifest_rejections_match_the_real_normalisation`](../../tests/tools/test_synthetic_data.py)

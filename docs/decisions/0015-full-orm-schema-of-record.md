@@ -26,4 +26,4 @@ Two narrower options were on the table and not chosen: keeping the models as a s
 
 - [`models.py`](../../src/medicare_rebuild/models.py), [`legacy_models.py`](../../src/medicare_rebuild/legacy_models.py), [`sql/schema.sql`](../../sql/schema.sql), [`tools/generate_schema.py`](../../tools/generate_schema.py)
 - [`__main__.py`](../../src/medicare_rebuild/__main__.py) (`DataImporter`, `reset_all_data` from `models.py`)
-- [`test_generate_schema.py`](../../tests/test_generate_schema.py), [`test_import_patient_data`](../../tests/integration/test_data_importer_integration.py)
+- [`test_generate_schema.py`](../../tests/tools/test_generate_schema.py), [`test_import_patient_data`](../../tests/integration/test_data_importer_integration.py)

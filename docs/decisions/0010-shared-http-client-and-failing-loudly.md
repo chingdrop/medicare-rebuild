@@ -23,5 +23,5 @@ Keeping the old wrapper, which returned `None` on errors. The commit chose raisi
 ## Evidence
 
 - [`api_utils.py`](../../src/medicare_rebuild/utils/api_utils.py)
-- [`test_get_group_members_raises_on_http_error`](../../tests/test_api_utils.py), `test_get_readings_raises_on_http_error` (same file)
+- [`test_get_group_members_raises_on_http_error`](../../tests/utils/test_api_utils.py), `test_get_readings_raises_on_http_error` (same file)
 - [`rest_adapter.py`](../../src/medicare_rebuild/vendor/rest_adapter.py) (the inlined adapter; until 0013 it came from a git dependency declared in `pyproject.toml`)
