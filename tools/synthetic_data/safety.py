@@ -15,9 +15,7 @@ _MBI = re.compile(
     r"-?[AC-HJKMNP-RT-Yac-hjkmnp-rt-y][AC-HJKMNP-RT-Yac-hjkmnp-rt-y0-9][0-9]"
     r"-?[AC-HJKMNP-RT-Yac-hjkmnp-rt-y]{2}[0-9]{2}(?![A-Za-z0-9])"
 )
-_PHONE = re.compile(
-    r"(?<![\w.-])(?:\+?1[ .-]?)?\(?([2-9]\d{2})\)?[ .-]?(\d{3})[ .-]?(\d{4})(?![\w-])"
-)
+_PHONE = re.compile(r"(?<![\w.-])(?:\+?1[ .-]?)?\(?([2-9]\d{2})\)?[ .-]?(\d{3})[ .-]?(\d{4})(?![\w-])")
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+")
 
 

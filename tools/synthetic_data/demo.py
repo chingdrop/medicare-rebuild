@@ -302,16 +302,8 @@ def collect_actual(data_dir: Path, report_path: Path, errors: list[str]) -> Actu
                 GPS_DB,
             )["n"].iloc[0]
         ),
-        "note authors": int(
-            _read(
-                "SELECT COUNT(*) AS n FROM patient_note WHERE user_id IS NULL", GPS_DB
-            )["n"].iloc[0]
-        ),
-        "patient coaches": int(
-            _read("SELECT COUNT(*) AS n FROM patient WHERE user_id IS NULL", GPS_DB)[
-                "n"
-            ].iloc[0]
-        ),
+        "note authors": int(_read("SELECT COUNT(*) AS n FROM patient_note WHERE user_id IS NULL", GPS_DB)["n"].iloc[0]),
+        "patient coaches": int(_read("SELECT COUNT(*) AS n FROM patient WHERE user_id IS NULL", GPS_DB)["n"].iloc[0]),
         "patient statuses": int(
             _read(
                 "SELECT COUNT(*) AS n FROM patient_status WHERE patient_status_type_id IS NULL",
@@ -395,9 +387,7 @@ def compare(manifest: dict, a: Actual) -> tuple[list[Check], dict[str, bool]]:
         )
     )
 
-    expected_codes = Counter(
-        (c["id"], c["code"], c["applied_at"]) for c in e["applied_codes"]
-    )
+    expected_codes = Counter((c["id"], c["code"], c["applied_at"]) for c in e["applied_codes"])
     checks.append(
         Check(
             "billing codes applied (patient, code, timestamp)",
@@ -420,9 +410,7 @@ def compare(manifest: dict, a: Actual) -> tuple[list[Check], dict[str, bool]]:
         Check(
             "no SQL errors logged by the pipeline",
             not a.pipeline_errors,
-            f"{len(a.pipeline_errors)} error(s); first: {a.pipeline_errors[0][:160]}"
-            if a.pipeline_errors
-            else "",
+            f"{len(a.pipeline_errors)} error(s); first: {a.pipeline_errors[0][:160]}" if a.pipeline_errors else "",
         )
     )
 
@@ -439,16 +427,11 @@ def compare(manifest: dict, a: Actual) -> tuple[list[Check], dict[str, bool]]:
     for s in manifest["scenarios"]:
         pid = s["patient_id"]
         want = Counter((c["code"], c["applied_at"]) for c in s["expected_codes"])
-        want_report = Counter(
-            (c["code"], c["applied_at"][:10])
-            for c in s["expected_codes"]
-            if c["in_report"]
-        )
+        want_report = Counter((c["code"], c["applied_at"][:10]) for c in s["expected_codes"] if c["in_report"])
         ok = (
             want == by_id_actual.get(pid, Counter())
             and want_report == report_by_id.get(pid, Counter())
-            and (pid in a.loaded_patient_ids)
-            == (s["in_export"] and s["rejected_reason"] is None)
+            and (pid in a.loaded_patient_ids) == (s["in_export"] and s["rejected_reason"] is None)
         )
         scenarios[s["key"]] = ok
     checks.append(
@@ -481,10 +464,7 @@ def _check_lines(checks: list[Check], manifest: dict, a: Actual) -> list[str]:
             if c.name.startswith("every named scenario"):
                 total = len(manifest["scenarios"])
                 name = f"named scenarios behave as designed ({total} scenarios)"
-            out.append(
-                f"  [{'PASS' if c.ok else 'FAIL'}] {name}"
-                + ("" if c.ok else f" - {c.detail}")
-            )
+            out.append(f"  [{'PASS' if c.ok else 'FAIL'}] {name}" + ("" if c.ok else f" - {c.detail}"))
             continue
         prefix, label = group
         if prefix in done:
@@ -492,9 +472,7 @@ def _check_lines(checks: list[Check], manifest: dict, a: Actual) -> list[str]:
         done.add(prefix)
         members = [m for m in checks if m.name.startswith(prefix)]
         bad = [m for m in members if not m.ok]
-        out.append(
-            f"  [{'PASS' if not bad else 'FAIL'}] {label} ({len(members)} checks)"
-        )
+        out.append(f"  [{'PASS' if not bad else 'FAIL'}] {label} ({len(members)} checks)")
         out.extend(f"         {m.name} - {m.detail}" for m in bad)
     return out
 
@@ -522,18 +500,14 @@ def render_summary(manifest: dict, a: Actual, checks: list[Check]) -> str:
         "",
         f"Rejected patients ({len(e['rejected_patients'])}) - reasons are from the manifest;",
     ]
-    lines.append(
-        "the pipeline drops these rows silently, along with their devices, readings and notes:"
-    )
+    lines.append("the pipeline drops these rows silently, along with their devices, readings and notes:")
     for r in e["rejected_patients"]:
         lines.append(f"  ID {r['id']}: {r['reason']}")
     other: dict[str, list[str]] = {}
     for x in e["excluded_rows"]:
         if x["table"] == "patient" or x["reason"].startswith("patient rejected"):
             continue
-        other.setdefault(x["reason"], []).append(
-            f"{x['count']} {x['table'].replace('_', ' ')}"
-        )
+        other.setdefault(x["reason"], []).append(f"{x['count']} {x['table'].replace('_', ' ')}")
     lines.append("Other rows not loaded:")
     for reason, parts in other.items():
         lines.append(f"  {reason}: {', '.join(parts)}")
@@ -604,16 +578,10 @@ def run_demo(data_dir: Path, output_dir: Path) -> DemoResult:
         # Applied only after the checks above, so this summary still describes the
         # clean run; `python -m tools.reconcile` is what must catch the fault.
         apply_faults(faults, report)
-        summary += (
-            f"\nInjected fault(s) applied after these checks: {', '.join(faults)}\n"
-        )
+        summary += f"\nInjected fault(s) applied after these checks: {', '.join(faults)}\n"
     (output_dir / "summary.txt").write_text(summary)
-    (output_dir / "checks.json").write_text(
-        json.dumps([c.__dict__ for c in checks], indent=2) + "\n"
-    )
-    return DemoResult(
-        actual, checks, scenarios, summary, report, time.monotonic() - started, manifest
-    )
+    (output_dir / "checks.json").write_text(json.dumps([c.__dict__ for c in checks], indent=2) + "\n")
+    return DemoResult(actual, checks, scenarios, summary, report, time.monotonic() - started, manifest)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -624,11 +592,7 @@ def main(argv: list[str] | None = None) -> int:
     result = run_demo(args.data_dir, args.output_dir)
     print(result.summary, end="")
     report = result.report_path
-    shown = (
-        report.relative_to(Path.cwd())
-        if report and report.is_relative_to(Path.cwd())
-        else report
-    )
+    shown = report.relative_to(Path.cwd()) if report and report.is_relative_to(Path.cwd()) else report
     print(f"Report: {shown}")
     return 0 if result.passed else 1
 

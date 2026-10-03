@@ -66,9 +66,7 @@ def run(data_dir: Path, output_dir: Path, sample: int | None = None) -> Reconcil
     )
     rec.seed = manifest["generator"]["seed"]
     faults_file = data_dir / "faults.json"
-    rec.faults = (
-        json.loads(faults_file.read_text())["faults"] if faults_file.exists() else []
-    )
+    rec.faults = json.loads(faults_file.read_text())["faults"] if faults_file.exists() else []
     (output_dir / "reconcile.txt").write_text(render_text(rec))
     (output_dir / "reconcile.json").write_text(render_json(rec))
     return rec
@@ -80,16 +78,12 @@ def run(data_dir: Path, output_dir: Path, sample: int | None = None) -> Reconcil
 def _equation(name: str, s: dict) -> str:
     parts = [f"loaded {s['loaded']}"]
     if s["loaded_from_fanout"]:
-        parts = [
-            f"loaded {s['loaded']} (of which {s['loaded_from_fanout']} extra from device fan-out)"
-        ]
+        parts = [f"loaded {s['loaded']} (of which {s['loaded_from_fanout']} extra from device fan-out)"]
     parts.append(f"duplicates merged {s['duplicates_merged']}")
     for code, n in s["dispositions"].items():
         parts.append(f"{code} {n}")
     tail = f"unexplained {s['unexplained']}"
-    return (
-        f"  {name:<24} source {s['source']:>5} = " + " + ".join(parts) + f"  [{tail}]"
-    )
+    return f"  {name:<24} source {s['source']:>5} = " + " + ".join(parts) + f"  [{tail}]"
 
 
 def render_text(rec: Reconciliation) -> str:
@@ -97,18 +91,14 @@ def render_text(rec: Reconciliation) -> str:
     if rec.seed is not None:
         lines.append(f"Seed {rec.seed}")
     if rec.faults:
-        lines.append(
-            f"Injected fault(s) applied after the run: {', '.join(rec.faults)}"
-        )
+        lines.append(f"Injected fault(s) applied after the run: {', '.join(rec.faults)}")
     lines.append("")
     conservation = next(r for r in rec.results if r.name.startswith("1 "))
     lines.append("Row conservation (source = loaded + merged + dispositions):")
     for name, s in conservation.details["sources"].items():
         lines.append(_equation(name, s))
         if s.get("rejected_by_reason"):
-            reasons_txt = ", ".join(
-                f"{k} {v}" for k, v in s["rejected_by_reason"].items()
-            )
+            reasons_txt = ", ".join(f"{k} {v}" for k, v in s["rejected_by_reason"].items())
             lines.append(f"  {'':<24} rejected by reason: {reasons_txt}")
     for table, v in conservation.details["derived_tables"].items():
         lines.append(

@@ -30,9 +30,7 @@ class Note:
     note_type: str
     seconds: int | None  # None -> no Time_Log row
     auto_time: bool = True
-    same_as: "Note | None" = (
-        None  # a duplicated source row: same Note_ID, no second Time_Log row
-    )
+    same_as: "Note | None" = None  # a duplicated source row: same Note_ID, no second Time_Log row
 
 
 @dataclass

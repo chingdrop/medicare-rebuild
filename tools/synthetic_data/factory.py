@@ -80,9 +80,7 @@ class Factory:
         dx = ", ".join(rng.sample(cfg.DX_CODES, rng.choice([1, 2, 2, 3])))
         commercial = rng.random() < 0.3
         supplement = rng.random() < 0.15
-        status = rng.choices(
-            ["Active", "In-Active", "On-Board", "DO NOT CALL"], [80, 8, 8, 4]
-        )[0]
+        status = rng.choices(["Active", "In-Active", "On-Board", "DO NOT CALL"], [80, 8, 8, 4])[0]
         local = f"{first}.{last}".lower()
         local = "".join(ch for ch in local if ch.isalnum() or ch == ".")
         row = {
@@ -95,9 +93,7 @@ class Factory:
             "Email": f"{local}.syn{sid}@example.com",
             "Suffix": "" if female else rng.choice(["", "", "", "Jr", "Sr"]),
             "Social Security": "",
-            "Race": rng.choice(
-                ["White", "Black", "Asian", "Hispanic", "Caucasian", "Native American"]
-            ),
+            "Race": rng.choice(["White", "Black", "Asian", "Hispanic", "Caucasian", "Native American"]),
             "Weight": f"{rng.randint(120, 260)} lbs",
             "Height": self._height(),
             "Mailing Address": street,
@@ -110,20 +106,14 @@ class Factory:
             "EmergencyNumber2": self.phone() if contacts > 1 else "",
             "Medicare ID number": f"SYN-{sid:06d}",
             "DX_Code": dx,
-            "Insurance ID:": f"SYNINS-{rng.randint(100000, 999999)}"
-            if commercial
-            else "",
+            "Insurance ID:": f"SYNINS-{rng.randint(100000, 999999)}" if commercial else "",
             "Insurance Name:": rng.choice(cfg.COMMERCIAL_PLANS) if commercial else "",
-            "InsuranceID2": f"SYNSUP-{rng.randint(100000, 999999)}"
-            if supplement
-            else "",
+            "InsuranceID2": f"SYNSUP-{rng.randint(100000, 999999)}" if supplement else "",
             "InsuranceName2": rng.choice(cfg.SUPPLEMENT_PLANS) if supplement else "",
             "On-board Date": f"2024-{rng.randint(1, 12):02d}-{rng.randint(1, 28):02d}",
             "Member_Status": status,
             "Health Coach": rng.choice(cfg.COACHES),
-            "Relationship_Status": rng.choice(
-                ["Married", "Single", "Widowed", "Divorced"]
-            ),
+            "Relationship_Status": rng.choice(["Married", "Single", "Widowed", "Divorced"]),
             "Preferred_Language": rng.choice(["English", "English", "Spanish"]),
             "DOB": dob.strftime("%m/%d/%Y"),
             "ID": sid,
@@ -140,9 +130,7 @@ class Factory:
 
     # -- devices ----------------------------------------------------------
 
-    def device(
-        self, kind: str, sid: int, *, resupply: bool = False, n: int = 1
-    ) -> Device:
+    def device(self, kind: str, sid: int, *, resupply: bool = False, n: int = 1) -> Device:
         if kind == "bg":
             return Device(
                 "Tenovi",
@@ -161,9 +149,7 @@ class Factory:
 
     # -- readings ---------------------------------------------------------
 
-    def reading_at(
-        self, kind: str, recorded: datetime, latency_min: int | None = None
-    ) -> Reading:
+    def reading_at(self, kind: str, recorded: datetime, latency_min: int | None = None) -> Reading:
         rng = self.rng
         latency = rng.randint(1, 25) if latency_min is None else latency_min
         received = recorded + timedelta(minutes=latency)
@@ -173,9 +159,7 @@ class Factory:
             values = (float(rng.randint(105, 165)), float(rng.randint(62, 98)))
         return Reading(kind, recorded, received, values, manual=rng.random() < 0.1)
 
-    def daily_readings(
-        self, kind: str, days: list[date], per_day: int = 1
-    ) -> list[Reading]:
+    def daily_readings(self, kind: str, days: list[date], per_day: int = 1) -> list[Reading]:
         """Readings recorded and received on the same calendar day (6am-9pm)."""
         out = []
         for d in days:
@@ -213,7 +197,5 @@ class Factory:
         )
 
     def note_on(self, d: date, seconds: int | None, **kw) -> Note:
-        when = datetime(
-            d.year, d.month, d.day, self.rng.randint(8, 17), self.rng.randint(0, 59)
-        )
+        when = datetime(d.year, d.month, d.day, self.rng.randint(8, 17), self.rng.randint(0, 59))
         return self.note(when, seconds, **kw)

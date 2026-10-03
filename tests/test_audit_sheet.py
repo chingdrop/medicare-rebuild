@@ -22,8 +22,7 @@ def _write_run(tmp_path, *, report_ok=True):
     data.mkdir()
     out.mkdir()
     sources = {
-        "patients": _source(10, 9, PATIENT_REJECTED=1)
-        | {"rejected_by_reason": {"ZIP_LENGTH": 1}},
+        "patients": _source(10, 9, PATIENT_REJECTED=1) | {"rejected_by_reason": {"ZIP_LENGTH": 1}},
         "users": _source(2, 2),
         "devices": _source(5, 4, PATIENT_REJECTED=1),
         "glucose readings": _source(40, 37, NO_MATCHING_DEVICE=3),
@@ -52,9 +51,7 @@ def _write_run(tmp_path, *, report_ok=True):
         },
     ]
     (out / "reconcile.json").write_text(json.dumps({"seed": 42, "checks": checks}))
-    (out / "checks.json").write_text(
-        json.dumps([{"name": "a", "ok": True}, {"name": "b", "ok": False}])
-    )
+    (out / "checks.json").write_text(json.dumps([{"name": "a", "ok": True}, {"name": "b", "ok": False}]))
     (data / "manifest.json").write_text(
         json.dumps(
             {

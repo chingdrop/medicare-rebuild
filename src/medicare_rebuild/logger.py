@@ -44,9 +44,7 @@ def setup_logger(name: str, level: str = "warning") -> logging.Logger:
         },
     )
 
-    file_handler.setFormatter(
-        logging.Formatter("[%(asctime)s - %(levelname)s/%(name)s]: %(message)s")
-    )
+    file_handler.setFormatter(logging.Formatter("[%(asctime)s - %(levelname)s/%(name)s]: %(message)s"))
     stream_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)

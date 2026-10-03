@@ -44,7 +44,5 @@ def test_report_off_by_one_changes_exactly_one_count_by_one(tmp_path):
     path = tmp_path / "Billing_Report.xlsx"
     wb.save(path)
     bump_report_count(path)
-    rows = [
-        [c.value for c in r] for r in load_workbook(path).active.iter_rows(min_row=2)
-    ]
+    rows = [[c.value for c in r] for r in load_workbook(path).active.iter_rows(min_row=2)]
     assert rows == [[1, 0, 1, 1, 0, 0], [2, 0, 0, 0, 3, 0]]

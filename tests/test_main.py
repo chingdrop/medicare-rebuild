@@ -16,9 +16,7 @@ from medicare_rebuild.__main__ import main
 @patch("medicare_rebuild.__main__.load_dotenv")
 @patch("medicare_rebuild.__main__.create_billing_report")
 @patch("medicare_rebuild.__main__.import_all_data")
-def test_main_derives_last_months_billing_cycle(
-    mock_import_all_data, mock_create_billing_report, *_mocks
-):
+def test_main_derives_last_months_billing_cycle(mock_import_all_data, mock_create_billing_report, *_mocks):
     """ "Today" in March: the report covers February, and the import window starts a
     full calendar month earlier (January) so the billing rules' rolling windows (up to
     30 days/1 month back from the report end date) have every reading/note they need
@@ -43,9 +41,7 @@ def test_main_derives_last_months_billing_cycle(
 @patch("medicare_rebuild.__main__.load_dotenv")
 @patch("medicare_rebuild.__main__.create_billing_report")
 @patch("medicare_rebuild.__main__.import_all_data")
-def test_main_import_window_crosses_year_boundary(
-    mock_import_all_data, mock_create_billing_report, *_mocks
-):
+def test_main_import_window_crosses_year_boundary(mock_import_all_data, mock_create_billing_report, *_mocks):
     """ "Today" in January: the report covers last December, and the import window
     starts in November of the prior year; the end bound rolls over into the new year."""
     main()

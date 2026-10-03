@@ -35,16 +35,12 @@ class _FakeResponse:
 
 
 def _adapter(**config_kwargs) -> RestAdapter:
-    return RestAdapter(
-        RestAdapterConfig(base_url="https://api.example.test", **config_kwargs)
-    )
+    return RestAdapter(RestAdapterConfig(base_url="https://api.example.test", **config_kwargs))
 
 
 def test_json_content_type_returns_dict(monkeypatch):
     adapter = _adapter()
-    monkeypatch.setattr(
-        adapter.session, "request", lambda **kw: _FakeResponse(json_data={"ok": True})
-    )
+    monkeypatch.setattr(adapter.session, "request", lambda **kw: _FakeResponse(json_data={"ok": True}))
     assert adapter.get("/agents") == {"ok": True}
 
 
@@ -53,9 +49,7 @@ def test_text_content_type_returns_str(monkeypatch):
     monkeypatch.setattr(
         adapter.session,
         "request",
-        lambda **kw: _FakeResponse(
-            text="Name,Enabled\nWS-01,True\n", content_type="text/csv"
-        ),
+        lambda **kw: _FakeResponse(text="Name,Enabled\nWS-01,True\n", content_type="text/csv"),
     )
     result = adapter.get("/export")
     assert isinstance(result, str)
@@ -67,9 +61,7 @@ def test_html_content_type_returns_str(monkeypatch):
     monkeypatch.setattr(
         adapter.session,
         "request",
-        lambda **kw: _FakeResponse(
-            text="<html></html>", content_type="text/html; charset=utf-8"
-        ),
+        lambda **kw: _FakeResponse(text="<html></html>", content_type="text/html; charset=utf-8"),
     )
     assert adapter.get("/page") == "<html></html>"
 
@@ -79,9 +71,7 @@ def test_unrecognized_content_type_returns_raw_bytes(monkeypatch):
     monkeypatch.setattr(
         adapter.session,
         "request",
-        lambda **kw: _FakeResponse(
-            text="binary-ish", content_type="application/octet-stream"
-        ),
+        lambda **kw: _FakeResponse(text="binary-ish", content_type="application/octet-stream"),
     )
     result = adapter.get("/blob")
     assert isinstance(result, bytes)
@@ -90,9 +80,7 @@ def test_unrecognized_content_type_returns_raw_bytes(monkeypatch):
 
 def test_http_error_status_raises(monkeypatch):
     adapter = _adapter()
-    monkeypatch.setattr(
-        adapter.session, "request", lambda **kw: _FakeResponse(status_code=500)
-    )
+    monkeypatch.setattr(adapter.session, "request", lambda **kw: _FakeResponse(status_code=500))
     with pytest.raises(requests.HTTPError):
         adapter.get("/broken")
 
@@ -101,9 +89,7 @@ def test_http_error_status_raises(monkeypatch):
     "method_name,expected_verb",
     [("get", "GET"), ("post", "POST"), ("put", "PUT"), ("delete", "DELETE")],
 )
-def test_convenience_methods_use_correct_http_verb(
-    monkeypatch, method_name, expected_verb
-):
+def test_convenience_methods_use_correct_http_verb(monkeypatch, method_name, expected_verb):
     adapter = _adapter()
     seen = {}
 
@@ -122,9 +108,7 @@ def test_per_call_headers_override_session_headers(monkeypatch):
     monkeypatch.setattr(
         adapter.session,
         "request",
-        lambda **kw: (seen.update(headers=kw["headers"]), _FakeResponse(json_data={}))[
-            1
-        ],
+        lambda **kw: (seen.update(headers=kw["headers"]), _FakeResponse(json_data={}))[1],
     )
     adapter.get("/x", headers={"Authorization": "ApiToken override"})
     assert seen["headers"]["Authorization"] == "ApiToken override"
@@ -162,9 +146,7 @@ def test_timeout_falls_back_to_config_default(monkeypatch):
     monkeypatch.setattr(
         adapter.session,
         "request",
-        lambda **kw: (seen.update(timeout=kw["timeout"]), _FakeResponse(json_data={}))[
-            1
-        ],
+        lambda **kw: (seen.update(timeout=kw["timeout"]), _FakeResponse(json_data={}))[1],
     )
     adapter.get("/x")
     assert seen["timeout"] == 42.0
@@ -190,8 +172,6 @@ def test_retries_mounted_with_configured_total(monkeypatch):
 
 
 def test_auth_and_proxies_applied_to_session():
-    adapter = _adapter(
-        auth=("user", "pass"), proxies={"https": "https://proxy.example"}
-    )
+    adapter = _adapter(auth=("user", "pass"), proxies={"https": "https://proxy.example"})
     assert adapter.session.auth == ("user", "pass")
     assert adapter.session.proxies["https"] == "https://proxy.example"

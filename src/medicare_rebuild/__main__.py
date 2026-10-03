@@ -120,10 +120,7 @@ def _require_lookup_seeds(session: Session) -> None:
         present = set(session.scalars(select(model.name)))  # type: ignore[attr-defined]
         missing += [f"{model.__tablename__}.{n}" for n in names if n not in present]
     if missing:
-        raise RuntimeError(
-            "GPS lookup tables are missing required rows (run `make migrate`): "
-            + ", ".join(missing)
-        )
+        raise RuntimeError("GPS lookup tables are missing required rows (run `make migrate`): " + ", ".join(missing))
 
 
 class DataImporter:
@@ -165,9 +162,7 @@ class DataImporter:
         """A small {key: id} dict from a lookup or already-loaded table, queried fresh
         each call so this works regardless of which DataImporter instance or session
         loaded the rows it depends on (see decision 0015)."""
-        rows = self.session.execute(
-            select(getattr(model, key_attr), getattr(model, value_attr))
-        )
+        rows = self.session.execute(select(getattr(model, key_attr), getattr(model, value_attr)))
         return {k: v for k, v in rows if k is not None}
 
     def _unique_lookup(
@@ -184,9 +179,7 @@ class DataImporter:
         are matched case-insensitively (an Entra sign-in name); callers lower-case the
         values they look up to match."""
         ids: dict[Any, set[Any]] = {}
-        for k, v in self.session.execute(
-            select(getattr(model, key_attr), getattr(model, value_attr))
-        ):
+        for k, v in self.session.execute(select(getattr(model, key_attr), getattr(model, value_attr))):
             if k is not None:
                 ids.setdefault(k.lower() if casefold else k, set()).add(v)
         ambiguous = sorted(k for k, v in ids.items() if len(v) > 1)
@@ -243,9 +236,7 @@ class DataImporter:
             self.snap_dataframe(df, self.snaps_dir / "snap_user_df.xlsx")
         return df
 
-    def get_patient_data(
-        self, filename: Path | str, snap: bool = False
-    ) -> dict[str, pd.DataFrame]:
+    def get_patient_data(self, filename: Path | str, snap: bool = False) -> dict[str, pd.DataFrame]:
         """
         Retrieves and normalizes patient data from a CSV file.
 
@@ -261,9 +252,7 @@ class DataImporter:
             dtype={"Phone Number": "str", "Social Security": "str", "Zip code": "str"},
             parse_dates=["DOB", "On-board Date"],
         )
-        self.logger.debug(
-            f"Reading patient export from SharePoint (rows: {df.shape[0]}, cols: {df.shape[1]})"
-        )
+        self.logger.debug(f"Reading patient export from SharePoint (rows: {df.shape[0]}, cols: {df.shape[1]})")
         df = normalize_patients(df)
         df = check_patient_db_constraints(df)
         df, dup_ids = drop_duplicate_sharepoint_ids(df)
@@ -271,8 +260,7 @@ class DataImporter:
         # snap=True to inspect the rows themselves.
         if dup_ids:
             self.logger.warning(
-                f"{len(dup_ids)} SharePoint ID(s) appear on more than one patient row; "
-                "kept the first row of each"
+                f"{len(dup_ids)} SharePoint ID(s) appear on more than one patient row; kept the first row of each"
             )
         possible_dupes = find_possible_duplicate_patients(df)
         if possible_dupes:
@@ -313,12 +301,8 @@ class DataImporter:
                 get_time_log_stmt(self.start_date, self.end_date),
                 parse_dates=["Start_Time", "End_Time"],
             )
-        time_df = time_df.rename(
-            columns={"SharPoint_ID": "SharePoint_ID", "Notes": "Note_Type"}
-        )
-        df = pd.merge(
-            notes_df, time_df, on=["SharePoint_ID", "Note_ID", "AZURE_UPN"], how="left"
-        )
+        time_df = time_df.rename(columns={"SharPoint_ID": "SharePoint_ID", "Notes": "Note_Type"})
+        df = pd.merge(notes_df, time_df, on=["SharePoint_ID", "Note_ID", "AZURE_UPN"], how="left")
         df["Time_Note"] = df["Time_Note"].fillna(df["Note_Type"])
         df.drop(columns=["Note_ID", "Note_Type"], inplace=True)
         df = normalize_patient_notes(df)
@@ -407,9 +391,7 @@ class DataImporter:
             patient_data (Dict[str, pd.DataFrame]): A dictionary of patient data DataFrames to import.
         """
         user_lookup = self._unique_lookup(User, "display_name", "user_id")
-        status_lookup = self._lookup(
-            PatientStatusType, "name", "patient_status_type_id"
-        )
+        status_lookup = self._lookup(PatientStatusType, "name", "patient_status_type_id")
 
         patient_df = patient_data["patient"].copy()
         patient_df["user_id"] = _map_id(patient_df["temp_user"], user_lookup)
@@ -427,9 +409,7 @@ class DataImporter:
         insurance_df = with_patient_id(patient_data["insurance"])
         med_nec_df = with_patient_id(patient_data["med_nec"])
         status_df = with_patient_id(patient_data["status"])
-        status_df["patient_status_type_id"] = _map_id(
-            status_df["temp_status_type"], status_lookup
-        )
+        status_df["patient_status_type_id"] = _map_id(status_df["temp_status_type"], status_lookup)
         emcontacts_df = with_patient_id(patient_data["emcontacts"])
 
         self.session.add_all(PatientAddress(**r) for r in _records(address_df))
@@ -450,9 +430,7 @@ class DataImporter:
         note_type_lookup = self._lookup(NoteType, "name", "note_type_id")
         # Notes record their author's Entra sign-in name (AZURE_UPN), not their display
         # name, and Entra matches sign-in names case-insensitively.
-        upn_lookup = self._unique_lookup(
-            User, "user_principal_name", "user_id", casefold=True
-        )
+        upn_lookup = self._unique_lookup(User, "user_principal_name", "user_id", casefold=True)
 
         df = df.copy()
         df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
@@ -489,9 +467,7 @@ class DataImporter:
         self.session.add_all(Device(**row) for row in _records(df))
         self.session.commit()
 
-    def _resolve_device_readings(
-        self, df: pd.DataFrame, device_type: str
-    ) -> pd.DataFrame:
+    def _resolve_device_readings(self, df: pd.DataFrame, device_type: str) -> pd.DataFrame:
         """Resolve sharepoint_id -> patient_id, then link each reading to the patient's
         device(s) of `device_type` (standardize_device_type, from the device name):
         legacy readings carry no device identifier, so the device type is what keeps
@@ -504,9 +480,7 @@ class DataImporter:
         docs/reconciliation.md), so it is dropped again once it has done that job."""
         patient_ids = self._lookup(Patient, "sharepoint_id", "patient_id")
         devices = pd.DataFrame(
-            self.session.execute(
-                select(Device.device_id, Device.patient_id, Device.name)
-            ),
+            self.session.execute(select(Device.device_id, Device.patient_id, Device.name)),
             columns=["device_id", "patient_id", "name"],
         )
         devices = devices.loc[
@@ -516,13 +490,10 @@ class DataImporter:
         df = df.copy()
         df["patient_id"] = _map_id(df["sharepoint_id"], patient_ids)
         df = df.drop(columns=["sharepoint_id"])
-        no_device = df["patient_id"].notna() & ~df["patient_id"].isin(
-            devices["patient_id"]
-        )
+        no_device = df["patient_id"].notna() & ~df["patient_id"].isin(devices["patient_id"])
         if no_device.any():
             self.logger.warning(
-                f"{int(no_device.sum())} reading(s) dropped: the patient has no device "
-                "of the reading's type on file"
+                f"{int(no_device.sum())} reading(s) dropped: the patient has no device of the reading's type on file"
             )
         return pd.merge(df, devices, on="patient_id").drop(columns=["patient_id"])
 
@@ -627,9 +598,7 @@ def create_billing_report(
     try:
         run_billing(session, end_date)
         df = build_billing_report(session, start_date, end_date)
-        write_structured_file(
-            df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False
-        )
+        write_structured_file(df, Path.cwd() / "data" / "Billing_Report.xlsx", index=False)
     finally:
         session.close()
         gps.close()

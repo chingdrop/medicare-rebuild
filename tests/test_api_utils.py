@@ -10,9 +10,7 @@ JSON_HEADERS = {"Content-Type": "application/json"}
 
 @pytest.fixture
 def ms_graph_api():
-    return MSGraphApi(
-        tenant_id="tenant_id", client_id="client_id", client_secret="client_secret"
-    )
+    return MSGraphApi(tenant_id="tenant_id", client_id="client_id", client_secret="client_secret")
 
 
 def test_request_access_token(ms_graph_api, requests_mock):
@@ -27,9 +25,7 @@ def test_request_access_token(ms_graph_api, requests_mock):
     assert ms_graph_api.rest.session.headers["Authorization"] == "Bearer test_token"
 
 
-def test_token_request_does_not_log_the_client_secret(
-    ms_graph_api, requests_mock, caplog
-):
+def test_token_request_does_not_log_the_client_secret(ms_graph_api, requests_mock, caplog):
     requests_mock.post(
         "https://login.microsoftonline.com/tenant_id/oauth2/v2.0/token",
         json={"access_token": "test_token"},

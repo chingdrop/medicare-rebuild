@@ -53,9 +53,7 @@ def _hms(seconds: int) -> str:
 
 def build_plans(seed: int, patients: int) -> list[Plan]:
     if patients < minimum_patients():
-        raise ValueError(
-            f"--patients must be at least {minimum_patients()} to cover every scenario"
-        )
+        raise ValueError(f"--patients must be at least {minimum_patients()} to cover every scenario")
     f = Factory(seed)
     plans: list[Plan] = []
     sid = cfg.FIRST_PATIENT_ID
@@ -97,9 +95,7 @@ def _users() -> list[dict]:
 def _tables(plans: list[Plan], seed: int) -> dict[str, pd.DataFrame]:
     rng = random.Random(seed + 1)  # independent stream for shuffling source rows
 
-    patients = pd.DataFrame(
-        [p.row for p in plans if p.in_export], columns=PATIENT_CSV_COLUMNS
-    )
+    patients = pd.DataFrame([p.row for p in plans if p.in_export], columns=PATIENT_CSV_COLUMNS)
 
     devices, glucose, bp, notes, time_log = [], [], [], [], []
     note_ids: dict[int, int] = {}
@@ -117,16 +113,12 @@ def _tables(plans: list[Plan], seed: int) -> dict[str, pd.DataFrame]:
                 }
             )
         for r in p.readings:
-            model = (
-                "Tenovi Glucometer" if r.kind == "bg" else "Omron Blood Pressure Cuff"
-            )
+            model = "Tenovi Glucometer" if r.kind == "bg" else "Omron Blood Pressure Cuff"
             base = {
                 "SharePoint_ID": sid,
                 "Device_Model": model,
                 "Time_Recorded": _ts(r.recorded),
-                "Time_Recieved": _ts(
-                    r.received
-                ),  # column spelling matches the legacy table
+                "Time_Recieved": _ts(r.received),  # column spelling matches the legacy table
             }
             if r.kind == "bg":
                 glucose.append(
@@ -227,9 +219,7 @@ def _expected(plans: list[Plan]) -> dict:
         sid = p.patient_id
         is_loaded = p.in_export and p.rejected_reason is None
         drop_reason = (
-            "no matching patient in the export"
-            if not p.in_export
-            else f"patient rejected: {p.rejected_reason}"
+            "no matching patient in the export" if not p.in_export else f"patient rejected: {p.rejected_reason}"
         )
         dup["reading_rows"] += p.duplicate_readings
         dup["note_rows"] += p.duplicate_notes
@@ -258,9 +248,7 @@ def _expected(plans: list[Plan]) -> dict:
         for d in p.devices:
             source["devices"] += 1
             if d.resupply:
-                excluded[
-                    ("device", "excluded by the source query (Resupply flag set)")
-                ] += 1
+                excluded[("device", "excluded by the source query (Resupply flag set)")] += 1
             elif not is_loaded:
                 excluded[("device", drop_reason)] += 1
             else:
@@ -310,10 +298,7 @@ def _expected(plans: list[Plan]) -> dict:
     return {
         "source_rows": dict(source),
         "loaded_rows": dict(loaded),
-        "excluded_rows": [
-            {"table": t, "reason": why, "count": n}
-            for (t, why), n in sorted(excluded.items())
-        ],
+        "excluded_rows": [{"table": t, "reason": why, "count": n} for (t, why), n in sorted(excluded.items())],
         "rejected_patients": rejected,
         "duplicates": {
             "duplicate_reading_rows": dup["reading_rows"],
@@ -323,9 +308,7 @@ def _expected(plans: list[Plan]) -> dict:
         "multi_device_patients": multi_device,
         "codes_applied": {c: codes_applied.get(c, 0) for c in cfg.BILLING_CODES},
         "codes_in_report": {c: codes_reported.get(c, 0) for c in cfg.BILLING_CODES},
-        "applied_codes": sorted(
-            applied, key=lambda a: (a["id"], a["code"], a["applied_at"])
-        ),
+        "applied_codes": sorted(applied, key=lambda a: (a["id"], a["code"], a["applied_at"])),
         "report_rows": report_rows,
     }
 

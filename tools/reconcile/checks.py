@@ -105,9 +105,7 @@ def _ids(series: pd.Series) -> set[int]:
 
 def _sid_of_patient_id(loaded: Loaded) -> dict[int, int]:
     p = loaded.tables["patient"]
-    return {
-        int(a): int(b) for a, b in zip(p["patient_id"], p["sharepoint_id"], strict=True)
-    }
+    return {int(a): int(b) for a, b in zip(p["patient_id"], p["sharepoint_id"], strict=True)}
 
 
 def device_counts_by_sharepoint_id(loaded: Loaded, device_type: str) -> pd.Series:
@@ -140,10 +138,7 @@ def check_row_conservation(
 
     # patients
     by_reason = Counter(
-        code
-        for pid, codes in reasons.items()
-        for code in codes
-        for _ in range(int((src.patients["ID"] == pid).sum()))
+        code for pid, codes in reasons.items() for code in codes for _ in range(int((src.patients["ID"] == pid).sum()))
     )
     n_rejected = int(src.patients["ID"].isin(rejected_ids).sum())
     n_loaded = len(t["patient"])
@@ -213,9 +208,7 @@ def check_row_conservation(
         inside = frame[~outside]
         no_patient = int((~inside[id_col].isin(export_ids)).sum())
         rejected = int(inside[id_col].isin(rejected_ids).sum())
-        rest = inside[
-            inside[id_col].isin(export_ids) & ~inside[id_col].isin(rejected_ids)
-        ]
+        rest = inside[inside[id_col].isin(export_ids) & ~inside[id_col].isin(rejected_ids)]
         disp = {
             "OUTSIDE_EXTRACT_WINDOW": int(outside.sum()),
             "NO_PATIENT_IN_EXPORT": no_patient,
@@ -259,15 +252,11 @@ def check_row_conservation(
         abs(v["unexplained"]) for v in derived.values()
     )
     ok = not unexplained_total and not unexplained_ids and not rejected_but_loaded
-    bad = [k for k, s in sources.items() if s["unexplained"]] + [
-        k for k, v in derived.items() if v["unexplained"]
-    ]
+    bad = [k for k, s in sources.items() if s["unexplained"]] + [k for k, v in derived.items() if v["unexplained"]]
     return CheckResult(
         "1 row conservation",
         ok,
-        "every source row is accounted for"
-        if ok
-        else f"unexplained differences in: {', '.join(bad) or 'patient IDs'}",
+        "every source row is accounted for" if ok else f"unexplained differences in: {', '.join(bad) or 'patient IDs'}",
         {"sources": sources, "derived_tables": derived},
         _cap(unexplained_ids | rejected_but_loaded),
     )
@@ -317,16 +306,12 @@ def check_foreign_keys(loaded: Loaded) -> CheckResult:
         if orphan.any():
             problems[f"{child}.{col} -> {parent}"] = int(orphan.sum())
             pk = PRIMARY_KEYS[child]
-            violations += [
-                f"{child}:{int(v)}" for v in t[child].loc[values[orphan].index, pk]
-            ]
+            violations += [f"{child}:{int(v)}" for v in t[child].loc[values[orphan].index, pk]]
     ok = not problems
     return CheckResult(
         "2b foreign keys",
         ok,
-        f"{len(FOREIGN_KEYS)} relationships have no orphans"
-        if ok
-        else f"orphans: {', '.join(problems)}",
+        f"{len(FOREIGN_KEYS)} relationships have no orphans" if ok else f"orphans: {', '.join(problems)}",
         {
             "relationships_checked": len(FOREIGN_KEYS),
             "orphans_by_relationship": problems,
@@ -344,17 +329,12 @@ def check_required_fields(loaded: Loaded) -> CheckResult:
             missing = t[table][col].isna()
             if missing.any():
                 problems[f"{table}.{col}"] = int(missing.sum())
-                violations += [
-                    f"{table}:{int(v)}"
-                    for v in t[table].loc[missing, PRIMARY_KEYS[table]]
-                ]
+                violations += [f"{table}:{int(v)}" for v in t[table].loc[missing, PRIMARY_KEYS[table]]]
     ok = not problems
     return CheckResult(
         "2c required fields",
         ok,
-        "no required field is empty after load"
-        if ok
-        else f"empty required fields: {', '.join(problems)}",
+        "no required field is empty after load" if ok else f"empty required fields: {', '.join(problems)}",
         {
             "fields_checked": sum(len(c) for c in REQUIRED_FIELDS.values()),
             "empty_by_field": problems,
@@ -366,9 +346,7 @@ def check_required_fields(loaded: Loaded) -> CheckResult:
 # -- 3. cross-source consistency -------------------------------------------------
 
 
-def check_cross_source(
-    src: Source, loaded: Loaded, rejected_ids: set[int]
-) -> CheckResult:
+def check_cross_source(src: Source, loaded: Loaded, rejected_ids: set[int]) -> CheckResult:
     """A patient present in more than one source resolves to one loaded entity."""
     where = {
         "export": _ids(src.patients["ID"]),
@@ -382,9 +360,7 @@ def check_cross_source(
     loadable = multi - rejected_ids
     loaded_count = loaded.tables["patient"]["sharepoint_id"].value_counts()
     bad = {i for i in loadable if int(loaded_count.get(i, 0)) != 1}
-    dup_in_export = {
-        int(i) for i, n in src.patients["ID"].value_counts().items() if n > 1
-    }
+    dup_in_export = {int(i) for i, n in src.patients["ID"].value_counts().items() if n > 1}
     ok = not bad and not dup_in_export
     return CheckResult(
         "3 cross-source consistency",
@@ -427,8 +403,7 @@ def check_rejection_accounting(
         summary = f"{len(rejected)} rejected patients, each with a reason code"
     else:
         summary = (
-            f"{len(no_reason)} patients missing without a reason, "
-            f"{len(reason_but_loaded)} loaded despite a reason"
+            f"{len(no_reason)} patients missing without a reason, {len(reason_but_loaded)} loaded despite a reason"
         )
     return CheckResult(
         "4 rejection accounting",
@@ -460,9 +435,7 @@ def _billed_codes(loaded: Loaded) -> pd.DataFrame:
             on="med_code_type_id",
             how="left",
         )
-        .merge(
-            t["patient"][["patient_id", "sharepoint_id"]], on="patient_id", how="left"
-        )
+        .merge(t["patient"][["patient_id", "sharepoint_id"]], on="patient_id", how="left")
         .rename(columns={"name": "code"})
     )
     # A code whose patient row is missing keeps a -1 placeholder rather than failing.
@@ -471,9 +444,7 @@ def _billed_codes(loaded: Loaded) -> pd.DataFrame:
 
 
 def _sample(rows: pd.DataFrame, sample: int | None) -> pd.DataFrame:
-    rows = rows.sort_values(["sharepoint_id", "code", "med_code_id"]).reset_index(
-        drop=True
-    )
+    rows = rows.sort_values(["sharepoint_id", "code", "med_code_id"]).reset_index(drop=True)
     if not sample or sample >= len(rows):
         return rows
     step = len(rows) / sample
@@ -496,10 +467,7 @@ def check_billing_lineage(
     # Readings link to a patient only through their device (the pipeline does not
     # write a patient key on reading rows), so resolve patient via device.
     device_sid = {
-        int(d): sid.get(int(p))
-        for d, p in zip(
-            t["device"]["device_id"], t["device"]["patient_id"], strict=True
-        )
+        int(d): sid.get(int(p)) for d, p in zip(t["device"]["device_id"], t["device"]["patient_id"], strict=True)
     }
     readings = []
     for kind, table in (
@@ -510,9 +478,7 @@ def check_billing_lineage(
         r["sid"] = r["device_id"].map(device_sid)
         r["kind"] = kind
         r["when"] = pd.to_datetime(r["received_datetime"])
-        readings.append(
-            r[["sid", "kind", "recorded_datetime", "received_datetime", "when"]]
-        )
+        readings.append(r[["sid", "kind", "recorded_datetime", "received_datetime", "when"]])
     readings_db = pd.concat(readings, ignore_index=True)
     source_readings = {
         (kind, int(i), pd.Timestamp(a), pd.Timestamp(b))
@@ -524,9 +490,7 @@ def check_billing_lineage(
             strict=True,
         )
     }
-    notes_db = t["patient_note"].merge(
-        t["note_type"][["note_type_id", "name"]], on="note_type_id", how="left"
-    )
+    notes_db = t["patient_note"].merge(t["note_type"][["note_type_id", "name"]], on="note_type_id", how="left")
     notes_db["sid"] = notes_db["patient_id"].map(sid)
     notes_db["when"] = pd.to_datetime(notes_db["note_datetime"])
     source_notes = {
@@ -567,8 +531,7 @@ def check_billing_lineage(
             else:
                 backing = backing[backing["when"] >= window_month]
             in_source = all(
-                (pid, pd.Timestamp(r.note_datetime), str(r.temp_user)) in source_notes
-                for r in backing.itertuples()
+                (pid, pd.Timestamp(r.note_datetime), str(r.temp_user)) in source_notes for r in backing.itertuples()
             )
             anchors = {backing["when"].max()} if len(backing) else set()
         stats["traced"] += 1
@@ -648,11 +611,7 @@ def check_report_totals(loaded: Loaded, cfg: Settings) -> CheckResult:
         .ngroups
     )
     unknown_ids = set(rep["ID"].astype(int)) - _ids(t["patient"]["sharepoint_id"])
-    diff = {
-        c: rep_by_code[c] - db_by_code[c]
-        for c in CODES
-        if rep_by_code[c] != db_by_code[c]
-    }
+    diff = {c: rep_by_code[c] - db_by_code[c] for c in CODES if rep_by_code[c] != db_by_code[c]}
     ok = not diff and len(rep) == db_rows and not unknown_ids
     return CheckResult(
         "6 report totals",

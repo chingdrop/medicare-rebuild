@@ -43,9 +43,7 @@ def ensure_dir(path: Path | str) -> Path:
     return path
 
 
-def atomic_write(
-    path: Path | str, data: str | bytes, *, encoding: str = "utf-8"
-) -> None:
+def atomic_write(path: Path | str, data: str | bytes, *, encoding: str = "utf-8") -> None:
     """Write ``data`` to ``path`` such that a reader never observes a partial
     write, and a crash mid-write never leaves ``path`` truncated.
 
@@ -56,9 +54,7 @@ def atomic_write(
     is inferred from ``data``'s type.
     """
     path = Path(path)
-    fd, tmp_name = tempfile.mkstemp(
-        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
-    )
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         if isinstance(data, bytes):
             with os.fdopen(fd, "wb") as bfh:

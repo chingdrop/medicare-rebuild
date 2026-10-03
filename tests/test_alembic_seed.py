@@ -12,12 +12,7 @@ from medicare_rebuild.__main__ import _require_lookup_seeds
 from medicare_rebuild.models import LOOKUP_SEEDS
 from tools.synthetic_data.schema import LOOKUP_SEEDS as DEMO_LOOKUP_SEEDS
 
-MIGRATION = (
-    Path(__file__).resolve().parents[1]
-    / "alembic"
-    / "versions"
-    / "31d8eabb7bab_seed_lookup_tables.py"
-)
+MIGRATION = Path(__file__).resolve().parents[1] / "alembic" / "versions" / "31d8eabb7bab_seed_lookup_tables.py"
 
 
 def _load_migration():

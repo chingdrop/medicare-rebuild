@@ -140,9 +140,7 @@ class PatientStatus(GpsBase):
     modified_date: Mapped[datetime | None] = mapped_column(DATETIME2)
     temp_user: Mapped[str | None] = mapped_column(String(100))
     patient_id: Mapped[int | None] = mapped_column(ForeignKey("patient.patient_id"))
-    patient_status_type_id: Mapped[int | None] = mapped_column(
-        ForeignKey("patient_status_type.patient_status_type_id")
-    )
+    patient_status_type_id: Mapped[int | None] = mapped_column(ForeignKey("patient_status_type.patient_status_type_id"))
 
 
 class EmergencyContact(GpsBase):
@@ -168,12 +166,8 @@ class Device(GpsBase):
     vendor_id: Mapped[int | None] = mapped_column(ForeignKey("vendor.vendor_id"))
 
     patient: Mapped[Patient | None] = relationship(back_populates="devices")
-    glucose_readings: Mapped[list[GlucoseReading]] = relationship(
-        back_populates="device"
-    )
-    blood_pressure_readings: Mapped[list[BloodPressureReading]] = relationship(
-        back_populates="device"
-    )
+    glucose_readings: Mapped[list[GlucoseReading]] = relationship(back_populates="device")
+    blood_pressure_readings: Mapped[list[BloodPressureReading]] = relationship(back_populates="device")
 
 
 class GlucoseReading(GpsBase):
@@ -202,9 +196,7 @@ class BloodPressureReading(GpsBase):
     is_manual: Mapped[bool | None] = mapped_column(BIT)
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.device_id"))
 
-    device: Mapped[Device | None] = relationship(
-        back_populates="blood_pressure_readings"
-    )
+    device: Mapped[Device | None] = relationship(back_populates="blood_pressure_readings")
 
 
 class PatientNote(GpsBase):
@@ -220,9 +212,7 @@ class PatientNote(GpsBase):
     start_call_datetime: Mapped[datetime | None] = mapped_column(DATETIME2)
     end_call_datetime: Mapped[datetime | None] = mapped_column(DATETIME2)
     patient_id: Mapped[int | None] = mapped_column(ForeignKey("patient.patient_id"))
-    note_type_id: Mapped[int | None] = mapped_column(
-        ForeignKey("note_type.note_type_id")
-    )
+    note_type_id: Mapped[int | None] = mapped_column(ForeignKey("note_type.note_type_id"))
     user_id: Mapped[int | None] = mapped_column(ForeignKey("user.user_id"))
 
     patient: Mapped[Patient | None] = relationship(back_populates="notes")
@@ -233,23 +223,17 @@ class MedicalCode(GpsBase):
 
     med_code_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     patient_id: Mapped[int | None] = mapped_column(ForeignKey("patient.patient_id"))
-    med_code_type_id: Mapped[int | None] = mapped_column(
-        ForeignKey("medical_code_type.med_code_type_id")
-    )
+    med_code_type_id: Mapped[int | None] = mapped_column(ForeignKey("medical_code_type.med_code_type_id"))
     timestamp_applied: Mapped[datetime | None] = mapped_column(DATETIME2)
 
-    devices: Mapped[list[MedicalCodeDevice]] = relationship(
-        back_populates="medical_code"
-    )
+    devices: Mapped[list[MedicalCodeDevice]] = relationship(back_populates="medical_code")
 
 
 class MedicalCodeDevice(GpsBase):
     __tablename__ = "medical_code_device"
 
     medical_code_device_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    med_code_id: Mapped[int | None] = mapped_column(
-        ForeignKey("medical_code.med_code_id")
-    )
+    med_code_id: Mapped[int | None] = mapped_column(ForeignKey("medical_code.med_code_id"))
     device_id: Mapped[int | None] = mapped_column(ForeignKey("device.device_id"))
 
     medical_code: Mapped[MedicalCode | None] = relationship(back_populates="devices")

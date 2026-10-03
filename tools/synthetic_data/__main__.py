@@ -15,24 +15,19 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m tools.synthetic_data",
         description="Generate deterministic, obviously synthetic source data for the demo.",
     )
-    parser.add_argument(
-        "--seed", type=int, default=cfg.DEFAULT_SEED, help="same seed, same output"
-    )
+    parser.add_argument("--seed", type=int, default=cfg.DEFAULT_SEED, help="same seed, same output")
     parser.add_argument(
         "--patients",
         type=int,
         default=cfg.DEFAULT_PATIENTS,
         help=f"patients in the export (minimum {minimum_patients()})",
     )
-    parser.add_argument(
-        "--out", type=Path, default=Path("demo_data"), help="output directory"
-    )
+    parser.add_argument("--out", type=Path, default=Path("demo_data"), help="output directory")
     parser.add_argument(
         "--inject-fault",
         action="append",
         choices=sorted(FAULTS),
-        help="apply a named fault after the demo run, to prove reconcile catches it "
-        "(default: none)",
+        help="apply a named fault after the demo run, to prove reconcile catches it (default: none)",
     )
     args = parser.parse_args(argv)
 

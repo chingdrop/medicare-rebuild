@@ -98,24 +98,15 @@ def build(data_dir: Path, output_dir: Path) -> str:
             text = f"{_fmt(v)} {DISPOSITIONS.get(k, k.lower())}"
             if k == "PATIENT_REJECTED" and s.get("rejected_by_reason"):
                 # The patient rows themselves: say why validation rejected them.
-                why = ", ".join(
-                    REJECTION_REASONS.get(r, r.lower()) for r in s["rejected_by_reason"]
-                )
-                text = (
-                    f"{_fmt(v)} rejected by validation "
-                    f"<span class='muted'>({why} too long)</span>"
-                )
+                why = ", ".join(REJECTION_REASONS.get(r, r.lower()) for r in s["rejected_by_reason"])
+                text = f"{_fmt(v)} rejected by validation <span class='muted'>({why} too long)</span>"
             reasons.append(f"<li>{text}</li>")
         reason_html = (
             f"<ul class='reasons'>{''.join(reasons)}</ul>"
             if reasons
             else "<div class='reasons none'>nothing dropped</div>"
         )
-        drop_seg = (
-            f"<div class='seg drop' style='flex:{n_dropped}'></div>"
-            if n_dropped
-            else ""
-        )
+        drop_seg = f"<div class='seg drop' style='flex:{n_dropped}'></div>" if n_dropped else ""
         rows.append(
             f"""
         <div class="ledger-row">
@@ -161,11 +152,7 @@ def build(data_dir: Path, output_dir: Path) -> str:
     check_rows = []
     for c in rec["checks"]:
         num, _, name = c["name"].partition(" ")
-        mark = (
-            "<span class='pass'>&#10003; PASS</span>"
-            if c["ok"]
-            else "<span class='fail'>&#10007; FAIL</span>"
-        )
+        mark = "<span class='pass'>&#10003; PASS</span>" if c["ok"] else "<span class='fail'>&#10007; FAIL</span>"
         check_rows.append(
             f"""
         <div class="check">
@@ -419,9 +406,7 @@ def find_browser() -> str | None:
     """A Chromium-based browser that can screenshot headlessly: a known install, one
     on PATH, or the Chromium vhs (via go-rod) downloads for recording demo.tape."""
     for candidate in BROWSERS:
-        found = shutil.which(candidate) or (
-            candidate if Path(candidate).is_file() else None
-        )
+        found = shutil.which(candidate) or (candidate if Path(candidate).is_file() else None)
         if found:
             return found
     rod = sorted(Path.home().glob(".cache/rod/browser/chromium-*"), reverse=True)
@@ -454,17 +439,14 @@ def render_png(page: Path, png: Path, chrome: str, margin: int = 32) -> None:
             capture_output=True,
         )
         gray = subprocess.run(
-            ["ffmpeg", "-loglevel", "error", "-i", str(shot)]
-            + ["-f", "rawvideo", "-pix_fmt", "gray", "-"],
+            ["ffmpeg", "-loglevel", "error", "-i", str(shot)] + ["-f", "rawvideo", "-pix_fmt", "gray", "-"],
             check=True,
             capture_output=True,
         ).stdout
         w = WIDTH * SCALE
         background = gray[0]
         last = max(
-            y
-            for y in range(len(gray) // w)
-            if any(abs(b - background) > 6 for b in gray[y * w : (y + 1) * w : 2])
+            y for y in range(len(gray) // w) if any(abs(b - background) > 6 for b in gray[y * w : (y + 1) * w : 2])
         )
         subprocess.run(
             ["ffmpeg", "-loglevel", "error", "-y", "-i", str(shot)]

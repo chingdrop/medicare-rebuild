@@ -76,9 +76,7 @@ def _last_note(notes: list[Note]) -> datetime:
     return max(n.timestamp for n in notes)
 
 
-def _time_codes(
-    notes: list[Note], total: int, effective_ie: bool = False
-) -> list[ExpectedCode]:
+def _time_codes(notes: list[Note], total: int, effective_ie: bool = False) -> list[ExpectedCode]:
     """Codes for a patient whose ONLY time comes from `notes` (all inside the 99457 window).
 
     Written from the documented thresholds: 99457 needs 20 minutes, each further 20
@@ -144,9 +142,7 @@ def _rpm_duplicates(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "")
     p.devices = [f.device("bg", sid)]
     once = f.daily_readings("bg", days_between(day(2, 5), 16))
-    p.readings = once + [
-        Reading(r.kind, r.recorded, r.received, r.values, r.manual) for r in once
-    ]
+    p.readings = once + [Reading(r.kind, r.recorded, r.received, r.values, r.manual) for r in once]
     p.duplicate_readings = len(once)
     p.expected_codes = _rpm_codes(once)
     p.flags = ["duplicate_rows_loaded_as_is"]
@@ -184,9 +180,7 @@ def _rpm_recorded_after_cutoff(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "")
     p.devices = [f.device("bg", sid)]
     readings = f.daily_readings("bg", days_between(day(2, 13), 15))
-    readings.append(
-        f.reading_at("bg", datetime(2025, 2, 28, 9, 0))
-    )  # after extract window
+    readings.append(f.reading_at("bg", datetime(2025, 2, 28, 9, 0)))  # after extract window
     p.readings = readings  # only 15 distinct days are extracted -> no codes
     return p
 
@@ -255,9 +249,7 @@ def _ie_two_notes(f: Factory, sid: int) -> Plan:
 def _rn_forced_type(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "")
     # Logged as a follow-up; the pipeline re-types RegisteredNurse notes as Initial Evaluation.
-    p.notes = [
-        f.note_on(day(2, 12), 900, note_type="Follow-Up", upn=cfg.REGISTERED_NURSE)
-    ]
+    p.notes = [f.note_on(day(2, 12), 900, note_type="Follow-Up", upn=cfg.REGISTERED_NURSE)]
     p.expected_codes = [ExpectedCode("99202", p.notes[0].timestamp)]
     return p
 
@@ -314,18 +306,14 @@ def _notes_without_time(f: Factory, sid: int) -> Plan:
 def _alert_notes(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "")
     p.notes = [f.note_on(day(2, 6), 1200, note_type="Follow-Up", upn=cfg.ALERT_MEMBER)]
-    p.expected_codes = [
-        ExpectedCode("99457", p.notes[0].timestamp)
-    ]  # any note type counts
+    p.expected_codes = [ExpectedCode("99457", p.notes[0].timestamp)]  # any note type counts
     return p
 
 
 def _full_stack(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "", contacts=2)
     p.devices = [f.device("bg", sid)]
-    p.readings = f.daily_readings(
-        "bg", days_between(day(2, 5), 16)
-    )  # last reading 2025-02-20
+    p.readings = f.daily_readings("bg", days_between(day(2, 5), 16))  # last reading 2025-02-20
     p.notes = _notes_totalling(f, [day(2, 6), day(2, 12), day(2, 20)], 2400)
     p.expected_codes = _rpm_codes(p.readings) + _time_codes(p.notes, 2400)
     return p
@@ -745,9 +733,7 @@ def _filler_quiet(kind: str):
         first = day(2, f.rng.randint(1, 14))
         p.readings = f.daily_readings(kind, days_between(first, f.rng.randint(3, 10)))
         for _ in range(f.rng.randint(0, 2)):
-            p.notes.append(
-                f.note_on(day(2, f.rng.randint(3, 26)), f.rng.choice([120, 180, 300]))
-            )
+            p.notes.append(f.note_on(day(2, f.rng.randint(3, 26)), f.rng.choice([120, 180, 300])))
         return p
 
     return build
@@ -781,23 +767,15 @@ def _filler_time(f: Factory, sid: int) -> Plan:
 def _filler_time_long(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "filler", contacts=f.rng.choice([1, 2]))
     total = f.rng.choice([2400, 2700, 3600, 4500])
-    p.notes = _notes_totalling(
-        f, [day(2, 4), day(2, 11), day(2, f.rng.randint(12, 25))], total
-    )
+    p.notes = _notes_totalling(f, [day(2, 4), day(2, 11), day(2, f.rng.randint(12, 25))], total)
     p.expected_codes = _time_codes(p.notes, total)
     return p
 
 
 def _filler_initial_eval(f: Factory, sid: int) -> Plan:
     p = _plan(f, sid, "filler", contacts=f.rng.choice([1, 2]))
-    p.notes = [
-        f.note_on(
-            day(2, f.rng.randint(3, 26)), 300, note_type=IE, upn=cfg.NURSE_PRACTITIONER
-        )
-    ]
-    p.expected_codes = [
-        ExpectedCode("99202", p.notes[0].timestamp)
-    ]  # forced to 15 minutes
+    p.notes = [f.note_on(day(2, f.rng.randint(3, 26)), 300, note_type=IE, upn=cfg.NURSE_PRACTITIONER)]
+    p.expected_codes = [ExpectedCode("99202", p.notes[0].timestamp)]  # forced to 15 minutes
     return p
 
 

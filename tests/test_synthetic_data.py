@@ -89,9 +89,7 @@ def test_synthetic_markers_are_visible(generated):
     emails = patients["Email"].dropna().str.strip().str.lower()
     with_at = emails[emails.str.contains("@")]
     assert with_at.str.endswith("@example.com").all()
-    assert (
-        len(patients) - len(with_at) == 2
-    )  # the two deliberate missing/malformed cases
+    assert len(patients) - len(with_at) == 2  # the two deliberate missing/malformed cases
     notes = pd.read_csv(out / FILES["notes"])
     assert notes["Notes"].str.contains(cfg.SYNTHETIC_MARKER).all()
     # Optional identifiers the demo does not need are left blank rather than invented.
@@ -145,9 +143,7 @@ def test_every_billing_code_and_edge_case_is_covered(generated):
     ):
         assert phrase in edges, phrase
     # A coded-but-unreported case exists, so the report check is meaningful.
-    assert any(
-        not c["in_report"] for s in manifest["scenarios"] for c in s["expected_codes"]
-    )
+    assert any(not c["in_report"] for s in manifest["scenarios"] for c in s["expected_codes"])
 
 
 def test_manifest_rejections_match_the_real_normalisation(generated):
