@@ -4,7 +4,7 @@ from pathlib import Path
 import colorlog
 
 from medicare_rebuild.helpers import create_file
-from medicare_rebuild.utils.atomic_io import ensure_dir
+from medicare_rebuild.vendor.atomic_io import ensure_dir
 
 
 def setup_logger(name: str, level: str = "warning") -> logging.Logger:

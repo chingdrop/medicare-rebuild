@@ -6,7 +6,7 @@ partial file, no temp leftovers). Round trips read back with plain pandas.
 import pandas as pd
 import pytest
 
-from medicare_rebuild.utils.tabular_io import TabularIOError, write_structured_file
+from medicare_rebuild.vendor.tabular_io import TabularIOError, write_structured_file
 
 
 @pytest.fixture

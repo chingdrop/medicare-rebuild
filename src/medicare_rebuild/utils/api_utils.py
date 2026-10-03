@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from medicare_rebuild.utils.rest_adapter import RestAdapter, RestAdapterConfig
+from medicare_rebuild.vendor.rest_adapter import RestAdapter, RestAdapterConfig
 
 
 def _http_logger(logger: logging.Logger) -> logging.Logger:

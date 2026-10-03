@@ -46,7 +46,6 @@ from medicare_rebuild.queries import (
     get_time_log_stmt,
 )
 from medicare_rebuild.utils.api_utils import MSGraphApi
-from medicare_rebuild.utils.atomic_io import ensure_dir
 from medicare_rebuild.utils.dataframe_utils import (
     BLOOD_PRESSURE_DEVICE,
     GLUCOSE_DEVICE,
@@ -68,7 +67,8 @@ from medicare_rebuild.utils.dataframe_utils import (
     standardize_device_type,
 )
 from medicare_rebuild.utils.db_utils import DatabaseManager
-from medicare_rebuild.utils.tabular_io import write_structured_file
+from medicare_rebuild.vendor.atomic_io import ensure_dir
+from medicare_rebuild.vendor.tabular_io import write_structured_file
 
 
 def _records(df: pd.DataFrame) -> list[dict[str, Any]]:

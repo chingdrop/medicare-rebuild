@@ -1,4 +1,4 @@
-"""Tests for medicare_rebuild/utils/rest_adapter.py: content-type parsing, header
+"""Tests for medicare_rebuild/vendor/rest_adapter.py: content-type parsing, header
 merging, retry configuration, and the ``files`` passthrough, in isolation.
 
 Monkeypatches the underlying requests.Session.request, never touches the
@@ -8,7 +8,7 @@ network.
 import pytest
 import requests
 
-from medicare_rebuild.utils.rest_adapter import RestAdapter, RestAdapterConfig
+from medicare_rebuild.vendor.rest_adapter import RestAdapter, RestAdapterConfig
 
 
 class _FakeResponse:

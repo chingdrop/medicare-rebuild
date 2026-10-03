@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from medicare_rebuild.utils.atomic_io import atomic_write, ensure_dir
+from medicare_rebuild.vendor.atomic_io import atomic_write, ensure_dir
 
 
 def test_ensure_dir_creates_missing_directory(tmp_path):
