@@ -25,10 +25,10 @@ change of habit in one repository applies to all four.
   exemption for long fixture rows and expected strings.
 - **mypy.** Adds `warn_unused_configs`, `warn_redundant_casts`, `warn_unused_ignores`,
   `strict_equality` and `check_untyped_defs`, still over `src/` only.
-- **Vendored code.** Copies from `py-shared-tools` live in `src/medicare_rebuild/vendor/`
-  under their original module and symbol names, so they read as copies to diff against
-  the library. Changes go upstream first, then are re-copied. `logger.py` is project
-  code and stays outside it.
+- **Vendored code.** Copies of `py-shared-tools` modules live in
+  `src/medicare_rebuild/vendor/` under their original module and symbol names, so their
+  origin is clear. This repo owns them and does not keep them in sync with upstream.
+  `logger.py` is project code and stays outside it.
 - **Test layout.** Once there are more than 10 test modules outside
   `tests/integration/`, tests mirror the code they test (`tests/utils/`,
   `tests/vendor/`, `tests/tools/`), with tests of top-level modules at the top.
@@ -47,8 +47,8 @@ change of habit in one repository applies to all four.
 - **Ruff's default line length of 88**, or keeping `E501` ignored globally. 88 made the
   rule unenforceable here (80 long lines were too many to rewrap, hence the global
   ignore); at 120 it can be enforced with 11 fixes.
-- **Leave the copied helpers in `utils/`.** Mixed in with project code, they read as
-  this repository's own and invite local edits that drift from the library.
+- **Leave the copied helpers in `utils/`.** Mixed in with project code, nothing marks
+  where they came from.
 - **pytest's `importlib` import mode.** It avoids `sys.path` changes, but the tests'
   `import tools` would then need the repository root added some other way.
 - **Keep the coverage floor as a CI flag.** A local `pytest --cov` would not enforce it.
@@ -62,7 +62,8 @@ change of habit in one repository applies to all four.
   engine that is `None` until `create_engine()` runs; they now raise a clear error.
 - The branch-coverage baseline (74.71%) is not comparable with the earlier line-only
   figure (69.76%); the floor moves from 68 to 72.
-- Anything vendored must be fixed in `py-shared-tools` first.
+- The vendored copies are this repository's own: changes are made here and are not
+  synced with `py-shared-tools`.
 
 ## Evidence
 

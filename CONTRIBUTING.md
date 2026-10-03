@@ -60,9 +60,8 @@ and client configuration must never be committed, in files or in history.
 
 ## Vendored code
 
-`src/medicare_rebuild/vendor/` holds copies of modules from
-[py-shared-tools](https://github.com/chingdrop/py-shared-tools) under their original
-names. Fix them upstream first, then re-copy; don't let the copies drift
+`vendor/` holds copies of [py-shared-tools](https://github.com/chingdrop/py-shared-tools)
+modules. This repo owns them; they are not kept in sync with upstream
 ([decision 0013](docs/decisions/0013-inline-the-shared-helpers.md)).
 
 ## Decisions (ADRs)
