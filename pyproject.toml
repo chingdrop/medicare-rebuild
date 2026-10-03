@@ -119,7 +119,11 @@ check_untyped_defs = true
 
 [tool.coverage.run]
 source = ["src/medicare_rebuild", "tools"]
+branch = true
 
 [tool.coverage.report]
 show_missing = true
 skip_empty = true
+# Floor = measured baseline minus 2, rounded down (74.71% with branch coverage on
+# 2026-10-03). Raise it in the same PR when the baseline exceeds floor + 4.
+fail_under = 72

@@ -73,9 +73,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      # Floor is the measured baseline (69.76% on 2026-09-21) minus 2 points.
+      # The floor is fail_under in pyproject.toml: the measured baseline with branch
+      # coverage (74.71% on 2026-10-03) minus 2 points, rounded down.
       - name: pytest with coverage
-        run: uv run pytest --cov --cov-fail-under=68
+        run: uv run pytest --cov
 
   integration-test:
     if: github.event_name != 'schedule'
