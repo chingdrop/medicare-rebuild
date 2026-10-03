@@ -80,22 +80,19 @@ addopts = "-m 'not integration'"
 
 [tool.ruff]
 target-version = "py312"
+line-length = 120
 
 [tool.ruff.lint]
 # E/F: pycodestyle and pyflakes. I: import order. B: bugbear. UP: pyupgrade.
-# S: flake8-bandit security checks.
-select = ["E", "F", "I", "B", "UP", "S"]
-ignore = [
-    # Line length is left to `ruff format`, which does not wrap docstrings, comments,
-    # SQL or other string literals. 80 such lines exist and are not worth rewrapping.
-    "E501",
-]
+# SIM: flake8-simplify. S: flake8-bandit security checks.
+select = ["E", "F", "I", "B", "UP", "SIM", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "S101",  # pytest tests use plain assert
     "S105",  # fixtures hold fake tokens and mocked endpoint URLs
     "S106",  # fake client secret passed to the API client under test
+    "E501",  # long fixture rows, expected strings and test names read better unwrapped
 ]
 "tools/**" = [
     "S101",  # assert used for internal invariants in demo tooling
