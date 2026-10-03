@@ -1,0 +1,5 @@
+# Commits that only reformat code; `git blame` skips them when
+# blame.ignoreRevsFile points here (see CONTRIBUTING.md).
+
+# Reformat with ruff at 120 characters
+59649f7fc721ae7e75e76ea4c81b546deec45599
