@@ -30,9 +30,7 @@ def test_demo_passes_every_check(demo):
 
 def test_every_named_scenario_behaves_as_designed(demo):
     assert demo.scenarios_ok
-    assert all(demo.scenarios_ok.values()), [
-        k for k, ok in demo.scenarios_ok.items() if not ok
-    ]
+    assert all(demo.scenarios_ok.values()), [k for k, ok in demo.scenarios_ok.items() if not ok]
 
 
 def test_report_was_written(demo):

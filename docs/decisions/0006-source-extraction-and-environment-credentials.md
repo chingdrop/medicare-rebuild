@@ -25,5 +25,5 @@ SharePoint was read as a downloaded CSV rather than through an API because Share
 ## Evidence
 
 - [`__main__.py`](../../src/medicare_rebuild/__main__.py) (`get_user_data`, `get_patient_data`), [`api_utils.py`](../../src/medicare_rebuild/utils/api_utils.py)
-- [`test_get_group_members`](../../tests/test_api_utils.py), [`test_import_user_data`](../../tests/integration/test_data_importer_integration.py)
+- [`test_get_group_members`](../../tests/utils/test_api_utils.py), [`test_import_user_data`](../../tests/integration/test_data_importer_integration.py)
 - [`.gitignore`](../../.gitignore)

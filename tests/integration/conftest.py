@@ -31,10 +31,7 @@ def _wait_for_server(retries: int = 5, delay: float = 2.0) -> None:
         except Exception as exc:
             last_exc = exc
             time.sleep(delay)
-    pytest.skip(
-        f"Integration SQL Server not reachable at {DB_HOST}:{DB_PORT} "
-        f"(run `docker compose up -d`): {last_exc}"
-    )
+    pytest.skip(f"Integration SQL Server not reachable at {DB_HOST}:{DB_PORT} (run `docker compose up -d`): {last_exc}")
 
 
 def _connect(database: str) -> DatabaseManager:
@@ -66,8 +63,7 @@ def test_database():
     conn.autocommit = True
     cur = conn.cursor()
     cur.execute(
-        f"IF DB_ID('{TEST_DB_NAME}') IS NOT NULL "
-        f"ALTER DATABASE {TEST_DB_NAME} SET SINGLE_USER WITH ROLLBACK IMMEDIATE"
+        f"IF DB_ID('{TEST_DB_NAME}') IS NOT NULL ALTER DATABASE {TEST_DB_NAME} SET SINGLE_USER WITH ROLLBACK IMMEDIATE"
     )
     cur.execute(f"IF DB_ID('{TEST_DB_NAME}') IS NOT NULL DROP DATABASE {TEST_DB_NAME}")
     conn.close()

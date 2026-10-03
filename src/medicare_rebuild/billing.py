@@ -96,11 +96,7 @@ def _qualifying_by_minutes(
         total_seconds=("call_time_seconds", "sum"),
         timestamp_applied=("note_datetime", "max"),
     )
-    total = (
-        np.floor(grouped["total_seconds"])
-        if floor_seconds
-        else grouped["total_seconds"]
-    )
+    total = np.floor(grouped["total_seconds"]) if floor_seconds else grouped["total_seconds"]
     minutes = total / 60
     mask = minutes >= min_minutes
     if max_minutes is not None:
@@ -130,9 +126,7 @@ def _qualifying_by_reading_days(
             timestamp_applied=("received_datetime", "max"),
         )
     )
-    return grouped.loc[
-        grouped["distinct_days"] >= min_days, ["patient_id", "timestamp_applied"]
-    ].reset_index(drop=True)
+    return grouped.loc[grouped["distinct_days"] >= min_days, ["patient_id", "timestamp_applied"]].reset_index(drop=True)
 
 
 def _qualifying_99458(
@@ -153,25 +147,15 @@ def _qualifying_99458(
     if windowed_notes.empty or windowed_codes.empty:
         return pd.DataFrame(columns=["patient_id", "timestamp_applied"])
 
-    blocks = (
-        np.floor(windowed_notes.groupby("patient_id")["call_time_seconds"].sum() / 1200)
-        .fillna(0)
-        .clip(upper=4)
-    )
+    blocks = np.floor(windowed_notes.groupby("patient_id")["call_time_seconds"].sum() / 1200).fillna(0).clip(upper=4)
     code_counts = (
-        windowed_codes.assign(is_99458=windowed_codes["name"] == "99458")
-        .groupby("patient_id")["is_99458"]
-        .sum()
+        windowed_codes.assign(is_99458=windowed_codes["name"] == "99458").groupby("patient_id")["is_99458"].sum()
     )
     eligible = blocks.index.intersection(windowed_codes["patient_id"].unique())
     if eligible.empty:
         return pd.DataFrame(columns=["patient_id", "timestamp_applied"])
 
-    latest_note = (
-        all_notes[all_notes["patient_id"].isin(eligible)]
-        .groupby("patient_id")["note_datetime"]
-        .max()
-    )
+    latest_note = all_notes[all_notes["patient_id"].isin(eligible)].groupby("patient_id")["note_datetime"].max()
 
     patient_ids: list[int] = []
     for pid in eligible:
@@ -187,9 +171,7 @@ def _qualifying_99458(
     return out
 
 
-def _in_report_window(
-    codes: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
-) -> pd.DataFrame:
+def _in_report_window(codes: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
     """timestamp_applied >= start and <= end. `start`/`end` must already be
     midnight-normalized: the stored procedure's @start_date/@end_date are SQL `date`
     parameters compared against a `datetime2` column, which SQL Server implicitly casts
@@ -197,32 +179,24 @@ def _in_report_window(
     excluded even though its calendar date is the report's last day (see
     docs/billing-rules.md's midnight-truncation note). Callers normalize; this function
     does not, so a test can pin the boundary precisely."""
-    return codes[
-        (codes["timestamp_applied"] >= start) & (codes["timestamp_applied"] <= end)
-    ]
+    return codes[(codes["timestamp_applied"] >= start) & (codes["timestamp_applied"] <= end)]
 
 
 # -- session I/O: query, compute with the helpers above, insert, commit ----------------
 
 
 def _code_type_id(session: Session, name: str) -> int:
-    return session.execute(
-        select(MedicalCodeType.med_code_type_id).where(MedicalCodeType.name == name)
-    ).scalar_one()
+    return session.execute(select(MedicalCodeType.med_code_type_id).where(MedicalCodeType.name == name)).scalar_one()
 
 
 def _notes(session: Session, note_type_name: str | None = None) -> pd.DataFrame:
-    stmt = select(
-        PatientNote.patient_id, PatientNote.note_datetime, PatientNote.call_time_seconds
-    )
+    stmt = select(PatientNote.patient_id, PatientNote.note_datetime, PatientNote.call_time_seconds)
     if note_type_name is not None:
-        stmt = stmt.join(
-            NoteType, PatientNote.note_type_id == NoteType.note_type_id
-        ).where(NoteType.name == note_type_name)
+        stmt = stmt.join(NoteType, PatientNote.note_type_id == NoteType.note_type_id).where(
+            NoteType.name == note_type_name
+        )
     rows = session.execute(stmt).all()
-    df = pd.DataFrame(
-        rows, columns=["patient_id", "note_datetime", "call_time_seconds"]
-    )
+    df = pd.DataFrame(rows, columns=["patient_id", "note_datetime", "call_time_seconds"])
     df["note_datetime"] = pd.to_datetime(df["note_datetime"])
     df["call_time_seconds"] = pd.to_numeric(df["call_time_seconds"])
     return df
@@ -231,9 +205,9 @@ def _notes(session: Session, note_type_name: str | None = None) -> pd.DataFrame:
 def _device_readings(
     session: Session, reading_model: type[GlucoseReading] | type[BloodPressureReading]
 ) -> pd.DataFrame:
-    stmt = select(
-        Device.patient_id, Device.device_id, reading_model.received_datetime
-    ).join(reading_model, Device.device_id == reading_model.device_id)
+    stmt = select(Device.patient_id, Device.device_id, reading_model.received_datetime).join(
+        reading_model, Device.device_id == reading_model.device_id
+    )
     rows = session.execute(stmt).all()
     df = pd.DataFrame(rows, columns=["patient_id", "device_id", "received_datetime"])
     df["received_datetime"] = pd.to_datetime(df["received_datetime"])
@@ -252,9 +226,7 @@ def _patients_with_any_code(session: Session, type_names: list[str]) -> set[int]
     return {pid for (pid,) in rows if pid is not None}
 
 
-def _excluded_patients(
-    session: Session, code_type_id: int, window_start: pd.Timestamp
-) -> set[int]:
+def _excluded_patients(session: Session, code_type_id: int, window_start: pd.Timestamp) -> set[int]:
     rows = session.execute(
         select(MedicalCode.patient_id)
         .where(MedicalCode.med_code_type_id == code_type_id)
@@ -266,17 +238,13 @@ def _excluded_patients(
 def _linked_devices(session: Session, code_type_id: int) -> pd.DataFrame:
     rows = session.execute(
         select(MedicalCode.patient_id, MedicalCodeDevice.device_id)
-        .join(
-            MedicalCodeDevice, MedicalCode.med_code_id == MedicalCodeDevice.med_code_id
-        )
+        .join(MedicalCodeDevice, MedicalCode.med_code_id == MedicalCodeDevice.med_code_id)
         .where(MedicalCode.med_code_type_id == code_type_id)
     ).all()
     return pd.DataFrame(rows, columns=["patient_id", "device_id"])
 
 
-def _insert_codes(
-    session: Session, qualifying: pd.DataFrame, code_type_id: int
-) -> list[MedicalCode]:
+def _insert_codes(session: Session, qualifying: pd.DataFrame, code_type_id: int) -> list[MedicalCode]:
     if qualifying.empty:
         return []
     codes = [
@@ -298,15 +266,11 @@ def apply_99202(session: Session) -> None:
     code_type_id = _code_type_id(session, "99202")
     excluded = _patients_with_any_code(session, ["99202", "99203", "99204", "99205"])
     notes = _notes(session, note_type_name="Initial Evaluation")
-    qualifying = _qualifying_by_minutes(
-        notes, excluded, min_minutes=15, max_minutes=30, floor_seconds=True
-    )
+    qualifying = _qualifying_by_minutes(notes, excluded, min_minutes=15, max_minutes=30, floor_seconds=True)
     _insert_codes(session, qualifying, code_type_id)
 
 
-def _apply_99453_pass(
-    session: Session, reading_model: type[GlucoseReading] | type[BloodPressureReading]
-) -> None:
+def _apply_99453_pass(session: Session, reading_model: type[GlucoseReading] | type[BloodPressureReading]) -> None:
     code_type_id = _code_type_id(session, "99453")
     readings = _device_readings(session, reading_model)
     if readings.empty:
@@ -315,11 +279,7 @@ def _apply_99453_pass(
     exclude = None
     if not linked.empty:
         linked_pairs = set(map(tuple, linked.to_numpy()))
-        exclude = (
-            readings[["patient_id", "device_id"]]
-            .apply(tuple, axis=1)
-            .isin(linked_pairs)
-        )
+        exclude = readings[["patient_id", "device_id"]].apply(tuple, axis=1).isin(linked_pairs)
     qualifying = _qualifying_by_reading_days(readings, exclude)
     codes = _insert_codes(session, qualifying, code_type_id)
     if not codes:
@@ -365,9 +325,7 @@ def _apply_99454_pass(
 ) -> None:
     code_type_id = _code_type_id(session, "99454")
     window_start = pd.Timestamp(today_date).normalize() - pd.Timedelta(days=30)
-    readings = _since(
-        _device_readings(session, reading_model), "received_datetime", window_start
-    )
+    readings = _since(_device_readings(session, reading_model), "received_datetime", window_start)
     if readings.empty:
         return
     excluded = _excluded_patients(session, code_type_id, window_start)
@@ -403,9 +361,7 @@ def apply_99458(session: Session, today_date: datetime) -> None:
     code_type_id = _code_type_id(session, "99458")
     window_start = pd.Timestamp(today_date).normalize() - pd.DateOffset(months=1)
     all_notes = _notes(session)
-    windowed_notes = _since(all_notes, "note_datetime", window_start)[
-        ["patient_id", "call_time_seconds"]
-    ]
+    windowed_notes = _since(all_notes, "note_datetime", window_start)[["patient_id", "call_time_seconds"]]
     windowed_codes = pd.DataFrame(
         session.execute(
             select(MedicalCode.patient_id, MedicalCodeType.name)
@@ -417,9 +373,7 @@ def apply_99458(session: Session, today_date: datetime) -> None:
         ).all(),
         columns=["patient_id", "name"],
     )
-    qualifying = _qualifying_99458(
-        windowed_notes, windowed_codes, all_notes[["patient_id", "note_datetime"]]
-    )
+    qualifying = _qualifying_99458(windowed_notes, windowed_codes, all_notes[["patient_id", "note_datetime"]])
     _insert_codes(session, qualifying, code_type_id)
 
 
@@ -446,9 +400,7 @@ def run_billing(session: Session, today_date: datetime) -> None:
     apply_99458(session, today_date)
 
 
-def build_billing_report(
-    session: Session, start_date: datetime, end_date: datetime
-) -> pd.DataFrame:
+def build_billing_report(session: Session, start_date: datetime, end_date: datetime) -> pd.DataFrame:
     """Port of create_billing_report.sql: one row per patient per date of service,
     with a count per code type, joined to address/insurance/diagnosis data. A patient
     missing an address, insurance, or every diagnosis-code row is dropped from the
@@ -560,9 +512,7 @@ def build_billing_report(
     # patient_dx_codes is an inner join in the original: a patient with no
     # medical_necessity row at all is dropped, not given an empty DXCodes string.
     report = report[report["dx_codes"].notna()]
-    report = report.sort_values(["patient_id", "date_of_service"]).reset_index(
-        drop=True
-    )
+    report = report.sort_values(["patient_id", "date_of_service"]).reset_index(drop=True)
 
     return pd.DataFrame(
         {

@@ -93,9 +93,7 @@ def patient_csv(tmp_path):
 
 
 def test_import_user_data(data_importer, requests_mock):
-    token_endpoint = (
-        "https://login.microsoftonline.com/test-tenant-id/oauth2/v2.0/token"
-    )
+    token_endpoint = "https://login.microsoftonline.com/test-tenant-id/oauth2/v2.0/token"
     requests_mock.post(
         token_endpoint,
         json={"access_token": "test_token"},
@@ -124,9 +122,7 @@ def test_import_user_data(data_importer, requests_mock):
     user_df = data_importer.get_user_data()
     data_importer.import_user_data(user_df)
 
-    landed = data_importer.gps.read_sql(
-        "SELECT first_name, last_name, email FROM [user]"
-    )
+    landed = data_importer.gps.read_sql("SELECT first_name, last_name, email FROM [user]")
     assert landed.to_dict("records") == [
         {
             "first_name": "Alex",
@@ -152,44 +148,28 @@ def test_import_patient_data(data_importer, patient_csv):
         "SELECT patient_id, temp_state, city FROM patient_address ORDER BY patient_id"
     )
     assert set(addresses["patient_id"]) == {john_id, jane_id}
-    assert (
-        addresses.loc[addresses["patient_id"] == john_id, "temp_state"].item() == "CA"
-    )
-    assert (
-        addresses.loc[addresses["patient_id"] == jane_id, "temp_state"].item() == "TX"
-    )
+    assert addresses.loc[addresses["patient_id"] == john_id, "temp_state"].item() == "CA"
+    assert addresses.loc[addresses["patient_id"] == jane_id, "temp_state"].item() == "TX"
 
     insurance = data_importer.gps.read_sql(
         "SELECT patient_id, primary_payer_name FROM patient_insurance ORDER BY patient_id"
     )
-    assert (
-        insurance.loc[insurance["patient_id"] == john_id, "primary_payer_name"].item()
-        == "Kaiser"
-    )
+    assert insurance.loc[insurance["patient_id"] == john_id, "primary_payer_name"].item() == "Kaiser"
     # Jane had no insurance name/id on file but does have a Medicare ID, so
     # fill_primary_payer should have auto-resolved her to Medicare Part B.
-    assert (
-        insurance.loc[insurance["patient_id"] == jane_id, "primary_payer_name"].item()
-        == "Medicare Part B"
-    )
+    assert insurance.loc[insurance["patient_id"] == jane_id, "primary_payer_name"].item() == "Medicare Part B"
 
     med_necessity = data_importer.gps.read_sql(
         "SELECT patient_id, temp_dx_code FROM medical_necessity ORDER BY patient_id"
     )
     # John has 2 Dx codes (E11.9, I10), Jane has 1 (I10) -> 3 rows total.
     assert med_necessity.shape[0] == 3
-    assert sorted(
-        med_necessity.loc[med_necessity["patient_id"] == john_id, "temp_dx_code"]
-    ) == ["E119", "I10"]
+    assert sorted(med_necessity.loc[med_necessity["patient_id"] == john_id, "temp_dx_code"]) == ["E119", "I10"]
 
-    statuses = data_importer.gps.read_sql(
-        "SELECT patient_id, temp_status_type FROM patient_status ORDER BY patient_id"
-    )
+    statuses = data_importer.gps.read_sql("SELECT patient_id, temp_status_type FROM patient_status ORDER BY patient_id")
     assert set(statuses["temp_status_type"]) == {"Active"}
 
-    emcontacts = data_importer.gps.read_sql(
-        "SELECT patient_id, full_name FROM emergency_contact ORDER BY patient_id"
-    )
+    emcontacts = data_importer.gps.read_sql("SELECT patient_id, full_name FROM emergency_contact ORDER BY patient_id")
     # Both patients only had a first emergency contact; the blank second slot
     # is dropped, so exactly one row per patient.
     assert emcontacts.shape[0] == 2

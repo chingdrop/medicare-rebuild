@@ -24,5 +24,5 @@ Using SQLAlchemy at all was the author's own preferred direction, brought in for
 ## Evidence
 
 - [`db_utils.py`](../../src/medicare_rebuild/utils/db_utils.py)
-- [`test_execute_query_handles_error`](../../tests/test_db_utils.py)
+- [`test_execute_query_handles_error`](../../tests/utils/test_db_utils.py)
 - [`test_execute_query_rolls_back_on_error`](../../tests/integration/test_db_utils_integration.py)

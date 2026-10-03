@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from medicare_rebuild.utils.atomic_io import atomic_write, ensure_dir
+from medicare_rebuild.vendor.atomic_io import atomic_write, ensure_dir
 
 
 def test_ensure_dir_creates_missing_directory(tmp_path):
@@ -55,9 +55,7 @@ def test_atomic_write_missing_parent_directory_raises(tmp_path):
         atomic_write(path, "hello")
 
 
-def test_atomic_write_cleans_up_temp_file_and_preserves_original_on_failure(
-    tmp_path, monkeypatch
-):
+def test_atomic_write_cleans_up_temp_file_and_preserves_original_on_failure(tmp_path, monkeypatch):
     path = tmp_path / "out.txt"
     path.write_text("original content")
 

@@ -59,7 +59,4 @@ def load_loaded(output_dir: Path) -> Loaded:
 
 def load_expected_codes(data_dir: Path) -> list[tuple[int, str, str]]:
     manifest = json.loads((data_dir / FILES["manifest"]).read_text())
-    return [
-        (int(c["id"]), c["code"], c["applied_at"])
-        for c in manifest["expected"]["applied_codes"]
-    ]
+    return [(int(c["id"]), c["code"], c["applied_at"]) for c in manifest["expected"]["applied_codes"]]

@@ -28,7 +28,7 @@ duplicates, out-of-order dates and malformed fields; see the [scenario table](#s
   `billing.py` (a faithful port of the original stored procedures) is written to do, not
   what CMS requires;
 - the Microsoft Graph client works. It is replaced by a local file for the run
-  (it is covered by `tests/test_api_utils.py` instead).
+  (it is covered by `tests/utils/test_api_utils.py` instead).
 
 ## Requirements
 

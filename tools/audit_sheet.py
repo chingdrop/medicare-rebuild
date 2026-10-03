@@ -98,24 +98,15 @@ def build(data_dir: Path, output_dir: Path) -> str:
             text = f"{_fmt(v)} {DISPOSITIONS.get(k, k.lower())}"
             if k == "PATIENT_REJECTED" and s.get("rejected_by_reason"):
                 # The patient rows themselves: say why validation rejected them.
-                why = ", ".join(
-                    REJECTION_REASONS.get(r, r.lower()) for r in s["rejected_by_reason"]
-                )
-                text = (
-                    f"{_fmt(v)} rejected by validation "
-                    f"<span class='muted'>({why} too long)</span>"
-                )
+                why = ", ".join(REJECTION_REASONS.get(r, r.lower()) for r in s["rejected_by_reason"])
+                text = f"{_fmt(v)} rejected by validation <span class='muted'>({why} too long)</span>"
             reasons.append(f"<li>{text}</li>")
         reason_html = (
             f"<ul class='reasons'>{''.join(reasons)}</ul>"
             if reasons
             else "<div class='reasons none'>nothing dropped</div>"
         )
-        drop_seg = (
-            f"<div class='seg drop' style='flex:{n_dropped}'></div>"
-            if n_dropped
-            else ""
-        )
+        drop_seg = f"<div class='seg drop' style='flex:{n_dropped}'></div>" if n_dropped else ""
         rows.append(
             f"""
         <div class="ledger-row">
@@ -151,8 +142,10 @@ def build(data_dir: Path, output_dir: Path) -> str:
         <div class="code-row">
           <div class="code"><b>{c}</b><span>{CODE_MEANING[c]}</span></div>
           <div class="code-bars">
-            <div class="cbar"><div class="fill applied" style="width:{100 * a / max_code:.1f}%"></div><span>{a}</span></div>
-            <div class="cbar"><div class="fill inreport" style="width:{100 * r / max_code:.1f}%"></div><span>{r}</span></div>
+            <div class="cbar"><div class="fill applied"
+              style="width:{100 * a / max_code:.1f}%"></div><span>{a}</span></div>
+            <div class="cbar"><div class="fill inreport"
+              style="width:{100 * r / max_code:.1f}%"></div><span>{r}</span></div>
           </div>
         </div>"""
         )
@@ -161,11 +154,7 @@ def build(data_dir: Path, output_dir: Path) -> str:
     check_rows = []
     for c in rec["checks"]:
         num, _, name = c["name"].partition(" ")
-        mark = (
-            "<span class='pass'>&#10003; PASS</span>"
-            if c["ok"]
-            else "<span class='fail'>&#10007; FAIL</span>"
-        )
+        mark = "<span class='pass'>&#10003; PASS</span>" if c["ok"] else "<span class='fail'>&#10007; FAIL</span>"
         check_rows.append(
             f"""
         <div class="check">
@@ -332,7 +321,8 @@ TEMPLATE = """<!doctype html>
 
   <div class="stats">
     <div class="stat"><div class="v">{total_source}</div>
-      <div class="l">source rows read, <b class="ok-ink">{unexplained} unexplained</b> &mdash; every row is loaded or dropped for a named reason</div></div>
+      <div class="l">source rows read, <b class="ok-ink">{unexplained} unexplained</b> &mdash;
+        every row is loaded or dropped for a named reason</div></div>
     <div class="stat"><div class="v"><span class="ok-ink">{rec_pass}</span><small> / {rec_total}</small></div>
       <div class="l">reconciliation checks passed &mdash; keys, foreign keys, lineage, report totals</div></div>
     <div class="stat"><div class="v"><span class="ok-ink">{demo_pass}</span><small> / {demo_total}</small></div>
@@ -386,7 +376,8 @@ TEMPLATE = """<!doctype html>
       <div class="legend"><span><i style="background:var(--loaded)"></i>applied in the run</span>
         <span><i style="background:var(--inreport)"></i>in the report window</span></div>
       {codes}
-      <div class="note">Codes stamped after the report window's end are applied but not reported &mdash; by design.</div>
+      <div class="note">Codes stamped after the report window's end are applied but not reported &mdash;
+        by design.</div>
     </section>
     <section>
       <h2>Reconciliation checks</h2>
@@ -395,7 +386,8 @@ TEMPLATE = """<!doctype html>
   </div>
 
   <footer>
-    <span>Generated from the run's own output: <code>make demo</code> &rarr; <code>make reconcile</code> &rarr; <code>tools/audit_sheet.py</code>. Counts and synthetic IDs only.</span>
+    <span>Generated from the run's own output: <code>make demo</code> &rarr; <code>make reconcile</code> &rarr;
+      <code>tools/audit_sheet.py</code>. Counts and synthetic IDs only.</span>
     <span>github.com/chingdrop/medicare-rebuild</span>
   </footer>
 </body></html>
@@ -419,9 +411,7 @@ def find_browser() -> str | None:
     """A Chromium-based browser that can screenshot headlessly: a known install, one
     on PATH, or the Chromium vhs (via go-rod) downloads for recording demo.tape."""
     for candidate in BROWSERS:
-        found = shutil.which(candidate) or (
-            candidate if Path(candidate).is_file() else None
-        )
+        found = shutil.which(candidate) or (candidate if Path(candidate).is_file() else None)
         if found:
             return found
     rod = sorted(Path.home().glob(".cache/rod/browser/chromium-*"), reverse=True)
@@ -454,17 +444,14 @@ def render_png(page: Path, png: Path, chrome: str, margin: int = 32) -> None:
             capture_output=True,
         )
         gray = subprocess.run(
-            ["ffmpeg", "-loglevel", "error", "-i", str(shot)]
-            + ["-f", "rawvideo", "-pix_fmt", "gray", "-"],
+            ["ffmpeg", "-loglevel", "error", "-i", str(shot)] + ["-f", "rawvideo", "-pix_fmt", "gray", "-"],
             check=True,
             capture_output=True,
         ).stdout
         w = WIDTH * SCALE
         background = gray[0]
         last = max(
-            y
-            for y in range(len(gray) // w)
-            if any(abs(b - background) > 6 for b in gray[y * w : (y + 1) * w : 2])
+            y for y in range(len(gray) // w) if any(abs(b - background) > 6 for b in gray[y * w : (y + 1) * w : 2])
         )
         subprocess.run(
             ["ffmpeg", "-loglevel", "error", "-y", "-i", str(shot)]

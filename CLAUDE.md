@@ -12,7 +12,7 @@ An ETL pipeline that rebuilds the data architecture for a medical company's remo
 uv sync                        # install deps + create .venv
 uv run pytest                  # unit tests (default; mocks all external systems)
 uv run pytest -m integration   # integration tests (needs a real SQL Server, see below)
-uv run pytest tests/test_dataframe_utils.py::test_standardize_state  # single test
+uv run pytest tests/utils/test_dataframe_utils.py::test_standardize_state  # single test
 uv run ruff check .            # lint
 uv run ruff format .           # format
 uv run mypy                    # type check (src/ only, per [tool.mypy] files config)
@@ -33,7 +33,7 @@ CI (`.github/workflows/ci.yml`) runs `test` (ruff + mypy + unit pytest) and `int
 
 `tests/integration/conftest.py` creates a dedicated database per test session and skips gracefully if no server is reachable — connection details default to `docker-compose.yml`'s and are overridable via `INTEGRATION_DB_HOST`/`PORT`/`USER`/`PASSWORD`. On Apple Silicon the SQL Server image only runs via x86_64 emulation (no native arm64 build exists); GitHub's runners are x86_64 natively.
 
-`sql/schema.sql` is generated from `src/medicare_rebuild/models.py` and `legacy_models.py` (the schema of record, see decision 0015) via `make schema`; a test (`tests/test_generate_schema.py`) fails if it drifts from the models. The integration tests, and the demo, build their databases from the same classes via `metadata.create_all()`, so there is only one definition of the GPS schema to keep in sync.
+`sql/schema.sql` is generated from `src/medicare_rebuild/models.py` and `legacy_models.py` (the schema of record, see decision 0015) via `make schema`; a test (`tests/tools/test_generate_schema.py`) fails if it drifts from the models. The integration tests, and the demo, build their databases from the same classes via `metadata.create_all()`, so there is only one definition of the GPS schema to keep in sync.
 
 Alembic migrations for the GPS database (only -- not the legacy source databases) live in `alembic/`, targeting `GpsBase.metadata`; `make migrate` (`alembic upgrade head`) is how a real GPS database is created or updated (see decision 0016). The demo and integration tests still use `metadata.create_all()`, not Alembic -- a throwaway database has no schema history to migrate from. `tests/integration/test_alembic_integration.py` runs the migration chain against a real database and fails if it drifts from `models.py` (`alembic check`). The second migration seeds the four lookup tables (`vendor`, `note_type`, `patient_status_type`, `medical_code_type`) with `models.LOOKUP_SEEDS` -- the only values the pipeline's own code produces or looks up by name -- keeping a frozen copy that `tests/test_alembic_seed.py` pins to the constant. `import_all_data()` refuses to run (`_require_lookup_seeds`) if any of those rows is missing, rather than silently dropping every device for want of a vendor. The demo seeds its own larger vocabulary (`tools/synthetic_data/schema.py`), which must include every required value.
 
@@ -61,11 +61,11 @@ Lookup-table foreign keys (`temp_status_type` → `patient_status_type_id`, `tem
 
 ### `utils/api_utils.py`
 
-`MSGraphApi`/`TenoviApi` wrap `RestAdapter` (`utils/rest_adapter.py`). `RestAdapter` builds request URLs with `urljoin(base_url, endpoint)`, not string concatenation — every `base_url` here **must** end with a trailing slash and every `endpoint` passed to `.get()`/`.post()`/etc. **must not** start with a leading slash, or `urljoin` silently drops the base URL's own path segment (e.g. Tenovi's `/clients/{domain}` or Graph's `/v1.0`) and produces a wrong-but-live URL. `RestAdapter` raises `requests.HTTPError` on 4xx/5xx after retries (it does not swallow and return `None`) — callers are expected to let that propagate.
+`MSGraphApi`/`TenoviApi` wrap `RestAdapter` (`vendor/rest_adapter.py`). `RestAdapter` builds request URLs with `urljoin(base_url, endpoint)`, not string concatenation — every `base_url` here **must** end with a trailing slash and every `endpoint` passed to `.get()`/`.post()`/etc. **must not** start with a leading slash, or `urljoin` silently drops the base URL's own path segment (e.g. Tenovi's `/clients/{domain}` or Graph's `/v1.0`) and produces a wrong-but-live URL. `RestAdapter` raises `requests.HTTPError` on 4xx/5xx after retries (it does not swallow and return `None`) — callers are expected to let that propagate.
 
-### Inlined helpers (`utils/rest_adapter.py`, `utils/atomic_io.py`, `utils/tabular_io.py`)
+### Vendored helpers (`vendor/rest_adapter.py`, `vendor/atomic_io.py`, `vendor/tabular_io.py`)
 
-These were copied from the `py-shared-tools` library (v1.3.1) so the repo is self-contained: no second repository, submodule or git dependency is needed. Only what the pipeline uses was copied: `RestAdapter`/`RestAdapterConfig` (HTTP), `atomic_io.ensure_dir` (idempotent directory creation) with `atomic_write`, and `tabular_io.write_structured_file` (DataFrame -> xlsx, used by `DataImporter.snap_dataframe` and `create_billing_report`). `logger.py`'s own `setup_logger` is deliberately **not** replaced by that library's `logging_setup` — the shared version only attaches a console handler, while this repo needs the per-name persistent file handler + colorlog formatting `setup_logger` provides. `requires-python = ">=3.12"` was originally set because `py-shared-tools` requires it; it was left unchanged when the code was inlined.
+These were copied from the `py-shared-tools` library (v1.3.1, commit `d54dcd6`) into `src/medicare_rebuild/vendor/`, under their original module and symbol names, so the repo is self-contained; this repo owns the copies and does not keep them in sync with upstream (decisions 0013 and 0017): no second repository, submodule or git dependency is needed. Only what the pipeline uses was copied: `RestAdapter`/`RestAdapterConfig` (HTTP), `atomic_io.ensure_dir` (idempotent directory creation) with `atomic_write`, and `tabular_io.write_structured_file` (DataFrame -> xlsx, used by `DataImporter.snap_dataframe` and `create_billing_report`). `logger.py`'s own `setup_logger` is deliberately **not** replaced by that library's `logging_setup` — the shared version only attaches a console handler, while this repo needs the per-name persistent file handler + colorlog formatting `setup_logger` provides. `requires-python = ">=3.12"` was originally set because `py-shared-tools` requires it; it was left unchanged when the code was inlined.
 
 ### Logging
 

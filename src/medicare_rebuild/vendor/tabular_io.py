@@ -10,7 +10,7 @@ writer method itself.
 
 Raises ``TabularIOError`` for an unsupported extension or a write failure.
 Text-based formats (csv/txt/json/html) are written through
-``medicare_rebuild.utils.atomic_io.atomic_write`` rather than pandas writing
+``medicare_rebuild.vendor.atomic_io.atomic_write`` rather than pandas writing
 directly to the target path, so a crash never leaves a partial file. Excel has no
 equivalent in-memory round trip as cheap as the text formats', so it's written
 directly and is not atomic.
@@ -24,7 +24,7 @@ from typing import Any
 
 import pandas as pd
 
-from medicare_rebuild.utils.atomic_io import atomic_write
+from medicare_rebuild.vendor.atomic_io import atomic_write
 
 
 class TabularIOError(Exception):
@@ -44,9 +44,7 @@ _EXCEL_EXTENSIONS = {"xls", "xlsx"}
 SUPPORTED_WRITE_EXTENSIONS = set(TEXT_WRITERS) | _EXCEL_EXTENSIONS
 
 
-def write_structured_file(
-    df: pd.DataFrame, file_path: str | Path, file_type: str | None = None, **kwargs: Any
-) -> None:
+def write_structured_file(df: pd.DataFrame, file_path: str | Path, file_type: str | None = None, **kwargs: Any) -> None:
     """Write a DataFrame to a CSV/Excel/JSON/HTML file.
 
     ``file_type`` overrides extension-based dispatch; ``**kwargs`` passes

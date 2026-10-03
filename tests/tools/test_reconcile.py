@@ -96,9 +96,7 @@ def world() -> tuple[Source, Loaded, dict]:
                 "Time_Recieved": [ts(1), ts(2), "2024-12-01 09:05:00", ts(3)],
             }
         ),
-        bp=pd.DataFrame(
-            {"SharePoint_ID": [], "Time_Recorded": [], "Time_Recieved": []}
-        ),
+        bp=pd.DataFrame({"SharePoint_ID": [], "Time_Recorded": [], "Time_Recieved": []}),
         notes=pd.DataFrame(
             {
                 "SharePoint_ID": [1, 2],
@@ -158,9 +156,7 @@ def world() -> tuple[Source, Loaded, dict]:
                 {"medical_necessity_id": 2, "patient_id": 11},
             ],
         ),
-        "patient_status_type": table(
-            "patient_status_type", [{"patient_status_type_id": 1}]
-        ),
+        "patient_status_type": table("patient_status_type", [{"patient_status_type_id": 1}]),
         "patient_status": table(
             "patient_status",
             [
@@ -168,9 +164,7 @@ def world() -> tuple[Source, Loaded, dict]:
                 {"patient_status_id": 2, "patient_id": 11, "patient_status_type_id": 1},
             ],
         ),
-        "emergency_contact": table(
-            "emergency_contact", [{"emergency_contact_id": 1, "patient_id": 10}]
-        ),
+        "emergency_contact": table("emergency_contact", [{"emergency_contact_id": 1, "patient_id": 10}]),
         "vendor": table("vendor", [{"vendor_id": 1}]),
         "device": table(
             "device",
@@ -387,16 +381,12 @@ def test_keys_pass_on_clean_data_and_fail_on_a_duplicate_natural_key():
 
 def test_foreign_keys_flag_orphans_but_not_unset_references():
     _, loaded, _ = world()
-    loaded.tables["patient_note"].loc[0, "note_type_id"] = (
-        None  # unset is not an orphan
-    )
+    loaded.tables["patient_note"].loc[0, "note_type_id"] = None  # unset is not an orphan
     assert checks.check_foreign_keys(loaded).ok
     loaded.tables["glucose_reading"].loc[0, "device_id"] = 999
     r = checks.check_foreign_keys(loaded)
     assert not r.ok
-    assert r.details["orphans_by_relationship"] == {
-        "glucose_reading.device_id -> device": 1
-    }
+    assert r.details["orphans_by_relationship"] == {"glucose_reading.device_id -> device": 1}
     assert r.violations == ["glucose_reading:1"]
 
 
@@ -480,9 +470,7 @@ def test_reason_derivation_agrees_with_the_pipeline_on_generated_data(tmp_path):
     assert set(reasons.reasons_by_patient_id(normalized, by_index)) == expected
 
 
-def test_drift_between_declared_limits_and_the_pipeline_is_detected(
-    tmp_path, monkeypatch
-):
+def test_drift_between_declared_limits_and_the_pipeline_is_detected(tmp_path, monkeypatch):
     generate(cfg.DEFAULT_SEED, minimum_patients() + 10, tmp_path)
     normalized = reasons.normalize(reasons.read_export(tmp_path / "Patient_Export.csv"))
     monkeypatch.setattr(
@@ -490,9 +478,7 @@ def test_drift_between_declared_limits_and_the_pipeline_is_detected(
         "LIMITS",
         [(c, n + 3 if c == "phone_number" else n, k) for c, n, k in reasons.LIMITS],
     )
-    assert not reasons.agrees_with_pipeline(
-        normalized, reasons.rejection_reasons(normalized)
-    )
+    assert not reasons.agrees_with_pipeline(normalized, reasons.rejection_reasons(normalized))
 
 
 # -- 5. billing lineage -------------------------------------------------------------

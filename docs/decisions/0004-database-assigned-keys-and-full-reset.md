@@ -24,4 +24,4 @@ Assigning keys in Python (rather than relying on the database's identity columns
 
 - [`reset_all_billing_tables.sql`](../../sql/stored_procedures/reset_all_billing_tables.sql)
 - [`add_id_col`](../../src/medicare_rebuild/utils/dataframe_utils.py), [`queries.py`](../../src/medicare_rebuild/queries.py)
-- [`test_add_id_col`](../../tests/test_dataframe_utils.py), [`test_import_patient_data`](../../tests/integration/test_data_importer_integration.py)
+- [`test_add_id_col`](../../tests/utils/test_dataframe_utils.py), [`test_import_patient_data`](../../tests/integration/test_data_importer_integration.py)

@@ -95,9 +95,7 @@ def test_pipeline_produces_internally_consistent_dataframes(raw_patient_export):
 
     # Dx codes explode one row per code: John has 2 (E11.9, I10), Jane has 1 (I10).
     assert med_necessity_df.shape[0] == 3
-    assert sorted(
-        med_necessity_df.loc[med_necessity_df["sharepoint_id"] == 1, "temp_dx_code"]
-    ) == ["E119", "I10"]
+    assert sorted(med_necessity_df.loc[med_necessity_df["sharepoint_id"] == 1, "temp_dx_code"]) == ["E119", "I10"]
 
     # Both John and Jane only have a first emergency contact on file; the blank
     # second slot is dropped by create_emcontacts_df's dropna.
@@ -113,10 +111,7 @@ def test_pipeline_produces_internally_consistent_dataframes(raw_patient_export):
     assert jane_insurance["primary_payer_name"] == "Medicare Part B"
 
     # previous_patient_statuses remapping applied before status_df was carved out.
-    assert (
-        status_df.loc[status_df["sharepoint_id"] == 2, "temp_status_type"].item()
-        == "Onboard"
-    )
+    assert status_df.loc[status_df["sharepoint_id"] == 2, "temp_status_type"].item() == "Onboard"
 
 
 def test_pipeline_blank_fields_become_real_nulls_not_the_string_nan(raw_patient_export):

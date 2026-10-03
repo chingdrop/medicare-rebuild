@@ -2,7 +2,7 @@ import logging
 from typing import Literal
 
 import pandas as pd
-from sqlalchemy import Row, create_engine, event, text
+from sqlalchemy import Engine, Row, create_engine, event, text
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql import Selectable
@@ -36,13 +36,18 @@ class DatabaseManager:
             logger (logging.Logger, optional): Logger instance for logging. Defaults to None.
         """
         self.logger = logger or logging.getLogger(__name__)
-        self.engine = None
+        self.engine: Engine | None = None
         self.session = None
 
+    def _require_engine(self) -> Engine:
+        """The engine `create_engine` made. Reading or writing before it is called would
+        otherwise hand pandas `None` and fail with an unrelated-looking error."""
+        if self.engine is None:
+            raise RuntimeError("DatabaseManager.create_engine() must be called first")
+        return self.engine
+
     @staticmethod
-    def __receive_before_cursor_execute(
-        conn, cursor, statement, params, context, executemany
-    ):
+    def __receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
         """
         Event listener to enable fast execution of multiple statements.
 
@@ -57,9 +62,7 @@ class DatabaseManager:
         if executemany:
             cursor.fast_executemany = True
 
-    def create_engine(
-        self, username: str, password: str, host: str, database: str
-    ) -> None:
+    def create_engine(self, username: str, password: str, host: str, database: str) -> None:
         """
         Creates a SQLAlchemy engine object with the provided credentials and sets up the session.
 
@@ -73,9 +76,7 @@ class DatabaseManager:
         # hide_parameters keeps bound values (patient row data) out of the text of
         # SQLAlchemy errors, which are logged and can reach tracebacks.
         engine = create_engine(connection_url, hide_parameters=True)
-        event.listen(
-            engine, "before_cursor_execute", self.__receive_before_cursor_execute
-        )
+        event.listen(engine, "before_cursor_execute", self.__receive_before_cursor_execute)
         self.engine = engine
         self.session = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
@@ -92,9 +93,7 @@ class DatabaseManager:
             Exception: If the database connection is not established.
         """
         if not self.session:
-            raise Exception(
-                "Database connection is not established. Call create_engine() first."
-            )
+            raise Exception("Database connection is not established. Call create_engine() first.")
         return self.session()
 
     def execute_query(self, query: str, params: dict | None = None) -> list[Row] | None:
@@ -146,7 +145,7 @@ class DatabaseManager:
         Returns:
             pd.DataFrame: The query results as a DataFrame.
         """
-        df = pd.read_sql(query, self.engine, params=params, parse_dates=parse_dates)
+        df = pd.read_sql(query, self._require_engine(), params=params, parse_dates=parse_dates)
         single_line_query = str(query).replace("\n", " ")
         self.logger.debug(f"Query: {single_line_query}")
         self.logger.debug(f"Reading (rows: {df.shape[0]}, cols: {df.shape[1]})...")
@@ -168,10 +167,8 @@ class DatabaseManager:
             if_exists (str): Specifies what to do if the table already exists. Defaults to 'fail' (optional).
             index (bool): Whether to write the DataFrame's index as a column. Defaults to False (optional).
         """
-        self.logger.debug(
-            f"Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}..."
-        )
-        df.to_sql(table, self.engine, if_exists=if_exists, index=index)
+        self.logger.debug(f"Writing (rows: {df.shape[0]}, cols: {df.shape[1]}) to {table}...")
+        df.to_sql(table, self._require_engine(), if_exists=if_exists, index=index)
 
     def close(
         self,

@@ -80,9 +80,7 @@ def test_read_sql(mock_read_sql, db_manager):
     result = db_manager.read_sql("SELECT 1")
 
     assert result == mock_df
-    mock_read_sql.assert_called_once_with(
-        "SELECT 1", db_manager.engine, params=None, parse_dates=None
-    )
+    mock_read_sql.assert_called_once_with("SELECT 1", db_manager.engine, params=None, parse_dates=None)
 
 
 def test_to_sql(db_manager):
@@ -91,9 +89,7 @@ def test_to_sql(db_manager):
 
     db_manager.to_sql(mock_df, "table")
 
-    mock_df.to_sql.assert_called_once_with(
-        "table", db_manager.engine, if_exists="fail", index=False
-    )
+    mock_df.to_sql.assert_called_once_with("table", db_manager.engine, if_exists="fail", index=False)
 
 
 def test_close(db_manager):
@@ -105,3 +101,10 @@ def test_close(db_manager):
 
 def test_close_without_engine_is_noop(db_manager):
     db_manager.close()
+
+
+def test_read_and_write_before_create_engine_fail_clearly(db_manager):
+    with pytest.raises(RuntimeError, match="create_engine"):
+        db_manager.read_sql("SELECT 1")
+    with pytest.raises(RuntimeError, match="create_engine"):
+        db_manager.to_sql(MagicMock(), "table")

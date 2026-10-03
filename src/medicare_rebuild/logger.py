@@ -4,7 +4,7 @@ from pathlib import Path
 import colorlog
 
 from medicare_rebuild.helpers import create_file
-from medicare_rebuild.utils.atomic_io import ensure_dir
+from medicare_rebuild.vendor.atomic_io import ensure_dir
 
 
 def setup_logger(name: str, level: str = "warning") -> logging.Logger:
@@ -44,9 +44,7 @@ def setup_logger(name: str, level: str = "warning") -> logging.Logger:
         },
     )
 
-    file_handler.setFormatter(
-        logging.Formatter("[%(asctime)s - %(levelname)s/%(name)s]: %(message)s")
-    )
+    file_handler.setFormatter(logging.Formatter("[%(asctime)s - %(levelname)s/%(name)s]: %(message)s"))
     stream_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)

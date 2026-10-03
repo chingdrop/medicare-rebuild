@@ -43,17 +43,12 @@ def keyword_list_search(value: str, keywords: dict, keep_original=False) -> str 
     """
     for standard_name, keyword_sets in keywords.items():
         for keyword_set in keyword_sets:
-            if all(
-                re.search(r"\b" + re.escape(keyword.lower()) + r"\b", value.lower())
-                for keyword in keyword_set
-            ):
+            if all(re.search(r"\b" + re.escape(keyword.lower()) + r"\b", value.lower()) for keyword in keyword_set):
                 return standard_name
     return value if keep_original else np.nan
 
 
-def extract_regex_pattern(
-    value: str, pattern: str | re.Pattern, keep_original=False
-) -> str | float:
+def extract_regex_pattern(value: str, pattern: str | re.Pattern, keep_original=False) -> str | float:
     """Searches the value for a matching regex pattern.
 
     Args:
@@ -74,7 +69,8 @@ def extract_regex_pattern(
 """
 Standardize functions are methods used to transform and clean data within a Pandas DataFrame.
 These functions take an initial input value, apply a transformation, and return a standardized output.
-The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as Series, enabling efficient data preprocessing and consistency.
+The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as
+Series, enabling efficient data preprocessing and consistency.
 """
 
 
@@ -234,9 +230,7 @@ def fill_primary_payer_id(row: pd.Series) -> str | float:
         str | float: The standardized primary payer ID.
     """
     ins_id = _text_nan_to_nan(row["Insurance ID:"])
-    if _text_nan_to_nan(row["Insurance Name:"]) == "Medicare Part B" and pd.isnull(
-        ins_id
-    ):
+    if _text_nan_to_nan(row["Insurance Name:"]) == "Medicare Part B" and pd.isnull(ins_id):
         return _text_nan_to_nan(row["Medicare ID number"])
     return ins_id
 
@@ -353,7 +347,8 @@ def standardize_race(race: str) -> str | float:
 
 def standardize_weight(weight: str) -> int | float:
     """Standardizes patient weight strings. Search values for common characters indicating height and remove them.
-    Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to only 3 characers.
+    Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to
+    only 3 characers.
 
     Args:
         weight (str): The value to be standardized.
@@ -373,7 +368,8 @@ def standardize_weight(weight: str) -> int | float:
 
 def standardize_height(height: str) -> int | float:
     """Standardizes patient height strings. Search values for common characters indicating weight and remove them.
-    Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to inches.
+    Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to
+    inches.
 
     Args:
         height (str): The value to be standardized.
@@ -396,7 +392,8 @@ def standardize_height(height: str) -> int | float:
 # --- Create Functions ---
 """
 Create functions are methods designed to separate and structure data imported from a SharePoint list.
-These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of information within the SharePoint list.
+These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of
+information within the SharePoint list.
 
 The data is organized into six distinct DataFrames:
 - Patient
@@ -506,7 +503,8 @@ def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
 # --- Normalize Functions ---
 """
 Normalize functions are methods that apply standardization transformations to the fields of a DataFrame.
-These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and return a cleaned and normalized DataFrame.
+These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and
+return a cleaned and normalized DataFrame.
 The end result is a Pandas DataFrame that matches the schema and value constraints of the new database.
 """
 
@@ -527,54 +525,32 @@ def normalize_users(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalize_patients(df: pd.DataFrame) -> pd.DataFrame:
-    df["First Name"] = df["First Name"].apply(
-        standardize_name, args=(r"[^a-zA-Z\s.-]",)
-    )
+    df["First Name"] = df["First Name"].apply(standardize_name, args=(r"[^a-zA-Z\s.-]",))
     df["Last Name"] = df["Last Name"].apply(standardize_name, args=(r"[^a-zA-Z\s.-]",))
     df["Full Name"] = df["First Name"] + " " + df["Last Name"]
-    df["Middle Name"] = df["Middle Name"].apply(
-        standardize_name, args=(r"[^a-zA-Z-\s]",)
-    )
+    df["Middle Name"] = df["Middle Name"].apply(standardize_name, args=(r"[^a-zA-Z-\s]",))
     df["Nickname"] = df["Nickname"].str.strip().str.title()
-    df["Phone Number"] = (
-        df["Phone Number"].astype(str).str.replace(r"\D", "", regex=True)
-    )
+    df["Phone Number"] = df["Phone Number"].astype(str).str.replace(r"\D", "", regex=True)
     df["Gender"] = df["Gender"].replace({"Male": "M", "Female": "F"})
     df["Email"] = df["Email"].apply(standardize_email)
     df["Suffix"] = df["Suffix"].str.strip().str.title()
-    df["Social Security"] = (
-        df["Social Security"].astype(str).str.replace(r"\D", "", regex=True)
-    )
+    df["Social Security"] = df["Social Security"].astype(str).str.replace(r"\D", "", regex=True)
     df["Race"] = df["Race"].apply(standardize_race)
     df["Weight"] = df["Weight"].apply(standardize_weight)
     df["Height"] = df["Height"].apply(standardize_height)
 
     # The logic in standardize name can be used for address text as well.
-    df["Mailing Address"] = df["Mailing Address"].apply(
-        standardize_name, args=(r"[^a-zA-Z0-9\s#.-/]",)
-    )
+    df["Mailing Address"] = df["Mailing Address"].apply(standardize_name, args=(r"[^a-zA-Z0-9\s#.-/]",))
     df["City"] = df["City"].apply(standardize_name, args=(r"[^a-zA-Z-]",))
     df["State"] = df["State"].apply(standardize_state)
     df["Zip code"] = df["Zip code"].astype(str).str.split("-", n=1).str[0]
 
-    df["EmergencyRelationship"] = df["EmergencyName"].apply(
-        standardize_emcontact_relationship
-    )
-    df["EmergencyRelationship2"] = df["EmergencyName2"].apply(
-        standardize_emcontact_relationship
-    )
-    df["EmergencyName"] = df["EmergencyName"].apply(
-        standardize_name, args=(r"[^a-zA-Z\s.-/()]",)
-    )
-    df["EmergencyNumber"] = (
-        df["EmergencyNumber"].astype(str).str.replace(r"\D", "", regex=True)
-    )
-    df["EmergencyName2"] = df["EmergencyName2"].apply(
-        standardize_name, args=(r"[^a-zA-Z\s.-/()]",)
-    )
-    df["EmergencyNumber2"] = (
-        df["EmergencyNumber2"].astype(str).str.replace(r"\D", "", regex=True)
-    )
+    df["EmergencyRelationship"] = df["EmergencyName"].apply(standardize_emcontact_relationship)
+    df["EmergencyRelationship2"] = df["EmergencyName2"].apply(standardize_emcontact_relationship)
+    df["EmergencyName"] = df["EmergencyName"].apply(standardize_name, args=(r"[^a-zA-Z\s.-/()]",))
+    df["EmergencyNumber"] = df["EmergencyNumber"].astype(str).str.replace(r"\D", "", regex=True)
+    df["EmergencyName2"] = df["EmergencyName2"].apply(standardize_name, args=(r"[^a-zA-Z\s.-/()]",))
+    df["EmergencyNumber2"] = df["EmergencyNumber2"].astype(str).str.replace(r"\D", "", regex=True)
 
     df["Medicare ID number"] = df["Medicare ID number"].apply(standardize_mbi)
     df["DX_Code"] = df["DX_Code"].apply(standardize_dx_code)
@@ -645,9 +621,7 @@ def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
 
     df["Time_Note"] = df["Time_Note"].apply(standardize_note_types)
     df.loc[
-        df["AZURE_UPN"].isin(
-            ["NursePractitioner", "RegisteredNurse1", "RegisteredNurse2"]
-        ),
+        df["AZURE_UPN"].isin(["NursePractitioner", "RegisteredNurse1", "RegisteredNurse2"]),
         "Time_Note",
     ] = "Initial Evaluation"
     df.loc[
@@ -663,9 +637,7 @@ def normalize_patient_notes(df: pd.DataFrame) -> pd.DataFrame:
         "Time_Note",
     ] = "Alert"
 
-    df["SharePoint_ID"] = pd.to_numeric(
-        df["SharePoint_ID"], errors="coerce", downcast="integer"
-    )
+    df["SharePoint_ID"] = pd.to_numeric(df["SharePoint_ID"], errors="coerce", downcast="integer")
     # Boolean column is flipped because it's stored differently in the database.
     df["Auto_Time"] = df["Auto_Time"].replace({True: 0, False: 1})
     df["Auto_Time"] = df["Auto_Time"].astype("Int64")
@@ -756,9 +728,7 @@ def find_possible_duplicate_patients(df: pd.DataFrame) -> list[list]:
     keys = ["first_name", "last_name", "date_of_birth"]
     matched = df.dropna(subset=keys)
     matched = matched[matched.duplicated(subset=keys, keep=False)]
-    return sorted(
-        sorted(ids) for ids in matched.groupby(keys)["sharepoint_id"].agg(list)
-    )
+    return sorted(sorted(ids) for ids in matched.groupby(keys)["sharepoint_id"].agg(list))
 
 
 def check_patient_db_constraints(df: pd.DataFrame) -> pd.DataFrame:

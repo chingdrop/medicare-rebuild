@@ -125,9 +125,7 @@ def test_standardize_call_time():
 
 
 def test_standardize_note_types():
-    assert (
-        standardize_note_types("Initial Evaluation with APRN") == "Initial Evaluation"
-    )
+    assert standardize_note_types("Initial Evaluation with APRN") == "Initial Evaluation"
     assert standardize_note_types("Follow-up, Check-up") == "Follow-up"
 
 
@@ -403,9 +401,7 @@ def test_find_possible_duplicate_patients_groups_by_name_and_birth_date():
             "sharepoint_id": [10, 11, 12, 13, 14],
             "first_name": ["Ann", "Ann", "Ann", "Bob", "Bob"],
             "last_name": ["Lee", "Lee", "Lee", "Ray", "Ray"],
-            "date_of_birth": pd.to_datetime(
-                ["1950-01-01", "1950-01-01", "1960-01-01", "1940-05-05", None]
-            ),
+            "date_of_birth": pd.to_datetime(["1950-01-01", "1950-01-01", "1960-01-01", "1940-05-05", None]),
         }
     )
     # Same name, different birth date (12) is a different person; a missing birth

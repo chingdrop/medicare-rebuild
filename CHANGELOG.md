@@ -51,6 +51,10 @@ anything before that commit.
 
 ### Added
 
+- `CONTRIBUTING.md` (setup, the checks CI runs, the synthetic-data rule, tests,
+  vendored code, ADRs and this changelog), `.python-version` (3.12),
+  `.git-blame-ignore-revs` (the 120-character reformat) and
+  [decision 0017](docs/decisions/0017-adopt-the-shared-python-tooling-standard.md).
 - `TODO.md`: the one list of open bugs, billing and pipeline features, production
   hardening and repo housekeeping. `docs/limitations-and-roadmap.md`'s "Possible next
   steps" and its last `TODO(craig)` marker now point there.
@@ -77,6 +81,15 @@ anything before that commit.
 
 ### Changed
 
+- Adopted the shared Python tooling standard (decision 0017): hatchling instead of
+  setuptools, with an explicit sdist exclude list; ruff at 120 characters with `SIM`
+  added and `E501` enforced outside tests; five stricter mypy checks
+  (`check_untyped_defs` among them); the copied py-shared-tools helpers moved from
+  `utils/` to `vendor/`; unit tests mirroring the source in `tests/utils/`,
+  `tests/vendor/` and `tests/tools/`; and branch coverage with the floor (72%, from a
+  74.71% baseline) set in `pyproject.toml` instead of a CI flag.
+- `DatabaseManager.read_sql`/`to_sql` raise a clear error if called before
+  `create_engine()`, instead of handing pandas `None`.
 - README's Data model section draws the five ERDs as Mermaid `erDiagram`s generated
   from `models.py` (real columns, keys and foreign keys) instead of embedding the PNGs.
   Tables from the original design that were never built (the language, race, marital

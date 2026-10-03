@@ -1,7 +1,7 @@
 """Generate sql/schema.sql from src/medicare_rebuild/models.py and legacy_models.py.
 
 Run via `make schema`. The checked-in file is verified against fresh output by
-tests/test_generate_schema.py, so a model change without regenerating fails CI.
+tests/tools/test_generate_schema.py, so a model change without regenerating fails CI.
 """
 
 from pathlib import Path

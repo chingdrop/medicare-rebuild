@@ -58,18 +58,11 @@ def rejection_reasons(normalized: pd.DataFrame) -> dict[int, list[str]]:
     return reasons
 
 
-def reasons_by_patient_id(
-    normalized: pd.DataFrame, by_index: dict[int, list[str]]
-) -> dict[int, list[str]]:
-    return {
-        int(normalized.loc[idx, "sharepoint_id"]): sorted(codes)
-        for idx, codes in by_index.items()
-    }
+def reasons_by_patient_id(normalized: pd.DataFrame, by_index: dict[int, list[str]]) -> dict[int, list[str]]:
+    return {int(normalized.loc[idx, "sharepoint_id"]): sorted(codes) for idx, codes in by_index.items()}
 
 
-def agrees_with_pipeline(
-    normalized: pd.DataFrame, by_index: dict[int, list[str]]
-) -> bool:
+def agrees_with_pipeline(normalized: pd.DataFrame, by_index: dict[int, list[str]]) -> bool:
     """True when the rows kept by the pipeline's own check are exactly the rows
     with no reason code here."""
     kept = set(check_patient_db_constraints(normalized.copy()).index)

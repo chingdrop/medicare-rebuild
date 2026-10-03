@@ -111,8 +111,6 @@ def test_unique_lookup_casefold_matches_sign_in_names_case_insensitively(manager
     importer.session = MagicMock()
     importer.session.execute.return_value = [("JDoe@Example.com", 7)]
 
-    lookup = importer._unique_lookup(
-        pipeline.User, "user_principal_name", "user_id", casefold=True
-    )
+    lookup = importer._unique_lookup(pipeline.User, "user_principal_name", "user_id", casefold=True)
 
     assert lookup == {"jdoe@example.com": 7}

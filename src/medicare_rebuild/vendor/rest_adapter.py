@@ -102,9 +102,7 @@ class RestAdapter:
             cookies=cookies,
             files=files,
             timeout=timeout or self.config.timeout,
-            verify=certifi.where()
-            if self.config.verify is True
-            else self.config.verify,
+            verify=certifi.where() if self.config.verify is True else self.config.verify,
             allow_redirects=allow_redirects,
         )
         resp.raise_for_status()

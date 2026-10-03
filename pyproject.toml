@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "medicare-rebuild"
@@ -9,6 +9,7 @@ authors = [{ name = "Craig Hurley", email = "chingdorp@pm.me" }]
 version = "3.3.0"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "Pandas >=3.0.0, <4.0.0",
@@ -30,14 +31,33 @@ Repository = "https://github.com/chingdrop/medicare-rebuild"
 [project.scripts]
 medicare-rebuild = "medicare_rebuild.__main__:main"
 
-[tool.setuptools]
-include-package-data = true
+[tool.hatch.build.targets.wheel]
+packages = ["src/medicare_rebuild"]
 
-[tool.setuptools.packages]
-find = { where = ["src"] }
-
-[tool.setuptools.package-dir]
-"" = "src"
+# Hatchling's sdist takes every file the repo's .gitignore doesn't exclude (and ignores a
+# personal global gitignore). These are excluded explicitly as well, so the sdist can't
+# pick up local data, logs, secrets or editor settings even if .gitignore changes. The
+# file types match the no-data-files pre-commit hook. .env.example is still shipped.
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".claude",
+    "data",
+    "demo_data",
+    "demo_output",
+    "logs",
+    ".env",
+    ".env.local",
+    "*.csv",
+    "*.xlsx",
+    "*.xls",
+    "*.bak",
+    "*.bacpac",
+    "*.mdf",
+    "*.ldf",
+    "*.parquet",
+    "*.db",
+    "*.sqlite",
+]
 
 [dependency-groups]
 dev = [
@@ -60,22 +80,19 @@ addopts = "-m 'not integration'"
 
 [tool.ruff]
 target-version = "py312"
+line-length = 120
 
 [tool.ruff.lint]
 # E/F: pycodestyle and pyflakes. I: import order. B: bugbear. UP: pyupgrade.
-# S: flake8-bandit security checks.
-select = ["E", "F", "I", "B", "UP", "S"]
-ignore = [
-    # Line length is left to `ruff format`, which does not wrap docstrings, comments,
-    # SQL or other string literals. 80 such lines exist and are not worth rewrapping.
-    "E501",
-]
+# SIM: flake8-simplify. S: flake8-bandit security checks.
+select = ["E", "F", "I", "B", "UP", "SIM", "S"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "S101",  # pytest tests use plain assert
     "S105",  # fixtures hold fake tokens and mocked endpoint URLs
     "S106",  # fake client secret passed to the API client under test
+    "E501",  # long fixture rows, expected strings and test names read better unwrapped
 ]
 "tools/**" = [
     "S101",  # assert used for internal invariants in demo tooling
@@ -88,17 +105,25 @@ ignore = [
 [tool.mypy]
 python_version = "3.12"
 files = ["src"]
-# Lenient baseline: passes today. Stricter settings would flag (as of 2026-09):
-#   --strict                 42 errors in src: 12 type-arg, 11 no-untyped-def,
-#                            10 no-untyped-call, 7 no-any-return, 2 arg-type
-#   --check-untyped-defs     2 errors (arg-type) in one file
-#   --disallow-untyped-defs  11 errors in 4 files
-#   --warn-return-any        7 errors in 2 files
-# tools/ and tests/ are not type-checked (`mypy src tools` reports 8 errors in tools/).
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+check_untyped_defs = true
+# Passes today with the flags above. Stricter settings would flag (measured 2026-10-03):
+#   --strict                 56 errors in 7 files: 21 type-arg, 17 no-untyped-def,
+#                            10 no-untyped-call, 8 no-any-return
+#   --disallow-untyped-defs  17 errors in 5 files
+#   --warn-return-any        8 errors in 3 files
+# tools/ and tests/ are not type-checked (`mypy src tools` reports 34 errors in tools/).
 
 [tool.coverage.run]
 source = ["src/medicare_rebuild", "tools"]
+branch = true
 
 [tool.coverage.report]
 show_missing = true
 skip_empty = true
+# Floor = measured baseline minus 2, rounded down (74.71% with branch coverage on
+# 2026-10-03). Raise it in the same PR when the baseline exceeds floor + 4.
+fail_under = 72

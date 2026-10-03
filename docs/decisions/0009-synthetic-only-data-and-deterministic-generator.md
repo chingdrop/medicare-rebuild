@@ -23,5 +23,5 @@ Computing expectations by re-implementing the billing rules is named and set asi
 ## Evidence
 
 - [`tools/synthetic_data/`](../../tools/synthetic_data/), [docs/demo.md](../demo.md), [provenance statement](../provenance-and-data-boundary.md)
-- [`tests/test_synthetic_data.py`](../../tests/test_synthetic_data.py)
+- [`tests/tools/test_synthetic_data.py`](../../tests/tools/test_synthetic_data.py)
 - [`test_demo_passes_every_check`](../../tests/integration/test_demo_integration.py)

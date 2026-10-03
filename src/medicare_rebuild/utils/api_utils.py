@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from medicare_rebuild.utils.rest_adapter import RestAdapter, RestAdapterConfig
+from medicare_rebuild.vendor.rest_adapter import RestAdapter, RestAdapterConfig
 
 
 def _http_logger(logger: logging.Logger) -> logging.Logger:
@@ -37,7 +37,8 @@ class MSGraphApi:
         self,
     ) -> None:
         """
-        Uses tenant ID, client ID, and client secret to request an access token with privileges outlined in the application object.
+        Uses tenant ID, client ID, and client secret to request an access token with privileges outlined in the
+        application object.
         """
         rest = RestAdapter(
             RestAdapterConfig(base_url="https://login.microsoftonline.com/"),
@@ -55,9 +56,7 @@ class MSGraphApi:
         access_token = res.get("access_token")
         headers = {"Authorization": f"Bearer {access_token}"}
         self.rest = RestAdapter(
-            RestAdapterConfig(
-                base_url="https://graph.microsoft.com/v1.0/", headers=headers
-            ),
+            RestAdapterConfig(base_url="https://graph.microsoft.com/v1.0/", headers=headers),
             logger=_http_logger(self.logger),
         )
 
@@ -131,6 +130,4 @@ class TenoviApi:
             if not isinstance(created_gte, str):
                 created_gte = created_gte.strftime("%Y-%m-%dT%H:%M:%SZ")
             params["created__gte"] = created_gte
-        return self.rest.get(
-            f"hwi/hwi-devices/{hwi_device_id}/measurements/", params=params
-        )
+        return self.rest.get(f"hwi/hwi-devices/{hwi_device_id}/measurements/", params=params)
