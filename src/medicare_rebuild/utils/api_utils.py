@@ -37,7 +37,8 @@ class MSGraphApi:
         self,
     ) -> None:
         """
-        Uses tenant ID, client ID, and client secret to request an access token with privileges outlined in the application object.
+        Uses tenant ID, client ID, and client secret to request an access token with privileges outlined in the
+        application object.
         """
         rest = RestAdapter(
             RestAdapterConfig(base_url="https://login.microsoftonline.com/"),

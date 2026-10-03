@@ -25,7 +25,7 @@ def _load_migration():
 
 def test_migration_seeds_match_lookup_seeds():
     expected = {model.__tablename__: names for model, names in LOOKUP_SEEDS.items()}
-    assert _load_migration().SEEDS == expected
+    assert expected == _load_migration().SEEDS
 
 
 def test_demo_seeds_cover_every_required_lookup_value():

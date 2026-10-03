@@ -69,7 +69,8 @@ def extract_regex_pattern(value: str, pattern: str | re.Pattern, keep_original=F
 """
 Standardize functions are methods used to transform and clean data within a Pandas DataFrame.
 These functions take an initial input value, apply a transformation, and return a standardized output.
-The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as Series, enabling efficient data preprocessing and consistency.
+The strength of these functions is in their ability to be applied to different dimensions of the DataFrame, such as
+Series, enabling efficient data preprocessing and consistency.
 """
 
 
@@ -346,7 +347,8 @@ def standardize_race(race: str) -> str | float:
 
 def standardize_weight(weight: str) -> int | float:
     """Standardizes patient weight strings. Search values for common characters indicating height and remove them.
-    Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to only 3 characers.
+    Remove all characters that aren't numeric. Check if weight string has more than 3 characters and trim values to
+    only 3 characers.
 
     Args:
         weight (str): The value to be standardized.
@@ -366,7 +368,8 @@ def standardize_weight(weight: str) -> int | float:
 
 def standardize_height(height: str) -> int | float:
     """Standardizes patient height strings. Search values for common characters indicating weight and remove them.
-    Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to inches.
+    Search values for strings that indicate height: 5ft2, 5'2", etc. Get the feet and inch values and converts to
+    inches.
 
     Args:
         height (str): The value to be standardized.
@@ -389,7 +392,8 @@ def standardize_height(height: str) -> int | float:
 # --- Create Functions ---
 """
 Create functions are methods designed to separate and structure data imported from a SharePoint list.
-These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of information within the SharePoint list.
+These functions parse the raw data and split it into distinct DataFrames, each representing a specific category of
+information within the SharePoint list.
 
 The data is organized into six distinct DataFrames:
 - Patient
@@ -499,7 +503,8 @@ def create_emcontacts_df(df: pd.DataFrame) -> pd.DataFrame:
 # --- Normalize Functions ---
 """
 Normalize functions are methods that apply standardization transformations to the fields of a DataFrame.
-These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and return a cleaned and normalized DataFrame.
+These functions take an initial DataFrame, apply a series of predefined standardization operations to the data, and
+return a cleaned and normalized DataFrame.
 The end result is a Pandas DataFrame that matches the schema and value constraints of the new database.
 """
 

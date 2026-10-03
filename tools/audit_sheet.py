@@ -142,8 +142,10 @@ def build(data_dir: Path, output_dir: Path) -> str:
         <div class="code-row">
           <div class="code"><b>{c}</b><span>{CODE_MEANING[c]}</span></div>
           <div class="code-bars">
-            <div class="cbar"><div class="fill applied" style="width:{100 * a / max_code:.1f}%"></div><span>{a}</span></div>
-            <div class="cbar"><div class="fill inreport" style="width:{100 * r / max_code:.1f}%"></div><span>{r}</span></div>
+            <div class="cbar"><div class="fill applied"
+              style="width:{100 * a / max_code:.1f}%"></div><span>{a}</span></div>
+            <div class="cbar"><div class="fill inreport"
+              style="width:{100 * r / max_code:.1f}%"></div><span>{r}</span></div>
           </div>
         </div>"""
         )
@@ -319,7 +321,8 @@ TEMPLATE = """<!doctype html>
 
   <div class="stats">
     <div class="stat"><div class="v">{total_source}</div>
-      <div class="l">source rows read, <b class="ok-ink">{unexplained} unexplained</b> &mdash; every row is loaded or dropped for a named reason</div></div>
+      <div class="l">source rows read, <b class="ok-ink">{unexplained} unexplained</b> &mdash;
+        every row is loaded or dropped for a named reason</div></div>
     <div class="stat"><div class="v"><span class="ok-ink">{rec_pass}</span><small> / {rec_total}</small></div>
       <div class="l">reconciliation checks passed &mdash; keys, foreign keys, lineage, report totals</div></div>
     <div class="stat"><div class="v"><span class="ok-ink">{demo_pass}</span><small> / {demo_total}</small></div>
@@ -373,7 +376,8 @@ TEMPLATE = """<!doctype html>
       <div class="legend"><span><i style="background:var(--loaded)"></i>applied in the run</span>
         <span><i style="background:var(--inreport)"></i>in the report window</span></div>
       {codes}
-      <div class="note">Codes stamped after the report window's end are applied but not reported &mdash; by design.</div>
+      <div class="note">Codes stamped after the report window's end are applied but not reported &mdash;
+        by design.</div>
     </section>
     <section>
       <h2>Reconciliation checks</h2>
@@ -382,7 +386,8 @@ TEMPLATE = """<!doctype html>
   </div>
 
   <footer>
-    <span>Generated from the run's own output: <code>make demo</code> &rarr; <code>make reconcile</code> &rarr; <code>tools/audit_sheet.py</code>. Counts and synthetic IDs only.</span>
+    <span>Generated from the run's own output: <code>make demo</code> &rarr; <code>make reconcile</code> &rarr;
+      <code>tools/audit_sheet.py</code>. Counts and synthetic IDs only.</span>
     <span>github.com/chingdrop/medicare-rebuild</span>
   </footer>
 </body></html>
