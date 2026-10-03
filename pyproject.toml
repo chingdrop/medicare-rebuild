@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "medicare-rebuild"
@@ -9,6 +9,7 @@ authors = [{ name = "Craig Hurley", email = "chingdorp@pm.me" }]
 version = "3.3.0"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "Pandas >=3.0.0, <4.0.0",
@@ -30,14 +31,33 @@ Repository = "https://github.com/chingdrop/medicare-rebuild"
 [project.scripts]
 medicare-rebuild = "medicare_rebuild.__main__:main"
 
-[tool.setuptools]
-include-package-data = true
+[tool.hatch.build.targets.wheel]
+packages = ["src/medicare_rebuild"]
 
-[tool.setuptools.packages]
-find = { where = ["src"] }
-
-[tool.setuptools.package-dir]
-"" = "src"
+# Hatchling's sdist takes every file the repo's .gitignore doesn't exclude (and ignores a
+# personal global gitignore). These are excluded explicitly as well, so the sdist can't
+# pick up local data, logs, secrets or editor settings even if .gitignore changes. The
+# file types match the no-data-files pre-commit hook. .env.example is still shipped.
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".claude",
+    "data",
+    "demo_data",
+    "demo_output",
+    "logs",
+    ".env",
+    ".env.local",
+    "*.csv",
+    "*.xlsx",
+    "*.xls",
+    "*.bak",
+    "*.bacpac",
+    "*.mdf",
+    "*.ldf",
+    "*.parquet",
+    "*.db",
+    "*.sqlite",
+]
 
 [dependency-groups]
 dev = [
